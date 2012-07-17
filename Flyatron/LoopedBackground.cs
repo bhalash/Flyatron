@@ -1,65 +1,87 @@
-﻿using System;
+﻿/*
+ * This method should ideally be gracefully handle any number of backdrop layers. 
+ * The elaborateness of any backdrop is limited by your ability to create background textures.
+ */
+
+using System;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using Flyatron;
 
 namespace Flyatron
 {
-	class BackgroundLayer
+	class Backdrop
 	{
-		// Happy sunshine infinitely left-scrolling backgrounds.
-		// TODO: Expand on this to manage multiple parallax layers.
-		Texture2D texture;
-		Vector2 vector1;
-		Vector2 vector2;
+		Texture2D[] texture;
+		Vector2[][]	vector;
 
-		public BackgroundLayer(Texture2D inputTexture, Vector2 inputVector)
+		int a = 0;
+		int b = 0;
+
+		int xBounds;
+		int yBounds;
+		int layers;
+
+		public Backdrop(Texture2D[] inputTexture, int inputXBounds, int inputYBounds, int inputLayers)
 		{
 			texture = inputTexture;
-			vector1 = inputVector;
-			vector2 = inputVector;
-			vector2.X += texture.Width;
+			xBounds = inputXBounds;
+			yBounds = inputYBounds;
+			layers  = inputLayers;
 		}
 
-		public void DrawLoop(SpriteBatch spriteBatch)
+		public void Initialize()
 		{
-			spriteBatch.Draw(texture, vector1, Color.White);
-			spriteBatch.Draw(texture, vector2, Color.White);
+			// TODO: Fix this. Vector arrays are not working.
+			vector = new Vector2[layers][];
+			texture = new Texture2D[layers];
+
+			for (int i = 0; i < layers; i++)
+				vector[i] = new Vector2[2];
+
+			for (int i = 0; i < layers; i++)
+			{
+				vector[i][0] = new Vector2(0, 0);
+				vector[i][1] = new Vector2(texture[i].Width);
+			}
+
+			vector[0][0] = new Vector2(0, 0);
 		}
 
-		public void Update(int x, int y)
+		public void Update()
 		{
-			// Shift vector1 to the right of vector2 when vector1 is completely offscreen. Vice versa.
-			if (vector1.X + texture.Width <= 0)
-				vector1.X = vector2.X + texture.Width;
-			if (vector2.X + texture.Width <= 0)
-				vector2.X = vector1.X + texture.Width;
-			// Shift vector1 to the left of vector2 when vector1 is completely offscreen. Vice versa.
-			if (vector1.X > texture.Width)
-				vector1.X = vector2.X - texture.Width;
-			if (vector2.X > texture.Width)
-				vector2.X = vector1.X - texture.Width;
-
-			if (x >= 0)
+			for (int i = 0; i < layers; i++)
 			{
-				vector1.X += x;
-				vector2.X += x;
-			}
-			if (x < 0)
-			{
-				vector1.X -= x - (x * 2);
-				vector2.X -= x - (x * 2);
+				// This manages right-to-left scrolling.
+				// If vector0's texture is completely off the screen, it is moved to the
+				// right of vector1's texture.
+				if (vector[i][0].X + texture[i].Width <= 0)
+					vector[i][0].X = vector[i][1].X + texture[i].Width;
+				if (vector[i][1].X + texture[i].Width <= 0)
+					vector[i][1].X = vector[i][0].X + texture[i].Width;
 			}
 
-			if (y >= 0)
+			for (int i = 0; i < layers; i++)
 			{
-				vector1.Y += y;
-				vector2.Y += y;
+				// As above, but works for left-to-right scrolling.
+				// Combined, these two loops emulate one infinitely scrolling texture.
+				if (vector[i][0].X > texture[i].Width)
+					vector[i][0].X = vector[i][1].X - texture[i].Width;
+				if (vector[i][1].X > texture[i].Width)
+					vector[i][1].X = vector[i][0].X - texture[i].Width;
 			}
-			if (y < 0)
-			{
-				vector1.Y -= y - (y * 2);
-				vector2.Y -= y - (y * 2);
-			}
+		}
+
+		public void Draw(SpriteBatch spriteBatch)
+		{
+			// Examples.
+			Vector2 vector1 = new Vector2(0, 0);
+			Vector2[] vector3 = new Vector2[1];
+			vector3[0] = new Vector2(0, 0);
+			// spriteBatch.Draw(texture[0], vector[0][0], Color.White);
+			// spriteBatch.Draw(texture[0], vector[0][1], Color.White);
+			spriteBatch.Draw(texture[0], vector3[0], Color.White);
+			spriteBatch.Draw(texture[0], new Vector2(0,100), Color.White);
 		}
 	}
 }

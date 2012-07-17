@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
-// My classes. Nar-de-nar-nar.
 using Flyatron;
 using System.Collections.Generic;
 
@@ -52,7 +51,7 @@ namespace Flyatron
 		enum ScreenState
 		{Menu, Play, New, Scores, About};
 
-		// Music sourced from the chiptunes group "8-Bit Weapon". Used with permission in exchange for attribution.
+		// Music sourced from the chiptunes group "8-Bit Weapon". Used with permission.
 		// Homepage: http://www.8bitweapon.com
 		List<string> playList = new List<string>()
 		{ 
@@ -65,8 +64,14 @@ namespace Flyatron
 
 		// Flyatron should start at the game menu.
 		ScreenState screen = ScreenState.Menu;
-		// Texture for the menu, since I use it in several places.
+		// Texture for the menu. Declared here since I use it in several places.
 		Texture2D menuBg; Vector2 menuVec;
+
+		// Arrays for background layers.
+		BackgroundLayer[] cloudLayer;
+		Texture2D[] cloudTexture;
+		Vector2[] cloudVector;
+		const int NUM_LAYERS = 3;
 
 		public Game()
 		{
@@ -83,9 +88,17 @@ namespace Flyatron
 
 		protected override void LoadContent()
 		{
+			// Numerical value equates to pixel size.
 			font10 = Content.Load<SpriteFont>("fonts\\PressStart2P_10");
 			font14 = Content.Load<SpriteFont>("fonts\\PressStart2P_14");
 			font25 = Content.Load<SpriteFont>("fonts\\PressStart2P_25");
+
+			cloudTexture = new Texture2D[NUM_LAYERS]
+			{
+				Content.Load<Texture2D>("sky\\cloud2"),
+				Content.Load<Texture2D>("sky\\cloud1"),
+				Content.Load<Texture2D>("sky\\cloud0")
+			};
 
 			menuBg = Content.Load<Texture2D>("bg\\paused");
 			menuVec = new Vector2(0, 0);
@@ -98,18 +111,18 @@ namespace Flyatron
 
 		protected override void Initialize()
 		{
-			cloud1 = new BackgroundLayer(
-				Content.Load<Texture2D>("sky\\cloud2"),
-				new Vector2(0, (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 200))
-			);
-			cloud2 = new BackgroundLayer(
-				Content.Load<Texture2D>("sky\\cloud1"),
-				new Vector2(0, (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 100))
-			);
-			cloud3 = new BackgroundLayer(
-				Content.Load<Texture2D>("sky\\cloud0"),
-				new Vector2(0, (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2))
-			);
+			cloudLayer = new BackgroundLayer[NUM_LAYERS];
+
+			cloudVector = new Vector2[NUM_LAYERS]
+			{
+				new Vector2(0, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 200),
+				new Vector2(0, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 100),
+				new Vector2(0, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 0),
+			};
+
+			// Experimenting with loop/list to consolidate control of the layers.
+			for (int i = 0; i < NUM_LAYERS; i++)
+				cloudLayer[i] = new BackgroundLayer(cloudTexture[i], cloudVector[i]);
 
 			spriteBatch = new SpriteBatch(GraphicsDevice);
 
@@ -218,27 +231,15 @@ namespace Flyatron
 		{
 			if (Keyboard.GetState().IsKeyDown(Keys.W))
 			{
-				cloud1.Update(0, 5);
-				cloud2.Update(0, 6);
-				cloud3.Update(0, 7);
 			}
 			if (Keyboard.GetState().IsKeyDown(Keys.S))
 			{
-				cloud1.Update(0, -5);
-				cloud2.Update(0, -6);
-				cloud3.Update(0, -7);
 			}
 			if (Keyboard.GetState().IsKeyDown(Keys.A))
 			{
-				cloud1.Update(5,0);
-				cloud2.Update(6,0);
-				cloud3.Update(7,0);
 			}
 			if (Keyboard.GetState().IsKeyDown(Keys.D))
 			{
-				cloud1.Update(-5,0);
-				cloud2.Update(-6,0);
-				cloud3.Update(-7,0);
 			}
 
 			first.Update(currentKeyboardState, currentMouseState, new GameTime());
@@ -260,10 +261,6 @@ namespace Flyatron
 				screen = ScreenState.Play;
 
 			eightBitWeapon.Volume(0.2F);
-
-			cloud1.Update(-1, 0);
-			cloud2.Update(-2, 0);
-			cloud3.Update(-3, 0);
 
 			int Y = 100;
 
@@ -314,10 +311,6 @@ namespace Flyatron
 		{
 			string title = "About Flyatron";
 
-			cloud1.Update(-1, 0);
-			cloud2.Update(-2, 0);
-			cloud3.Update(-3, 0);
-
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
 			spriteBatch.DrawString(font14, "TODO", new Vector2(50, 120), Color.White);
@@ -326,10 +319,6 @@ namespace Flyatron
 		private void Scores()
 		{
 			string title = "Top Scores";
-
-			cloud1.Update(-1, 0);
-			cloud2.Update(-2, 0);
-			cloud3.Update(-3, 0);
 
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
