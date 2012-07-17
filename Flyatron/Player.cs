@@ -120,6 +120,7 @@ namespace Flyatron
 			if (Keypress(dash))
 				if (dashTimer.Elapsed(dashCooldown))
 				{
+					// Burst of speed and warp across boundaries.
 					dashTimer.Reset();
 					velocityType = Velocity.Dashing;
 				}
@@ -127,17 +128,17 @@ namespace Flyatron
 			if (Keypress(teleport))
 				if (teleportTimer.Elapsed(teleportCooldown))
 				{
+					// Teleport player to a random location. 
+					// TODO: Make player explode (a la Asteroids).
 					teleportTimer.Reset();
 					Teleport();
 				}
 
-			// Velocity type.
 			if (velocityType == Velocity.Walking)
 				PlayerWalking();
 			if (velocityType == Velocity.Dashing)
 				PlayerDashing();
 
-			// Switch bounding based on boundType.
 			if (boundType == Boundaries.Wall)
 				Walled();
 			if (boundType == Boundaries.Warp)
@@ -183,9 +184,6 @@ namespace Flyatron
 				vector.Y = 0 - texture.Height;
 		}
 
-		// To explain the next two:
-		// It's an escape ability on a long cooldown.
-		// You have three seconds at being able to move much faster, and warp around the map.
 		private void PlayerWalking()
 		{
 			velocity = walkingVel;
@@ -211,8 +209,6 @@ namespace Flyatron
 		// Helpers.
 		private bool Keypress(Keys inputKey)
 		{
-			// If the key has been pressed and then released, true. Else, false.
-			// Helper class.
 			if (currentKeyboardState.IsKeyUp(inputKey) && (lastKeyboardState.IsKeyDown(inputKey)))
 				return true;
 
@@ -221,9 +217,6 @@ namespace Flyatron
 
 		public int Rng(int a, int b)
 		{
-			// Butt-simple random number generator. Roll between a and b.
-			// Normally I wouldn't methodize this, but there are things I may need to do here.
-			// Wicked things.
 			Random random = new Random();
 			return random.Next(a, b);
 		}
@@ -233,8 +226,7 @@ namespace Flyatron
 		{
 			List<string> debug = new List<string>()
 			{
-				// What messages are to be drawn.
-				// Useful fact: If you are drawing more than one debug panel, put 170.X between them.
+				// Put 170.X between duplicate debug panels.
 				"Player #: "	+ index,
 				"X: " + vector.X,
 				"Y: " + vector.Y,

@@ -12,17 +12,16 @@ namespace Flyatron
 {
 	public class Game : Microsoft.Xna.Framework.Game
 	{
+		// Welcome to Flyatron!
 		public static Game Instance;
 
 		static double version = 0.1;
 		static string versionString = "Version " + version;
 		bool debugging = true;
 
-		// BOW BEFORE YOUR ENDING!
 		static SpriteBatch spriteBatch;
 		GraphicsDeviceManager graphics;
 
-		// Looped background layers.
 		BackgroundLayer cloud1, cloud2, cloud3;
 
 		// Width, height, full screen.
@@ -221,10 +220,8 @@ namespace Flyatron
 				cloud3.Update(0, -7);
 			}
 
-			// Move player.
 			first.Update(currentKeyboardState, currentMouseState, new GameTime());
 
-			// Soundtrack controls.
 			if (Keypress(Keys.N))
 				eightBitWeapon.Play(Content.Load<Song>(playList[Rng(0, playList.Count - 1)]));
 			if (Keypress(Keys.P))
@@ -232,7 +229,6 @@ namespace Flyatron
 			if (Keypress(Keys.U))
 				eightBitWeapon.Resume();
 
-			// Toggle between the menu and gameplay.
 			if (Keypress(Keys.Escape))
 				screen = ScreenState.Menu;
 		}
