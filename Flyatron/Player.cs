@@ -56,15 +56,14 @@ namespace Flyatron
 		{
 		}
 
-		public void Art(Texture2D inputTexture, Vector2 inputVector, Color inputTint)
+		public void Content(Texture2D inputTexture, Color inputTint)
 		{
 			// Input art: Texture, vector, and tint.
 			texture = inputTexture;
-			vector = inputVector;
 			tint = inputTint;
 		}
 
-		public void Stats(int inputLives, int inputVelocity, int inputDashVelocity, int inputIndex)
+		public void Initialize(int inputLives, int inputVelocity, int inputDashVelocity, int inputIndex)
 		{
 			// Player stats: Walking speed, runningVel speed, lives, and index.
 			runningVel = inputDashVelocity;
@@ -103,6 +102,9 @@ namespace Flyatron
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
+			vector.X = xBound / 2 - texture.Width / 2;
+			vector.Y = yBound / 2 - texture.Height / 2;
+
 			spriteBatch.Draw(texture, vector, tint);
 			// Draw player HUD.
 			// TODO
@@ -110,6 +112,7 @@ namespace Flyatron
 
 		public void Update(KeyboardState inputState, MouseState inputMouseState, GameTime inputGameTime)
 		{
+			// I am changing the camera: Center the player.
 			currentKeyboardState = inputState;
 			currentMouseState = inputMouseState;
 

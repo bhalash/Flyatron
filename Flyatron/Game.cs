@@ -26,9 +26,9 @@ namespace Flyatron
 
 		// Width, height, full screen.
 		// Laptop's native is 1366x768.
-		int gameWidth   = 1366;
-		int gameHeight	 = 768;
-		bool fullScreen = true;
+		int gameWidth   = 1024;
+		int gameHeight	 = 600;
+		bool fullScreen = false;
 		bool showMouse  = true;
 
 		// Test if a key or button has been: 
@@ -91,23 +91,32 @@ namespace Flyatron
 			menuVec = new Vector2(0, 0);
 
 			eightBitWeapon = new Muzak();
-			eightBitWeapon.Play(Content.Load<Song>(playList[0]));
+			// eightBitWeapon.Play(Content.Load<Song>(playList[0]));
 
-			first.Art(Content.Load<Texture2D>("player\\astronaut"), new Vector2(100, 300), Color.White);
+			first.Content(Content.Load<Texture2D>("player\\astronaut"), Color.White);
 		}
 
 		protected override void Initialize()
 		{
-			cloud1 = new BackgroundLayer(Content.Load<Texture2D>("sky\\cloud2"), new Vector2(0, (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 200)));
-			cloud2 = new BackgroundLayer(Content.Load<Texture2D>("sky\\cloud1"), new Vector2(0, (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 100)));
-			cloud3 = new BackgroundLayer(Content.Load<Texture2D>("sky\\cloud0"), new Vector2(0, (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2)));
+			cloud1 = new BackgroundLayer(
+				Content.Load<Texture2D>("sky\\cloud2"),
+				new Vector2(0, (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 200))
+			);
+			cloud2 = new BackgroundLayer(
+				Content.Load<Texture2D>("sky\\cloud1"),
+				new Vector2(0, (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 100))
+			);
+			cloud3 = new BackgroundLayer(
+				Content.Load<Texture2D>("sky\\cloud0"),
+				new Vector2(0, (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2))
+			);
 
 			spriteBatch = new SpriteBatch(GraphicsDevice);
 
 			first = new Player();
 
 			first.Bounds(gameWidth, gameHeight);
-			first.Stats(3, 8, 15, 0);
+			first.Initialize(3, 8, 15, 0);
 			base.Initialize();
 		}
 
@@ -219,6 +228,18 @@ namespace Flyatron
 				cloud2.Update(0, -6);
 				cloud3.Update(0, -7);
 			}
+			if (Keyboard.GetState().IsKeyDown(Keys.A))
+			{
+				cloud1.Update(5,0);
+				cloud2.Update(6,0);
+				cloud3.Update(7,0);
+			}
+			if (Keyboard.GetState().IsKeyDown(Keys.D))
+			{
+				cloud1.Update(-5,0);
+				cloud2.Update(-6,0);
+				cloud3.Update(-7,0);
+			}
 
 			first.Update(currentKeyboardState, currentMouseState, new GameTime());
 
@@ -282,10 +303,6 @@ namespace Flyatron
 			}
 
 			first.Draw(spriteBatch);
-
-			cloud1.Update(-5, 0);
-			cloud2.Update(-6, 0);
-			cloud3.Update(-7, 0);
 		}
 
 		private void New()

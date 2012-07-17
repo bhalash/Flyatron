@@ -28,10 +28,16 @@ namespace Flyatron
 
 		public void Update(int x, int y)
 		{
+			// Shift vector1 to the right of vector2 when vector1 is completely offscreen. Vice versa.
 			if (vector1.X + texture.Width <= 0)
 				vector1.X = vector2.X + texture.Width;
 			if (vector2.X + texture.Width <= 0)
 				vector2.X = vector1.X + texture.Width;
+			// Shift vector1 to the left of vector2 when vector1 is completely offscreen. Vice versa.
+			if (vector1.X > texture.Width)
+				vector1.X = vector2.X - texture.Width;
+			if (vector2.X > texture.Width)
+				vector2.X = vector1.X - texture.Width;
 
 			if (x >= 0)
 			{
