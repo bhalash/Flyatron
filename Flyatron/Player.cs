@@ -14,28 +14,22 @@ namespace Flyatron
 		Vector2 vector;
 		Color tint;
 
-		// Keyboard state. Used in the same manner as the main method:
-		// 1. Capture the current keyboard sate.
-		// 2. Do foo, bar.
-		// 3. The current becomes the old.
 		KeyboardState lastKeyboardState, currentKeyboardState;
 		MouseState lastMouseState, currentMouseState;
 
-		// Player lives.
 		int lives;
-		// Player's velocity.
 		int velocity;
-		// Is the player walking or running? 
-		int walking;
-		int running;
+		int walkingVel;
+		int runningVel;
 
-		// The width and height of the video game.
+		// Player bounds.
 		int xBound;
 		int yBound;
 
+		// Player index. For multiplayer.
 		int index;
 
-		// Default keys are WSAD.
+		// Default keys are WSAD, but are changable via Rebind().
 		Keys up = Keys.W;
 		Keys down = Keys.S;
 		Keys left = Keys.A;
@@ -45,15 +39,14 @@ namespace Flyatron
 
 		// Dash ability.
 		mTimer dashTimer;
-		int dashCooldown = 3;
-		int dashDuration = 3;
+		int dashCooldown = 0;
+		int dashDuration = 5;
 
 		// Teleport ability.
 		mTimer teleportTimer;
 		int teleportCooldown = 0;
 
 		enum Boundaries { Warp, Wall };
-		// Types. Linked to the above.
 		Boundaries boundType;
 
 		enum Velocity { Walking, Dashing };
@@ -73,30 +66,27 @@ namespace Flyatron
 
 		public void Stats(int inputLives, int inputVelocity, int inputDashVelocity, int inputIndex)
 		{
-			// Player stats: Walking speed, running speed, lives, and index.
-			running = inputDashVelocity;
-			walking = inputVelocity;
-			velocity = walking;
+			// Player stats: Walking speed, runningVel speed, lives, and index.
+			runningVel = inputDashVelocity;
+			walkingVel = inputVelocity;
+			velocity = walkingVel;
 			lives = inputLives;
 			index = inputIndex;
 
-			// Shoehorning this in here since this method is called in the Initialize() method.
 			dashTimer = new mTimer();
 			teleportTimer = new mTimer();
 		}
 
 		public void Bounds(int inputXBound, int inputYBound)
 		{
-			// In case I need to switch up bounds later.
-			// Thinking of making the game world a 2000x2000 arena.
 			xBound = inputXBound;
 			yBound = inputYBound;
 		}
 
 		public Rectangle Rect()
 		{
-			// Not entirely sold on the utility of this, but it sure is useful.
-			// This returns a rectangle for the player based on the vector and texture.
+			// Return a rectangle for the player based on the vector and texture. Used for collisions.
+			// The precision loss is negigible (~1-2px).
 			int x = (int)Math.Round(vector.X, 0);
 			int y = (int)Math.Round(vector.Y, 0);
 			return new Rectangle(x, y, texture.Width, texture.Height);
@@ -104,8 +94,6 @@ namespace Flyatron
 
 		public void Rebind(Keys inputUp, Keys inputDown, Keys inputLeft, Keys inputRight)
 		{
-			// Optional, allows for rebinding of controls.
-			// Mandatory for more than one player.
 			up = inputUp;
 			down = inputDown;
 			left = inputLeft;
@@ -115,7 +103,6 @@ namespace Flyatron
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
-			// Draw the player.
 			spriteBatch.Draw(texture, vector, tint);
 			// Draw player HUD.
 			// TODO
@@ -128,7 +115,7 @@ namespace Flyatron
 
 			// Update timers.
 			dashTimer.Update(inputGameTime.ElapsedGameTime);
-			// teleportTimer.Update(inputGameTime.ElapsedGameTime);
+			teleportTimer.Update(inputGameTime.ElapsedGameTime);
 
 			if (Keypress(dash))
 				if (dashTimer.Elapsed(dashCooldown))
@@ -201,13 +188,13 @@ namespace Flyatron
 		// You have three seconds at being able to move much faster, and warp around the map.
 		private void PlayerWalking()
 		{
-			velocity = walking;
+			velocity = walkingVel;
 			boundType = Boundaries.Wall;
 		}
 
 		private void PlayerDashing()
 		{
-			velocity = running;
+			velocity = runningVel;
 			boundType = Boundaries.Warp;
 
 			if (dashTimer.Elapsed(dashDuration))

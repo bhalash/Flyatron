@@ -73,7 +73,6 @@ namespace Flyatron
 		{
 			Instance = this;
 
-			// Display opts.
 			graphics = new GraphicsDeviceManager(this);
 			graphics.PreferredBackBufferWidth = gameWidth;
 			graphics.PreferredBackBufferHeight = gameHeight;
@@ -89,7 +88,6 @@ namespace Flyatron
 			font14 = Content.Load<SpriteFont>("fonts\\PressStart2P_14");
 			font25 = Content.Load<SpriteFont>("fonts\\PressStart2P_25");
 
-			// Menu BG.
 			menuBg = Content.Load<Texture2D>("bg\\paused");
 			menuVec = new Vector2(0, 0);
 
@@ -101,7 +99,6 @@ namespace Flyatron
 
 		protected override void Initialize()
 		{
-			// Background textures.
 			cloud1 = new BackgroundLayer(Content.Load<Texture2D>("sky\\cloud2"), new Vector2(0, (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 200)));
 			cloud2 = new BackgroundLayer(Content.Load<Texture2D>("sky\\cloud1"), new Vector2(0, (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 100)));
 			cloud3 = new BackgroundLayer(Content.Load<Texture2D>("sky\\cloud0"), new Vector2(0, (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2)));
@@ -109,7 +106,7 @@ namespace Flyatron
 			spriteBatch = new SpriteBatch(GraphicsDevice);
 
 			first = new Player();
-			// Player information.	
+
 			first.Bounds(gameWidth, gameHeight);
 			first.Stats(3, 8, 15, 0);
 			base.Initialize();
@@ -137,8 +134,6 @@ namespace Flyatron
 		
 			base.Update(gameTime);
 
-			// Current keyboard state becomes the old. 
-			// Repeat x60 per second.
 			lastKeyboardState = currentKeyboardState;
 		}
 
@@ -146,17 +141,12 @@ namespace Flyatron
 		{
 			GraphicsDevice.Clear(Color.CornflowerBlue);
 
-			// The SpriteBatch is god. 
-			// The SpriteBatch is devil.
-			// The SpriteBatch is the alpha and the omega.
 			spriteBatch.Begin();
-				// Draw background. Sprites are drawn in the order in which they are evoked.
-				// I therefore want to make sure these remain in the background by evoking
-				// them before anything else.
 				cloud1.DrawLoop(spriteBatch);
 				cloud2.DrawLoop(spriteBatch);
 				cloud3.DrawLoop(spriteBatch);
 
+				// Draw depending on state.
 				if (screen == ScreenState.Menu)
 					Menu();
 				if (screen == ScreenState.Play)
@@ -175,7 +165,6 @@ namespace Flyatron
 
 		private bool Keypress(Keys inputKey)
 		{
-			// If the key has been pressed and lastKeyboardState released, true. Else, false.
 			if (currentKeyboardState.IsKeyUp(inputKey) && (lastKeyboardState.IsKeyDown(inputKey)))
 				return true;
 
@@ -184,9 +173,6 @@ namespace Flyatron
 
 		public int Rng(int a, int b)
 		{
-			// Butt-simple random number generator. Roll between a and b.
-			// Normally I wouldn't methodize this, but there are things I may need to do here.
-			// Wicked things.
 			Random random = new Random();
 			return random.Next(a, b);
 		}
@@ -224,14 +210,12 @@ namespace Flyatron
 		{
 			if (Keyboard.GetState().IsKeyDown(Keys.W))
 			{
-				// Move background up.
 				cloud1.Update(0, 5);
 				cloud2.Update(0, 6);
 				cloud3.Update(0, 7);
 			}
 			if (Keyboard.GetState().IsKeyDown(Keys.S))
 			{
-				// Move background down.
 				cloud1.Update(0, -5);
 				cloud2.Update(0, -6);
 				cloud3.Update(0, -7);
@@ -240,10 +224,7 @@ namespace Flyatron
 			// Move player.
 			first.Update(currentKeyboardState, currentMouseState, new GameTime());
 
-			// if (Keyboard.GetState().IsKeyDown(Keys.A))
-			// if (Keyboard.GetState().IsKeyDown(Keys.D))
-
-			// Muzak controls.
+			// Soundtrack controls.
 			if (Keypress(Keys.N))
 				eightBitWeapon.Play(Content.Load<Song>(playList[Rng(0, playList.Count - 1)]));
 			if (Keypress(Keys.P))
@@ -260,10 +241,9 @@ namespace Flyatron
 		{
 			if (Keypress(Keys.Escape))
 				screen = ScreenState.Play;
-			// Quieter music.
+
 			eightBitWeapon.Volume(0.2F);
 
-			// Scroll background left...slowly-er.
 			cloud1.Update(-1, 0);
 			cloud2.Update(-2, 0);
 			cloud3.Update(-3, 0);
@@ -293,10 +273,12 @@ namespace Flyatron
 
 		private void Play()
 		{
+			eightBitWeapon.Volume(0.5F);
+
 			if (!debugging)
+				// Playing track.
 				spriteBatch.DrawString(font10, eightBitWeapon.NameTime(), new Vector2(GraphicsDevice.Viewport.X + 25, GraphicsDevice.Viewport.Height - 30), Color.Black);
 
-			// Draw player.
 			if (debugging)
 			{
 				first.Debug(font10, spriteBatch, 30, 30);
@@ -305,10 +287,6 @@ namespace Flyatron
 
 			first.Draw(spriteBatch);
 
-			// Louder music.
-			eightBitWeapon.Volume(0.5F);
-
-			// Scroll background left.
 			cloud1.Update(-5, 0);
 			cloud2.Update(-6, 0);
 			cloud3.Update(-7, 0);
@@ -316,7 +294,6 @@ namespace Flyatron
 
 		private void New()
 		{
-			// Load a new game.
 			screen = ScreenState.Play;
 		}
 
