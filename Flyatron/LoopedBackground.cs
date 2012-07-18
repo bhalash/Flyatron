@@ -43,8 +43,9 @@ namespace BetterBackgrounds
 			for (int i = 0; i < layers; i++)
 				vector[i] = new Vector2[2];
 
-			// sep indicated the vectical separation from 0. For my specific
-			// cloud textures, a division of 100 pixels per layer is a solid start.
+			// sep indicated the vectical separation from 0. For my specific cloud textures, a division of 
+			// 100 pixels per layer is a solid start.
+
 			int sep = 100;
 			for (int i = 0; i < layers; i++)
 			{
@@ -56,8 +57,6 @@ namespace BetterBackgrounds
 
 		public void Rebind(Keys newUp, Keys newDown, Keys newRight, Keys newLeft)
 		{
-			// As with the player, the scrolling is tied to rebindable
-			// keyboard shortcuts.
 			up = newUp;
 			down = newDown;
 			left = newLeft;
@@ -138,6 +137,20 @@ namespace BetterBackgrounds
 		public void Bounding(int yBound)
 		{
 			// TODO.
+		}
+
+		public void Demo(int speed)
+		{
+			// Demo() is intended for use on menu screens. 
+			for (int i = 0; i < layers; i++)
+			{
+				for (int j = 0; j < 2; j++)
+					vector[i][j].X -= speed;
+
+				speed++;
+			}
+
+			LoopLayers();
 		}
 
 		public void LoopLayers()
