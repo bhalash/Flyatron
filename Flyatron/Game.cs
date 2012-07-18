@@ -23,9 +23,9 @@ namespace Flyatron
 
 		// Width, height, full screen.
 		// Laptop's native is 1366x768.
-		int gameWidth   = 1366;
-		int gameHeight	 = 768;
-		bool fullScreen = true;
+		int gameWidth   = 1024;
+		int gameHeight	 = 600;
+		bool fullScreen = false;
 		bool showMouse  = true;
 
 		// Test if a key or button has been: 
@@ -102,7 +102,7 @@ namespace Flyatron
 			menuVec = new Vector2(0, 0);
 
 			eightBitWeapon = new Muzak();
-			// eightBitWeapon.Play(Content.Load<Song>(playList[0]));
+			eightBitWeapon.Play(Content.Load<Song>(playList[0]));
 
 			first.Content(Content.Load<Texture2D>("player\\astronaut"), Color.White);
 		}
@@ -126,6 +126,8 @@ namespace Flyatron
 		{
 			// Capture current keyboard state.
 			currentKeyboardState = Keyboard.GetState();
+
+			first.UpdateTimers(gameTime);
 
 			if (screen == ScreenState.Menu)
 				UpdateMenu();
@@ -213,7 +215,7 @@ namespace Flyatron
 
 		public void UpdatePlay()
 		{
-			alpha.Update(currentKeyboardState, 10);
+			alpha.Update(currentKeyboardState, 6);
 
 			first.Update(currentKeyboardState, currentMouseState, new GameTime());
 

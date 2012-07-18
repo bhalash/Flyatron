@@ -39,12 +39,12 @@ namespace Flyatron
 
 		// Dash ability.
 		mTimer dashTimer;
-		int dashCooldown = 0;
-		int dashDuration = 5;
+		int dashCooldown = 10;
+		int dashDuration = 4;
 
 		// Teleport ability.
 		mTimer teleportTimer;
-		int teleportCooldown = 0;
+		int teleportCooldown = 15;
 
 		enum Boundaries { Warp, Wall };
 		Boundaries boundType;
@@ -76,49 +76,10 @@ namespace Flyatron
 			teleportTimer = new mTimer();
 		}
 
-		public void Bounds(int inputXBound, int inputYBound)
-		{
-			xBound = inputXBound;
-			yBound = inputYBound;
-		}
-
-		public Rectangle Rect()
-		{
-			// Return a rectangle for the player based on the vector and texture. Used for collisions.
-			// The precision loss is negigible (~1-2px).
-			int x = (int)Math.Round(vector.X, 0);
-			int y = (int)Math.Round(vector.Y, 0);
-			return new Rectangle(x, y, texture.Width, texture.Height);
-		}
-
-		public void Rebind(Keys inputUp, Keys inputDown, Keys inputLeft, Keys inputRight)
-		{
-			up = inputUp;
-			down = inputDown;
-			left = inputLeft;
-			right = inputRight;
-			// A, B, Start...
-		}
-
-		public void Draw(SpriteBatch spriteBatch)
-		{
-			vector.X = xBound / 2 - texture.Width / 2;
-			vector.Y = yBound / 2 - texture.Height / 2;
-
-			spriteBatch.Draw(texture, vector, tint);
-			// Draw player HUD.
-			// TODO
-		}
-
 		public void Update(KeyboardState inputState, MouseState inputMouseState, GameTime inputGameTime)
 		{
-			// I am changing the camera: Center the player.
 			currentKeyboardState = inputState;
 			currentMouseState = inputMouseState;
-
-			// Update timers.
-			dashTimer.Update(inputGameTime.ElapsedGameTime);
-			teleportTimer.Update(inputGameTime.ElapsedGameTime);
 
 			if (Keypress(dash))
 				if (dashTimer.Elapsed(dashCooldown))
@@ -147,6 +108,68 @@ namespace Flyatron
 			if (boundType == Boundaries.Warp)
 				Warping();
 
+			lastMouseState = currentMouseState;
+			lastKeyboardState = currentKeyboardState;
+		}
+
+		public void UpdateTimers(GameTime inputGameTime)
+		{
+			dashTimer.Update(inputGameTime.ElapsedGameTime);
+			teleportTimer.Update(inputGameTime.ElapsedGameTime);
+		}
+
+		public void Draw(SpriteBatch spriteBatch)
+		{
+			spriteBatch.Draw(texture, vector, tint);
+			// Draw player HUD.
+			// TODO
+		}
+
+		public void Bounds(int inputXBound, int inputYBound)
+		{
+			xBound = inputXBound;
+			yBound = inputYBound;
+		}
+
+		public Rectangle Rect()
+		{
+			// Return a rectangle for the player based on the vector and texture. Used for collisions.
+			// The precision loss is negligible (~1-2px).
+			int x = (int)Math.Round(vector.X, 0);
+			int y = (int)Math.Round(vector.Y, 0);
+			return new Rectangle(x, y, texture.Width, texture.Height);
+		}
+
+		public void Rebind(Keys inputUp, Keys inputDown, Keys inputLeft, Keys inputRight)
+		{
+			up = inputUp;
+			down = inputDown;
+			left = inputLeft;
+			right = inputRight;
+		}
+
+		private void Walled()
+		{
+			// If Walled, do not allow the player to go beyond screen bounds.
+			if (vector.X > 0)
+				if (currentKeyboardState.IsKeyDown(left))
+					vector.X -= velocity;
+
+			if (vector.Y > 0)
+				if (currentKeyboardState.IsKeyDown(up))
+					vector.Y -= velocity;
+
+			if (vector.Y + texture.Height < yBound)
+				if (currentKeyboardState.IsKeyDown(down))
+					vector.Y += velocity;
+
+			if (vector.X + texture.Width < xBound)
+				if (currentKeyboardState.IsKeyDown(right))
+					vector.X += velocity;
+		}
+
+		private void Warping()
+		{
 			// Up, down, left, right.
 			if (currentKeyboardState.IsKeyDown(up))
 				vector.Y -= velocity;
@@ -157,25 +180,6 @@ namespace Flyatron
 			if (currentKeyboardState.IsKeyDown(right))
 				vector.X += velocity;
 
-			lastMouseState = currentMouseState;
-			lastKeyboardState = currentKeyboardState;
-		}
-
-		private void Walled()
-		{
-			// If Walled, do not allow the player to go beyond screen bounds.
-			if (vector.X < 0)
-				vector.X = 0;
-			if (vector.Y < 0)
-				vector.Y = 0;
-			if (vector.Y + texture.Height > yBound)
-				vector.Y = yBound - texture.Height;
-			if (vector.X + texture.Width > xBound)
-				vector.X = xBound - texture.Width;
-		}
-
-		private void Warping()
-		{
 			// If Warp, warp the player to the opposite side of the screen.
 			if (vector.X + texture.Width < 0)
 				vector.X = xBound;
