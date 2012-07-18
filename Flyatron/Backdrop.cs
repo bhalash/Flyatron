@@ -1,6 +1,22 @@
 ﻿/*
+ * Author: Mark Grealish (mark@bhalash.com)
+ * 
  * This method should ideally be gracefully handle any number of backdrop layers. 
  * The elaborateness of any backdrop is limited by your ability to create background textures.
+ * Scrolling is either tied to: 
+ * 
+ *		1. The Update(KeyboardState, int speed) method. The background will move in lockstep with the character, per WSAD.
+ *		2. The Demo() method. It will gradually scroll toward the left. Intended for use in game menus.
+ *		
+ * You call this class pretty simply: Create an array of textures, 0-whatever and pass it to this class
+ * along with the vertical size of the screen. 
+ *  
+ *		Backdrop alpha = new Backdrop(textures, 768);
+ *		
+ * There is an optional Debug() method. It's just here to track Y positions. Scrolling is infinite in either
+ * horizontal direction and seamlessly limited in the vertical based on the *front-most* layer's position.
+ *  
+ * Enjoy!
  */
 
 using System;
@@ -11,7 +27,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-namespace BetterBackgrounds
+namespace Flyatron
 {
 	class Backdrop
 	{
@@ -20,21 +36,19 @@ namespace BetterBackgrounds
 		Texture2D[] texture;
 		Vector2[][]	vector;
 
-		Keys left = Keys.A;
-		Keys right = Keys.D;
-		Keys down = Keys.S;
-		Keys up = Keys.W;
-		
-		int xBounds;
+		Keys left = Keys.D;
+		Keys right = Keys.A;
+		Keys down = Keys.W;
+		Keys up = Keys.S;
+
 		int yBounds;
 		int layers;
 
-		public Backdrop(Texture2D[] inputTexture, int inputXBounds, int inputYBounds, int inputLayers)
+		public Backdrop(Texture2D[] inputTexture, int inputYBounds)
 		{
 			texture = inputTexture;
-			xBounds = inputXBounds;
 			yBounds = inputYBounds;
-			layers  = inputLayers;
+			layers  = inputTexture.Length;
 
 			// I need to explicitly initialize all of the vector arrays here, or the content
 			// is not correctly detected by the other dependent methods.
@@ -45,7 +59,6 @@ namespace BetterBackgrounds
 
 			// sep indicated the vectical separation from 0. For my specific cloud textures, a division of 
 			// 100 pixels per layer is a solid start.
-
 			int sep = 100;
 			for (int i = 0; i < layers; i++)
 			{
@@ -68,8 +81,6 @@ namespace BetterBackgrounds
 			currentState = inputState;
 			// Scroll each of the textures. 
 			LoopLayers();
-			// Enforce Y-axis bounding to stop the layers scrolling off the screen.
-			Bounding(yBounds);
 
 			if (currentState.IsKeyDown(up))
 				ScrollUp(speed);
@@ -90,57 +101,12 @@ namespace BetterBackgrounds
 					spriteBatch.Draw(texture[i], vector[i][j], Color.White);
 		}
 
-		public void ScrollLeft(int speed)
+		public void Demo(SpriteBatch spriteBatch, int speed)
 		{
 			for (int i = 0; i < layers; i++)
-			{
 				for (int j = 0; j < 2; j++)
-					vector[i][j].X -= speed;
+					spriteBatch.Draw(texture[i], vector[i][j], Color.White);
 
-				speed += speed / 4;
-			}
-		}
-
-		public void ScrollRight(int speed)
-		{
-			for (int i = 0; i < layers; i++)
-			{
-				for (int j = 0; j < 2; j++)
-					vector[i][j].X += speed;
-
-				speed += speed / 4;
-			}
-		}
-
-		public void ScrollUp(int speed)
-		{
-			for (int i = 0; i < layers; i++)
-			{
-				for (int j = 0; j < 2; j++)
-					vector[i][j].Y -= speed;
-
-				speed += speed / 4;
-			}
-		}
-
-		public void ScrollDown(int speed)
-		{
-			for (int i = 0; i < layers; i++)
-			{
-				for (int j = 0; j < 2; j++)
-					vector[i][j].Y += speed;
-
-				speed += speed / 4;
-			}
-		}
-
-		public void Bounding(int yBound)
-		{
-			// TODO.
-		}
-
-		public void Demo(int speed)
-		{
 			// Demo() is intended for use on menu screens. 
 			for (int i = 0; i < layers; i++)
 			{
@@ -151,6 +117,73 @@ namespace BetterBackgrounds
 			}
 
 			LoopLayers();
+		}
+
+		public void ScrollLeft(int speed)
+		{
+			for (int i = 0; i < layers; i++)
+			{
+				for (int j = 0; j < 2; j++)
+					vector[i][j].X -= speed;
+
+				speed += 2;
+			}
+		}
+
+		public void ScrollRight(int speed)
+		{
+			for (int i = 0; i < layers; i++)
+			{
+				for (int j = 0; j < 2; j++)
+					vector[i][j].X += speed;
+
+				speed += 2;
+			}
+		}
+
+		public void ScrollUp(int speed)
+		{
+			for (int i = 0; i < layers; i++)
+			{
+				for (int j = 0; j < 2; j++)
+					if (vector[2][j].Y > 0)
+						vector[i][j].Y -= speed;
+
+				speed += 2;
+			}
+		}
+
+		public void ScrollDown(int speed)
+		{
+			// *.Y bounding is handled implicitly, bassed upon the position of
+			//  the frontmost (read: last in array) layer. 
+			// Vertical moves only occur if it would not move the front layer
+			// off of the screen in either direction.
+			for (int i = 0; i < layers; i++)
+			{
+				for (int j = 0; j < 2; j++)
+					if (vector[2][j].Y < yBounds)
+						vector[i][j].Y += speed;
+
+				speed += 2;
+			}
+		}
+
+		public void Debug(SpriteFont font, SpriteBatch spriteBatch, int x, int y)
+		{
+			List<string> debug = new List<string>()
+			{
+				// Put 170.X between duplicate debug panels.
+				"vector[0][0].Y: " + vector[0][0].Y,
+				"vector[1][0].Y: " + vector[1][0].Y,
+				"vector[2][0].Y: " + vector[2][0].Y,
+			};
+
+			for (int i = 0; i < debug.Count; i++)
+			{
+				spriteBatch.DrawString(font, debug[i], new Vector2(x, y), Color.Black);
+				y += 15;
+			}
 		}
 
 		public void LoopLayers()

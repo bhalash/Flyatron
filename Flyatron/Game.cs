@@ -4,8 +4,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
-using Flyatron;
 using System.Collections.Generic;
+using Flyatron;
 
 namespace Flyatron
 {
@@ -20,8 +20,6 @@ namespace Flyatron
 
 		static SpriteBatch spriteBatch;
 		GraphicsDeviceManager graphics;
-
-		BackgroundLayer cloud1, cloud2, cloud3;
 
 		// Width, height, full screen.
 		// Laptop's native is 1366x768.
@@ -51,6 +49,10 @@ namespace Flyatron
 		enum ScreenState
 		{Menu, Play, New, Scores, About};
 
+		// Backdrop.
+		Texture2D[] alphaTextures;
+		Backdrop alpha;
+
 		// Music sourced from the chiptunes group "8-Bit Weapon". Used with permission.
 		// Homepage: http://www.8bitweapon.com
 		List<string> playList = new List<string>()
@@ -67,12 +69,6 @@ namespace Flyatron
 		// Texture for the menu. Declared here since I use it in several places.
 		Texture2D menuBg; Vector2 menuVec;
 
-		// Arrays for background layers.
-		BackgroundLayer[] cloudLayer;
-		Texture2D[] cloudTexture;
-		Vector2[] cloudVector;
-		const int NUM_LAYERS = 3;
-
 		public Game()
 		{
 			Instance = this;
@@ -88,17 +84,19 @@ namespace Flyatron
 
 		protected override void LoadContent()
 		{
+			alphaTextures = new Texture2D[]
+			{
+				Content.Load<Texture2D>("sky\\cloud0"),
+				Content.Load<Texture2D>("sky\\cloud1"),
+				Content.Load<Texture2D>("sky\\cloud2")
+			};
+
+			alpha = new Backdrop(alphaTextures, gameHeight);
+
 			// Numerical value equates to pixel size.
 			font10 = Content.Load<SpriteFont>("fonts\\PressStart2P_10");
 			font14 = Content.Load<SpriteFont>("fonts\\PressStart2P_14");
 			font25 = Content.Load<SpriteFont>("fonts\\PressStart2P_25");
-
-			cloudTexture = new Texture2D[NUM_LAYERS]
-			{
-				Content.Load<Texture2D>("sky\\cloud2"),
-				Content.Load<Texture2D>("sky\\cloud1"),
-				Content.Load<Texture2D>("sky\\cloud0")
-			};
 
 			menuBg = Content.Load<Texture2D>("bg\\paused");
 			menuVec = new Vector2(0, 0);
@@ -111,19 +109,6 @@ namespace Flyatron
 
 		protected override void Initialize()
 		{
-			cloudLayer = new BackgroundLayer[NUM_LAYERS];
-
-			cloudVector = new Vector2[NUM_LAYERS]
-			{
-				new Vector2(0, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 200),
-				new Vector2(0, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 100),
-				new Vector2(0, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2 - 0),
-			};
-
-			// Experimenting with loop/list to consolidate control of the layers.
-			for (int i = 0; i < NUM_LAYERS; i++)
-				cloudLayer[i] = new BackgroundLayer(cloudTexture[i], cloudVector[i]);
-
 			spriteBatch = new SpriteBatch(GraphicsDevice);
 
 			first = new Player();
@@ -163,9 +148,8 @@ namespace Flyatron
 			GraphicsDevice.Clear(Color.CornflowerBlue);
 
 			spriteBatch.Begin();
-				cloud1.DrawLoop(spriteBatch);
-				cloud2.DrawLoop(spriteBatch);
-				cloud3.DrawLoop(spriteBatch);
+
+				alpha.Draw(spriteBatch);
 
 				// Draw depending on state.
 				if (screen == ScreenState.Menu)
@@ -229,6 +213,8 @@ namespace Flyatron
 
 		public void UpdatePlay()
 		{
+			alpha.Update(currentKeyboardState, 10);
+
 			if (Keyboard.GetState().IsKeyDown(Keys.W))
 			{
 			}
@@ -275,6 +261,7 @@ namespace Flyatron
 				"Exit"
 			};
 
+			alpha.Demo(spriteBatch, 3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
 			// Draw the menu.
@@ -311,6 +298,7 @@ namespace Flyatron
 		{
 			string title = "About Flyatron";
 
+			alpha.Demo(spriteBatch, 3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
 			spriteBatch.DrawString(font14, "TODO", new Vector2(50, 120), Color.White);
@@ -320,6 +308,7 @@ namespace Flyatron
 		{
 			string title = "Top Scores";
 
+			alpha.Demo(spriteBatch, 3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
 			spriteBatch.DrawString(font14, "TODO", new Vector2(50, 120), Color.White);
