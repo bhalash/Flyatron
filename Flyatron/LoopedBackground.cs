@@ -4,20 +4,22 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
-using Flyatron;
+using Microsoft.Xna.Framework.Input;
 
-namespace Flyatron
+namespace BetterBackgrounds
 {
 	class Backdrop
 	{
+		KeyboardState currentState, previousState;
+
 		Texture2D[] texture;
 		Vector2[][]	vector;
-
-		int a = 0;
-		int b = 0;
-
+		
 		int xBounds;
 		int yBounds;
 		int layers;
@@ -28,28 +30,47 @@ namespace Flyatron
 			xBounds = inputXBounds;
 			yBounds = inputYBounds;
 			layers  = inputLayers;
-		}
 
-		public void Initialize()
-		{
-			// TODO: Fix this. Vector arrays are not working.
+			// I need to explicitly initialize all of the vector arrays here, or the content
+			// is not correctly detected by the other dependent methods.
 			vector = new Vector2[layers][];
-			texture = new Texture2D[layers];
 
 			for (int i = 0; i < layers; i++)
 				vector[i] = new Vector2[2];
 
 			for (int i = 0; i < layers; i++)
 			{
-				vector[i][0] = new Vector2(0, 0);
-				vector[i][1] = new Vector2(texture[i].Width);
+				vector[i][0] = new Vector2(0,0);
+				vector[i][1] = new Vector2(texture[i].Width, 0);
 			}
-
-			vector[0][0] = new Vector2(0, 0);
 		}
 
-		public void Update()
+		public void Update(KeyboardState inputKeyboardState)
 		{
+			currentState = inputKeyboardState;
+
+			// Testing.
+			if (Keyboard.GetState().IsKeyDown(Keys.A))
+			{
+				vector[0][0].X -= 10;
+				vector[0][1].X -= 10;
+			}
+			if (Keyboard.GetState().IsKeyDown(Keys.D))
+			{
+				vector[0][0].X += 10;
+				vector[0][1].X += 10;
+			}
+			if (Keyboard.GetState().IsKeyDown(Keys.W))
+			{
+				vector[0][0].Y -= 10;
+				vector[0][1].Y -= 10;
+			}
+			if (Keyboard.GetState().IsKeyDown(Keys.S))
+			{
+				vector[0][0].Y += 10;
+				vector[0][1].Y += 10;
+			}
+
 			for (int i = 0; i < layers; i++)
 			{
 				// This manages right-to-left scrolling.
@@ -70,18 +91,14 @@ namespace Flyatron
 				if (vector[i][1].X > texture[i].Width)
 					vector[i][1].X = vector[i][0].X - texture[i].Width;
 			}
+
+			previousState = currentState;
 		}
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
-			// Examples.
-			Vector2 vector1 = new Vector2(0, 0);
-			Vector2[] vector3 = new Vector2[1];
-			vector3[0] = new Vector2(0, 0);
-			// spriteBatch.Draw(texture[0], vector[0][0], Color.White);
-			// spriteBatch.Draw(texture[0], vector[0][1], Color.White);
-			spriteBatch.Draw(texture[0], vector3[0], Color.White);
-			spriteBatch.Draw(texture[0], new Vector2(0,100), Color.White);
+			spriteBatch.Draw(texture[0], vector[0][0], Color.White);
+			spriteBatch.Draw(texture[0], vector[0][1], Color.White);
 		}
 	}
 }
