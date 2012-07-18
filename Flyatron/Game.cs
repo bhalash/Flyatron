@@ -23,9 +23,9 @@ namespace Flyatron
 
 		// Width, height, full screen.
 		// Laptop's native is 1366x768.
-		int gameWidth   = 1024;
-		int gameHeight	 = 600;
-		bool fullScreen = false;
+		int gameWidth   = 1366;
+		int gameHeight	 = 768;
+		bool fullScreen = true;
 		bool showMouse  = true;
 
 		// Test if a key or button has been: 
@@ -215,19 +215,6 @@ namespace Flyatron
 		{
 			alpha.Update(currentKeyboardState, 10);
 
-			if (Keyboard.GetState().IsKeyDown(Keys.W))
-			{
-			}
-			if (Keyboard.GetState().IsKeyDown(Keys.S))
-			{
-			}
-			if (Keyboard.GetState().IsKeyDown(Keys.A))
-			{
-			}
-			if (Keyboard.GetState().IsKeyDown(Keys.D))
-			{
-			}
-
 			first.Update(currentKeyboardState, currentMouseState, new GameTime());
 
 			if (Keypress(Keys.N))
@@ -278,7 +265,12 @@ namespace Flyatron
 
 			if (!debugging)
 				// Playing track.
-				spriteBatch.DrawString(font10, eightBitWeapon.NameTime(), new Vector2(GraphicsDevice.Viewport.X + 25, GraphicsDevice.Viewport.Height - 30), Color.Black);
+				spriteBatch.DrawString(
+					font10, 
+					eightBitWeapon.NameTime(), 
+					new Vector2(GraphicsDevice.Viewport.X + 25, GraphicsDevice.Viewport.Height - 30), 
+					Color.Black
+				);
 
 			if (debugging)
 			{
