@@ -129,17 +129,11 @@ namespace Flyatron
 
 			if (Keypress(Keys.Escape))
 			{
-				// I had to consolidate these two switches here in order to resolve
-				// a bug switching between the menu and the game.
 				if (screen == ScreenState.Play)
 					screen = ScreenState.Menu;
-				if (screen == ScreenState.Menu)
+				else if (screen == ScreenState.Menu)
 					screen = ScreenState.Play;
 			}
-
-			// Player timers should always be ticking away in the background.
-			// (regardless of menu state)
-			a.UpdateTimers(gameTime);
 
 			if (screen == ScreenState.Menu)
 				UpdateMenu();
@@ -239,11 +233,7 @@ namespace Flyatron
 
 		public void Menu()
 		{
-			if (Keypress(Keys.Escape))
-				screen = ScreenState.Play;
-
-			eightBitWeapon.Volume(0.2F);
-
+			eightBitWeapon.Volume(0.5F);
 			int Y = 100;
 
 			string title = "Flyatron";
@@ -270,7 +260,7 @@ namespace Flyatron
 
 		private void Play()
 		{
-			eightBitWeapon.Volume(0.5F);
+			eightBitWeapon.Volume(0.7F);
 
 			if (!debugging)
 				// Playing track.

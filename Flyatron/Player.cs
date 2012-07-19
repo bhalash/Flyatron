@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using Flyatron;
+using System.Diagnostics;
 
 namespace Flyatron
 {
@@ -17,15 +18,10 @@ namespace Flyatron
 		KeyboardState lastKeyboardState, currentKeyboardState;
 		MouseState lastMouseState, currentMouseState;
 
-		int lives;
-		int velocity;
-		int walkingVel;
-		int runningVel;
-
+		// Player speed.
+		int lives, velocity, walkingVel, runningVel;
 		// Player bounds.
-		int xBound;
-		int yBound;
-
+		int xBound, yBound;
 		// Player index. For multiplayer.
 		int index;
 
@@ -37,14 +33,12 @@ namespace Flyatron
 		Keys dash = Keys.Space;
 		Keys teleport = Keys.F;
 
-		// Dash ability.
-		mTimer dashTimer;
-		int dashCooldown = 10;
-		int dashDuration = 4;
+		// Player abilities.
+		Flytimer dashTimer, dashCooldown, teleportCooldown;
 
-		// Teleport ability.
-		mTimer teleportTimer;
-		int teleportCooldown = 15;
+		int dashDuration = 3;
+		int dashCD = 1;
+		int teleportCD = 1;
 
 		enum Boundaries { Warp, Wall };
 		Boundaries boundType;
@@ -72,8 +66,9 @@ namespace Flyatron
 			lives = inputLives;
 			index = inputIndex;
 
-			dashTimer = new mTimer();
-			teleportTimer = new mTimer();
+			dashTimer		  = new Flytimer(dashDuration);
+			dashCooldown	  = new Flytimer(dashCD);
+			teleportCooldown = new Flytimer(teleportCD);
 		}
 
 		public void Update(KeyboardState inputState, MouseState inputMouseState, GameTime inputGameTime)
@@ -82,19 +77,16 @@ namespace Flyatron
 			currentMouseState = inputMouseState;
 
 			if (Keypress(dash))
-				if (dashTimer.Elapsed(dashCooldown))
+				if (dashTimer.Expired())
 				{
-					// Burst of speed and warp across boundaries.
-					dashTimer.Reset();
+					dashTimer.Restart();
 					velocityType = Velocity.Dashing;
 				}
 
 			if (Keypress(teleport))
-				if (teleportTimer.Elapsed(teleportCooldown))
+				if (teleportCooldown.Expired())
 				{
-					// Teleport player to a random location. 
-					// TODO: Make player explode (a la Asteroids).
-					teleportTimer.Reset();
+					teleportCooldown.Restart();
 					Teleport();
 				}
 
@@ -110,12 +102,6 @@ namespace Flyatron
 
 			lastMouseState = currentMouseState;
 			lastKeyboardState = currentKeyboardState;
-		}
-
-		public void UpdateTimers(GameTime inputGameTime)
-		{
-			dashTimer.Update(inputGameTime.ElapsedGameTime);
-			teleportTimer.Update(inputGameTime.ElapsedGameTime);
 		}
 
 		public void Draw(SpriteBatch spriteBatch)
@@ -168,6 +154,10 @@ namespace Flyatron
 					vector.X += velocity;
 		}
 
+		public void UpdateTimers()
+		{
+		}
+
 		private void Warping()
 		{
 			// Up, down, left, right.
@@ -202,7 +192,7 @@ namespace Flyatron
 			velocity = runningVel;
 			boundType = Boundaries.Warp;
 
-			if (dashTimer.Elapsed(dashDuration))
+			if (dashTimer.Expired())
 				velocityType = Velocity.Walking;
 		}
 
@@ -242,8 +232,8 @@ namespace Flyatron
 				"Lives: " + lives,
 				"Velocity: " + velocity,
 				"Bounding: " + boundType,
-				"Sprint: " + dashTimer.Elapsed(dashCooldown),
-				"Teleport: " + teleportTimer.Elapsed(teleportCooldown),
+				"Sprint: " + dashTimer.Expired(),
+				"Teleport: " + teleportCooldown.Expired()
 			};
 
 			for (int i = 0; i < debug.Count; i++)

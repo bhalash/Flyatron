@@ -1,49 +1,73 @@
-﻿using System;
+﻿/*
+ * I am not wholly convinced of the value of wrappering most of the functionality of the Stopwatch class, 
+ * save that it allows me to consolidate a decent amount of code, and expand upon it upon demand.
+ */
+
+using System;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Flyatron;
 
 namespace Flyatron
 {
-	class mTimer
+	class Flytimer
 	{
-		// Kull wahad!
-		// Virtually the simplest timer I could conceive: 
-		// It counts up from 0 continually. Reset can be called as necessary.
+		Stopwatch timer;
+		int limit;
 
-		TimeSpan timer;
-
-		public mTimer()
+		public Flytimer(int inputLimit)
 		{
-			timer = TimeSpan.Zero;
+			limit = inputLimit;
+			timer = new Stopwatch();
 		}
 
-		public void Reset()
+		public void Update()
 		{
-			// Push the reset. 
-			timer = TimeSpan.Zero;
 		}
 
-		public bool Elapsed(double inputTime)
+		public void ChangeLimit(int inputLimit)
 		{
-			if (timer >= TimeSpan.FromSeconds(inputTime))
+			limit = inputLimit * 1000;
+		}
+
+		public void Restart()
+		{
+			timer.Restart();
+		}
+
+		public bool Running()
+		{
+			if (timer.IsRunning)
 				return true;
 
 			return false;
 		}
 
-		public string ReportSeconds()
+		public void Start()
 		{
-			return Convert.ToString(timer.Seconds);
+			timer.Start();
 		}
 
-		public string ReportMilliseconds()
+		public void Stop()
 		{
-			return Convert.ToString(timer.Milliseconds);
+			timer.Stop();
 		}
 
-		public void Update(TimeSpan inputGameTime)
+		public bool Expired()
 		{
-			timer += inputGameTime;
+			if (timer.ElapsedMilliseconds > limit)
+				return true;
+
+			return false;
+		}
+
+		public string Report()
+		{
+			string secs = Convert.ToString(timer.Elapsed.Seconds);
+			string mili = Convert.ToString(timer.Elapsed.Milliseconds);
+			string coln = ":";
+			string comb = secs + coln + mili; 
+			return comb;	
 		}
 	}
 }
