@@ -101,12 +101,8 @@ namespace Flyatron
 					spriteBatch.Draw(texture[i], vector[i][j], Color.White);
 		}
 
-		public void Demo(SpriteBatch spriteBatch, int speed)
+		public void Demo(int speed)
 		{
-			for (int i = 0; i < layers; i++)
-				for (int j = 0; j < 2; j++)
-					spriteBatch.Draw(texture[i], vector[i][j], Color.White);
-
 			// Demo() is intended for use on menu screens. 
 			for (int i = 0; i < layers; i++)
 			{

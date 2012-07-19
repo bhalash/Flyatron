@@ -23,6 +23,7 @@ namespace Flyatron
 
 		// Width, height, full screen.
 		// Laptop's native is 1366x768.
+		// A decent working size for me is 1024x600.
 		int gameWidth   = 1024;
 		int gameHeight	 = 600;
 		bool fullScreen = false;
@@ -43,11 +44,11 @@ namespace Flyatron
 		Muzak eightBitWeapon;
 
 		// Player.
-		Player first;
+		Player a;
 		
 		// Menu state.
 		enum ScreenState
-		{Menu, Play, New, Scores, About};
+		{Menu, Play, New, ScoresScreen, AboutScreen};
 
 		// Backdrop.
 		Texture2D[] alphaTextures;
@@ -104,17 +105,17 @@ namespace Flyatron
 			eightBitWeapon = new Muzak();
 			eightBitWeapon.Play(Content.Load<Song>(playList[0]));
 
-			first.Content(Content.Load<Texture2D>("player\\astronaut"), Color.White);
+			a.Content(Content.Load<Texture2D>("player\\astronaut"), Color.White);
 		}
 
 		protected override void Initialize()
 		{
 			spriteBatch = new SpriteBatch(GraphicsDevice);
 
-			first = new Player();
+			a = new Player();
 
-			first.Bounds(gameWidth, gameHeight);
-			first.Initialize(3, 8, 15, 0);
+			a.Bounds(gameWidth, gameHeight);
+			a.Initialize(3, 8, 15, 0);
 			base.Initialize();
 		}
 
@@ -124,21 +125,32 @@ namespace Flyatron
 
 		protected override void Update(GameTime gameTime)
 		{
-			// Capture current keyboard state.
 			currentKeyboardState = Keyboard.GetState();
 
-			first.UpdateTimers(gameTime);
+			if (Keypress(Keys.Escape))
+			{
+				// I had to consolidate these two switches here in order to resolve
+				// a bug switching between the menu and the game.
+				if (screen == ScreenState.Play)
+					screen = ScreenState.Menu;
+				if (screen == ScreenState.Menu)
+					screen = ScreenState.Play;
+			}
+
+			// Player timers should always be ticking away in the background.
+			// (regardless of menu state)
+			a.UpdateTimers(gameTime);
 
 			if (screen == ScreenState.Menu)
 				UpdateMenu();
 			if (screen == ScreenState.Play)
-				UpdatePlay();
+				UpdatePlayScreen();
 			if (screen == ScreenState.New)
-				New();
-			if (screen == ScreenState.Scores)
-				UpdateAbout();
-			if (screen == ScreenState.About)
-				UpdateScores();
+				NewGame();
+			if (screen == ScreenState.ScoresScreen)
+				UpdateAboutScreenScreen();
+			if (screen == ScreenState.AboutScreen)
+				UpdateScoreScreen();
 		
 			base.Update(gameTime);
 
@@ -151,19 +163,19 @@ namespace Flyatron
 
 			spriteBatch.Begin();
 
-				alpha.Draw(spriteBatch);
+			alpha.Draw(spriteBatch);
 
-				// Draw depending on state.
-				if (screen == ScreenState.Menu)
-					Menu();
-				if (screen == ScreenState.Play)
-					Play();
-				if (screen == ScreenState.New)
-					New();
-				if (screen == ScreenState.Scores)
-					About();
-				if (screen == ScreenState.About)
-					Scores();
+			// Draw depending on state.
+			if (screen == ScreenState.Menu)
+				Menu();
+			if (screen == ScreenState.Play)
+				Play();
+			if (screen == ScreenState.New)
+				NewGame();
+			if (screen == ScreenState.ScoresScreen)
+				AboutScreen();
+			if (screen == ScreenState.AboutScreen)
+				ScoresScreen();
 
 			spriteBatch.End();
 
@@ -183,41 +195,39 @@ namespace Flyatron
 			Random random = new Random();
 			return random.Next(a, b);
 		}
-
+		
 		public void UpdateMenu()
 		{
-			if (Keypress(Keys.Escape))
-				screen = ScreenState.Play;
 			// Menu opts.
 			if (Keypress(Keys.D1))
 				screen = ScreenState.Play;
 			if (Keypress(Keys.D2))
 				screen = ScreenState.New;
 			if (Keypress(Keys.D3))
-				screen = ScreenState.About;
+				screen = ScreenState.AboutScreen;
 			if (Keypress(Keys.D4))
-				screen = ScreenState.Scores;
+				screen = ScreenState.ScoresScreen;
 			if (Keypress(Keys.D5))
 				this.Exit();
 		}
 
-		public void UpdateAbout()
+		public void UpdateAboutScreenScreen()
 		{
 			if (Keypress(Keys.Escape))
 				screen = ScreenState.Menu;
 		}
 
-		public void UpdateScores()
+		public void UpdateScoreScreen()
 		{
 			if (Keypress(Keys.Escape))
 				screen = ScreenState.Menu;
 		}
 
-		public void UpdatePlay()
+		public void UpdatePlayScreen()
 		{
 			alpha.Update(currentKeyboardState, 6);
 
-			first.Update(currentKeyboardState, currentMouseState, new GameTime());
+			a.Update(currentKeyboardState, currentMouseState, new GameTime());
 
 			if (Keypress(Keys.N))
 				eightBitWeapon.Play(Content.Load<Song>(playList[Rng(0, playList.Count - 1)]));
@@ -225,9 +235,6 @@ namespace Flyatron
 				eightBitWeapon.Pause();
 			if (Keypress(Keys.U))
 				eightBitWeapon.Resume();
-
-			if (Keypress(Keys.Escape))
-				screen = ScreenState.Menu;
 		}
 
 		public void Menu()
@@ -246,11 +253,11 @@ namespace Flyatron
 				"Resume Game",
 				"New Game",
 				"High Scores",
-				"About Flyatron",
+				"About",
 				"Exit"
 			};
 
-			alpha.Demo(spriteBatch, 3);
+			alpha.Demo(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
 			// Draw the menu.
@@ -276,33 +283,34 @@ namespace Flyatron
 
 			if (debugging)
 			{
-				first.Debug(font10, spriteBatch, 30, 30);
+				a.Debug(font10, spriteBatch, 30, 30);
 				spriteBatch.DrawString(font10, versionString, new Vector2(30, gameHeight - 30), Color.Black);
 			}
 
-			first.Draw(spriteBatch);
+			a.Draw(spriteBatch);
 		}
 
-		private void New()
+		private void NewGame()
 		{
+			// TODO
 			screen = ScreenState.Play;
 		}
 
-		private void About()
+		private void AboutScreen()
 		{
-			string title = "About Flyatron";
+			string title = "AboutScreen Flyatron";
 
-			alpha.Demo(spriteBatch, 3);
+			alpha.Demo(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
 			spriteBatch.DrawString(font14, "TODO", new Vector2(50, 120), Color.White);
 		}
 
-		private void Scores()
+		private void ScoresScreen()
 		{
 			string title = "Top Scores";
 
-			alpha.Demo(spriteBatch, 3);
+			alpha.Demo(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
 			spriteBatch.DrawString(font14, "TODO", new Vector2(50, 120), Color.White);
