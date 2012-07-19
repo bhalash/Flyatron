@@ -25,9 +25,9 @@ namespace Flyatron
 		// Width, height, full screen.
 		// Laptop's native is 1366x768.
 		// A decent working size for me is 1024x600.
-		int gameWidth   = 1366;
-		int gameHeight	 = 768;
-		bool fullScreen = true;
+		int gameWidth   = 1024;
+		int gameHeight	 = 600;
+		bool fullScreen = false;
 		bool showMouse  = true;
 
 		// Test if a key or button has been: 
@@ -140,7 +140,7 @@ namespace Flyatron
 			}
 
 			if (Keypress(Keys.C))
-				a.OneDown();
+				a.ArbLives(0);
 			if ((a.RemainingLives() <= 0) && (screen == ScreenState.Play))
 				screen = ScreenState.GameOver;
 
@@ -316,16 +316,16 @@ namespace Flyatron
 				spriteBatch.Draw(menuBg, menuVec, color * 0.75F);
 				spriteBatch.DrawString(font25, message, fontVector, color * 0.75F);
 			}
-			if ((deathScreenTimer.ElapsedMilliseconds > 4000) && (deathScreenTimer.ElapsedMilliseconds <= 5000))
+			if (deathScreenTimer.ElapsedMilliseconds > 4000)
 			{
 				spriteBatch.Draw(menuBg, menuVec, color * 1.0F);
 				spriteBatch.DrawString(font25, message, fontVector, color * 1.0F);
 			}
 
-			if ((deathScreenTimer.ElapsedMilliseconds > 5000) || (Keypress(Keys.Escape)))
+			if (Keypress(Keys.Escape))
 			{
 				deathScreenTimer.Reset();
-				screen = ScreenState.ScoresScreen;
+				screen = ScreenState.Menu;
 			}
 		}
 

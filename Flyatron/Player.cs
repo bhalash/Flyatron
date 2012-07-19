@@ -3,8 +3,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
-using Flyatron;
 using System.Diagnostics;
+using Flyatron;
 
 namespace Flyatron
 {
@@ -219,6 +219,11 @@ namespace Flyatron
 		public void OneUp()
 		{
 			lives++;
+		}
+
+		public void ArbLives(int inputLives)
+		{
+			lives = inputLives;
 		}
 
 		private int Rng(int a, int b)
