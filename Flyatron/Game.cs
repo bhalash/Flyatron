@@ -17,7 +17,7 @@ namespace Flyatron
 
 		static double version = 0.1;
 		static string versionString = "Version " + version;
-		bool debug = true;
+		bool debug = false;
 
 		static SpriteBatch spriteBatch;
 		GraphicsDeviceManager graphics;
@@ -25,9 +25,9 @@ namespace Flyatron
 		// Width, height, full screen.
 		// Laptop's native is 1366x768.
 		// A decent working size for me is 1024x600.
-		int gameWidth   = 1024;
-		int gameHeight	 = 600;
-		bool fullScreen = false;
+		int gameWidth   = 1366;
+		int gameHeight	 = 768;
+		bool fullScreen = true;
 		bool showMouse  = true;
 
 		// Test if a key or button has been: 
@@ -108,6 +108,7 @@ namespace Flyatron
 
 			eightBitWeapon = new Muzak();
 			eightBitWeapon.Play(Content.Load<Song>(playList[0]));
+			eightBitWeapon.Pause();
 		}
 
 		protected override void Initialize()
@@ -254,6 +255,10 @@ namespace Flyatron
 			eightBitWeapon.Volume(0.5F);
 			int Y = 100;
 
+			if (a.RemainingLives() == 0)
+				for (int i = 0; i < 3; i++)
+					a.OneUp();
+
 			string title = "Flyatron";
 
 			List<string> opt = new List<string>()
@@ -274,6 +279,14 @@ namespace Flyatron
 				spriteBatch.DrawString(font14, (i + 1) + ". " + opt[i], new Vector2(50, Y), Color.White);
 				Y += 35;
 			}
+
+			if (debug)
+				spriteBatch.DrawString(
+					font10,
+					versionString,
+					new Vector2(gameWidth - 30 - font10.MeasureString(versionString).Length(), gameHeight - 30),
+					Color.White
+				);
 		}
 
 		private void GameOverScreen()
@@ -309,9 +322,9 @@ namespace Flyatron
 				spriteBatch.DrawString(font25, message, fontVector, color * 1.0F);
 			}
 
-			if (deathScreenTimer.ElapsedMilliseconds > 5000)
+			if ((deathScreenTimer.ElapsedMilliseconds > 5000) || (Keypress(Keys.Escape)))
 			{
-				deathScreenTimer.Stop();
+				deathScreenTimer.Reset();
 				screen = ScreenState.ScoresScreen;
 			}
 		}
@@ -321,13 +334,12 @@ namespace Flyatron
 			eightBitWeapon.Volume(0.7F);
 
 			if (!debug)
-				// Playing track.
 				spriteBatch.DrawString(
-					font10, 
-					eightBitWeapon.NameTime(), 
-					new Vector2(GraphicsDevice.Viewport.X + 25, GraphicsDevice.Viewport.Height - 30), 
+					font10,
+					eightBitWeapon.NameTime(),
+					new Vector2(GraphicsDevice.Viewport.X + 25, GraphicsDevice.Viewport.Height - 30),
 					Color.Black
-				);	
+				);
 
 			if (debug)
 			{
@@ -339,13 +351,6 @@ namespace Flyatron
 					new Vector2(30, gameHeight - 30), 
 					Color.Black
 				);
-
-				spriteBatch.DrawString(
-					font10, 
-					versionString,
-					new Vector2(gameWidth - 30 - font10.MeasureString(versionString).Length(), gameHeight - 30),
-				Color.Black
-			);
 			}
 
 			a.Draw(spriteBatch);
