@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System.Collections.Generic;
 using Flyatron;
+using System.Diagnostics;
 
 namespace Flyatron
 {
@@ -16,7 +17,7 @@ namespace Flyatron
 
 		static double version = 0.1;
 		static string versionString = "Version " + version;
-		bool debugging = true;
+		bool debug = true;
 
 		static SpriteBatch spriteBatch;
 		GraphicsDeviceManager graphics;
@@ -48,11 +49,13 @@ namespace Flyatron
 		
 		// Menu state.
 		enum ScreenState
-		{Menu, Play, New, ScoresScreen, AboutScreen};
+		{Menu, Play, New, ScoresScreen, AboutScreen, GameOver};
 
 		// Backdrop.
 		Texture2D[] alphaTextures;
 		Backdrop alpha;
+
+		Stopwatch deathScreenTimer;
 
 		// Music sourced from the chiptunes group "8-Bit Weapon". Used with permission.
 		// Homepage: http://www.8bitweapon.com
@@ -68,7 +71,8 @@ namespace Flyatron
 		// Flyatron should start at the game menu.
 		ScreenState screen = ScreenState.Menu;
 		// Texture for the menu. Declared here since I use it in several places.
-		Texture2D menuBg; Vector2 menuVec;
+		Texture2D menuBg; 
+		Vector2 menuVec;
 
 		public Game()
 		{
@@ -104,18 +108,17 @@ namespace Flyatron
 
 			eightBitWeapon = new Muzak();
 			eightBitWeapon.Play(Content.Load<Song>(playList[0]));
-
-			a.Content(Content.Load<Texture2D>("player\\astronaut"), Color.White);
 		}
 
 		protected override void Initialize()
 		{
 			spriteBatch = new SpriteBatch(GraphicsDevice);
 
-			a = new Player();
+			deathScreenTimer = new Stopwatch();
 
+			a = new Player(3, 8, 15, 0, Content.Load<Texture2D>("player\\astronaut"), Color.White);
 			a.Bounds(gameWidth, gameHeight);
-			a.Initialize(3, 8, 15, 0);
+
 			base.Initialize();
 		}
 
@@ -135,6 +138,11 @@ namespace Flyatron
 					screen = ScreenState.Play;
 			}
 
+			if (Keypress(Keys.C))
+				a.OneDown();
+			if ((a.RemainingLives() <= 0) && (screen == ScreenState.Play))
+				screen = ScreenState.GameOver;
+
 			if (screen == ScreenState.Menu)
 				UpdateMenu();
 			if (screen == ScreenState.Play)
@@ -145,6 +153,8 @@ namespace Flyatron
 				UpdateAboutScreenScreen();
 			if (screen == ScreenState.AboutScreen)
 				UpdateScoreScreen();
+			if (screen == ScreenState.GameOver)
+				UpdateDeathScreen();
 		
 			base.Update(gameTime);
 
@@ -163,13 +173,15 @@ namespace Flyatron
 			if (screen == ScreenState.Menu)
 				Menu();
 			if (screen == ScreenState.Play)
-				Play();
+				Play(gameTime);
 			if (screen == ScreenState.New)
 				NewGame();
 			if (screen == ScreenState.ScoresScreen)
-				AboutScreen();
-			if (screen == ScreenState.AboutScreen)
 				ScoresScreen();
+			if (screen == ScreenState.AboutScreen)
+				AboutScreen();
+			if (screen == ScreenState.GameOver)
+				GameOverScreen();
 
 			spriteBatch.End();
 
@@ -206,6 +218,12 @@ namespace Flyatron
 		}
 
 		public void UpdateAboutScreenScreen()
+		{
+			if (Keypress(Keys.Escape))
+				screen = ScreenState.Menu;
+		}
+
+		public void UpdateDeathScreen()
 		{
 			if (Keypress(Keys.Escape))
 				screen = ScreenState.Menu;
@@ -258,23 +276,76 @@ namespace Flyatron
 			}
 		}
 
-		private void Play()
+		private void GameOverScreen()
+		{
+			if (!deathScreenTimer.IsRunning)
+				deathScreenTimer.Start();
+
+			string message = "GAME OVER";
+
+			alpha.Demo(3);
+
+			Vector2 fontVector = new Vector2(gameWidth / 2 - font25.MeasureString(message).Length() / 2, gameHeight / 2 - 25);
+			Color color = Color.White;
+
+			if ((deathScreenTimer.ElapsedMilliseconds > 1000) && (deathScreenTimer.ElapsedMilliseconds <= 2000))
+			{
+				spriteBatch.Draw(menuBg, menuVec, color * 0.25F);
+				spriteBatch.DrawString(font25, message, fontVector, color * 0.25F);
+			}
+			if ((deathScreenTimer.ElapsedMilliseconds > 2000) && (deathScreenTimer.ElapsedMilliseconds <= 3000))
+			{
+				spriteBatch.Draw(menuBg, menuVec, color * 0.5F);
+				spriteBatch.DrawString(font25, message, fontVector, color * 0.5F);
+			}
+			if ((deathScreenTimer.ElapsedMilliseconds > 3000) && (deathScreenTimer.ElapsedMilliseconds <= 4000))
+			{
+				spriteBatch.Draw(menuBg, menuVec, color * 0.75F);
+				spriteBatch.DrawString(font25, message, fontVector, color * 0.75F);
+			}
+			if ((deathScreenTimer.ElapsedMilliseconds > 4000) && (deathScreenTimer.ElapsedMilliseconds <= 5000))
+			{
+				spriteBatch.Draw(menuBg, menuVec, color * 1.0F);
+				spriteBatch.DrawString(font25, message, fontVector, color * 1.0F);
+			}
+
+			if (deathScreenTimer.ElapsedMilliseconds > 5000)
+			{
+				deathScreenTimer.Stop();
+				screen = ScreenState.ScoresScreen;
+			}
+		}
+
+		private void Play(GameTime gameTime)
 		{
 			eightBitWeapon.Volume(0.7F);
 
-			if (!debugging)
+			if (!debug)
 				// Playing track.
 				spriteBatch.DrawString(
 					font10, 
 					eightBitWeapon.NameTime(), 
 					new Vector2(GraphicsDevice.Viewport.X + 25, GraphicsDevice.Viewport.Height - 30), 
 					Color.Black
+				);	
+
+			if (debug)
+			{
+				a.Debug(font10, spriteBatch);
+
+				spriteBatch.DrawString(
+					font10, 
+					Convert.ToString(gameTime.TotalGameTime), 
+					new Vector2(30, gameHeight - 30), 
+					Color.Black
 				);
 
-			if (debugging)
-			{
-				a.Debug(font10, spriteBatch, 30, 30);
-				spriteBatch.DrawString(font10, versionString, new Vector2(30, gameHeight - 30), Color.Black);
+				spriteBatch.DrawString(
+					font10, 
+					versionString,
+					new Vector2(gameWidth - 30 - font10.MeasureString(versionString).Length(), gameHeight - 30),
+				Color.Black
+			);
 			}
 
 			a.Draw(spriteBatch);
@@ -288,7 +359,7 @@ namespace Flyatron
 
 		private void AboutScreen()
 		{
-			string title = "AboutScreen Flyatron";
+			string title = "About Flyatron";
 
 			alpha.Demo(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);

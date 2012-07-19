@@ -26,19 +26,19 @@ namespace Flyatron
 		int index;
 
 		// Default keys are WSAD, but are changable via Rebind().
-		Keys up = Keys.W;
-		Keys down = Keys.S;
-		Keys left = Keys.A;
-		Keys right = Keys.D;
-		Keys dash = Keys.Space;
-		Keys teleport = Keys.F;
+		Keys up				= Keys.W;
+		Keys down		= Keys.S;
+		Keys left		= Keys.A;
+		Keys right		= Keys.D;
+		Keys dash		= Keys.Space;
+		Keys teleport	= Keys.F;
 
 		// Player abilities.
-		Flytimer dashTimer, dashCooldown, teleportCooldown;
+		Stopwatch dashTimer, dashCooldown, teleportCooldown;
 
-		int dashDuration = 3;
-		int dashCD = 1;
-		int teleportCD = 1;
+		int dashDur		= 3000;
+		int dashCD		= 5000;
+		int teleportCD	= 5000;
 
 		enum Boundaries { Warp, Wall };
 		Boundaries boundType;
@@ -46,19 +46,12 @@ namespace Flyatron
 		enum Velocity { Walking, Dashing };
 		Velocity velocityType;
 
-		public Player()
-		{
-		}
-
-		public void Content(Texture2D inputTexture, Color inputTint)
+		public Player(int inputLives, int inputVelocity, int inputDashVelocity, int inputIndex, Texture2D inputTexture, Color inputTint)
 		{
 			// Input art: Texture, vector, and tint.
 			texture = inputTexture;
 			tint = inputTint;
-		}
 
-		public void Initialize(int inputLives, int inputVelocity, int inputDashVelocity, int inputIndex)
-		{
 			// Player stats: Walking speed, runningVel speed, lives, and index.
 			runningVel = inputDashVelocity;
 			walkingVel = inputVelocity;
@@ -66,9 +59,12 @@ namespace Flyatron
 			lives = inputLives;
 			index = inputIndex;
 
-			dashTimer		  = new Flytimer(dashDuration);
-			dashCooldown	  = new Flytimer(dashCD);
-			teleportCooldown = new Flytimer(teleportCD);
+			dashTimer = new Stopwatch();
+			dashCooldown = new Stopwatch();
+			teleportCooldown = new Stopwatch();
+
+			dashCooldown.Start();
+			teleportCooldown.Start();
 		}
 
 		public void Update(KeyboardState inputState, MouseState inputMouseState, GameTime inputGameTime)
@@ -77,14 +73,14 @@ namespace Flyatron
 			currentMouseState = inputMouseState;
 
 			if (Keypress(dash))
-				if (dashTimer.Expired())
+				if (dashCooldown.ElapsedMilliseconds > dashCD)
 				{
-					dashTimer.Restart();
+					dashCooldown.Restart();
 					velocityType = Velocity.Dashing;
 				}
 
 			if (Keypress(teleport))
-				if (teleportCooldown.Expired())
+				if (teleportCooldown.ElapsedMilliseconds > teleportCD)
 				{
 					teleportCooldown.Restart();
 					Teleport();
@@ -92,7 +88,7 @@ namespace Flyatron
 
 			if (velocityType == Velocity.Walking)
 				PlayerWalking();
-			if (velocityType == Velocity.Dashing)
+			else if (velocityType == Velocity.Dashing)
 				PlayerDashing();
 
 			if (boundType == Boundaries.Wall)
@@ -154,10 +150,6 @@ namespace Flyatron
 					vector.X += velocity;
 		}
 
-		public void UpdateTimers()
-		{
-		}
-
 		private void Warping()
 		{
 			// Up, down, left, right.
@@ -192,7 +184,9 @@ namespace Flyatron
 			velocity = runningVel;
 			boundType = Boundaries.Warp;
 
-			if (dashTimer.Expired())
+			dashTimer.Restart();
+
+			if (dashTimer.ElapsedMilliseconds > 1000)
 				velocityType = Velocity.Walking;
 		}
 
@@ -212,15 +206,33 @@ namespace Flyatron
 			return false;
 		}
 
-		public int Rng(int a, int b)
+		public int RemainingLives()
+		{
+			return lives;
+		}
+
+		public void OneDown()
+		{
+			lives--;
+		}
+
+		public void OneUp()
+		{
+			lives++;
+		}
+
+		private int Rng(int a, int b)
 		{
 			Random random = new Random();
 			return random.Next(a, b);
 		}
 
 		// Debugging information.
-		public void Debug(SpriteFont font, SpriteBatch spriteBatch, int x, int y)
+		public void Debug(SpriteFont font, SpriteBatch spriteBatch)
 		{
+			int x = 30;
+			int y = 30;
+
 			List<string> debug = new List<string>()
 			{
 				// Put 170.X between duplicate debug panels.
@@ -232,8 +244,6 @@ namespace Flyatron
 				"Lives: " + lives,
 				"Velocity: " + velocity,
 				"Bounding: " + boundType,
-				"Sprint: " + dashTimer.Expired(),
-				"Teleport: " + teleportCooldown.Expired()
 			};
 
 			for (int i = 0; i < debug.Count; i++)
