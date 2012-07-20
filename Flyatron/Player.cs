@@ -33,9 +33,6 @@ namespace Flyatron
 		Keys dash		= Keys.Space;
 		Keys teleport	= Keys.F;
 
-		enum Boundaries { Warp, Wall };
-		Boundaries boundType;
-
 		enum Velocity { Walking, Dashing };
 		Velocity velocityType = Velocity.Walking;
 
@@ -58,31 +55,21 @@ namespace Flyatron
 			currentKeyboardState = inputState;
 			currentMouseState = inputMouseState;
 
-			/*
-			if (Keypress(dash))
-				if (dashCooldown.ElapsedMilliseconds > dashCD)
-				{
-					dashCooldown.Restart();
-					velocityType = Velocity.Dashing;
-				}
+			if (vector.X > 0)
+				if (currentKeyboardState.IsKeyDown(left))
+					vector.X -= velocity;
 
-			if (Keypress(teleport))
-				if (teleportCooldown.ElapsedMilliseconds > teleportCD)
-				{
-					teleportCooldown.Restart();
-					Teleport();
-				}
-			 */
+			if (vector.Y > 0)
+				if (currentKeyboardState.IsKeyDown(up))
+					vector.Y -= velocity;
 
-			if (velocityType == Velocity.Walking)
-				PlayerWalking();
-			else if (velocityType == Velocity.Dashing)
-				PlayerDashing();
+			if (vector.X + texture.Width < xBound)
+				if (currentKeyboardState.IsKeyDown(right))
+					vector.X += velocity;
 
-			if (boundType == Boundaries.Wall)
-				Walled();
-			if (boundType == Boundaries.Warp)
-				Warping();
+			if (vector.Y + texture.Height < yBound)
+				if (currentKeyboardState.IsKeyDown(down))
+					vector.Y += velocity;
 
 			lastMouseState = currentMouseState;
 			lastKeyboardState = currentKeyboardState;
@@ -116,66 +103,6 @@ namespace Flyatron
 			down = inputDown;
 			left = inputLeft;
 			right = inputRight;
-		}
-
-		private void Walled()
-		{
-			// If Walled, do not allow the player to go beyond screen bounds.
-			if (vector.X > 0)
-				if (currentKeyboardState.IsKeyDown(left))
-					vector.X -= velocity;
-
-			if (vector.Y > 0)
-				if (currentKeyboardState.IsKeyDown(up))
-					vector.Y -= velocity;
-
-			if (vector.X + texture.Width < xBound)
-				if (currentKeyboardState.IsKeyDown(right))
-					vector.X += velocity;
-
-			if (vector.Y + texture.Height < yBound)
-				if (currentKeyboardState.IsKeyDown(down))
-					vector.Y += velocity;
-		}
-
-		private void Warping()
-		{
-			// Up, down, left, right.
-			if (currentKeyboardState.IsKeyDown(up))
-				vector.Y -= velocity;
-			if (currentKeyboardState.IsKeyDown(down))
-				vector.Y += velocity;
-			if (currentKeyboardState.IsKeyDown(left))
-				vector.X -= velocity;
-			if (currentKeyboardState.IsKeyDown(right))
-				vector.X += velocity;
-
-			// If Warp, warp the player to the opposite side of the screen.
-			if (vector.X + texture.Width < 0)
-				vector.X = xBound;
-			if (vector.X > xBound)
-				vector.X = 0 - texture.Width;
-			if (vector.Y + texture.Height < 0)
-				vector.Y = yBound;
-			if (vector.Y > yBound)
-				vector.Y = 0 - texture.Height;
-		}
-
-		private void PlayerWalking()
-		{
-			velocity = walkingVel;
-			boundType = Boundaries.Wall;
-		}
-
-		private void PlayerDashing()
-		{
-			velocity = runningVel;
-			boundType = Boundaries.Warp;
-
-			/*
-			if (dashTimer.ElapsedMilliseconds > 1000)
-				velocityType = Velocity.Walking;
-			 */
 		}
 
 		private void Teleport()
@@ -234,7 +161,6 @@ namespace Flyatron
 				"Height: " + texture.Height,
 				"Lives: " + lives,
 				"Velocity: " + velocity,
-				"Bounding: " + boundType,
 			};
 
 			for (int i = 0; i < debug.Count; i++)

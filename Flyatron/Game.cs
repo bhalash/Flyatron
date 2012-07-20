@@ -28,7 +28,7 @@ namespace Flyatron
 		int gameWidth   = 1024;
 		int gameHeight	 = 600;
 		bool fullScreen = false;
-		bool showMouse  = true;
+		bool showMouse  = false;
 
 		// Test if a key or button has been: 
 		KeyboardState lastKeyboardState, currentKeyboardState;
@@ -49,6 +49,7 @@ namespace Flyatron
 
 		// Score
 		Scoreboard scores;
+		string scoreFile = "scores.txt";
 		
 		// Menu state.
 		enum ScreenState
@@ -76,6 +77,11 @@ namespace Flyatron
 		// Texture for the menu. Declared here since I use it in several places.
 		Texture2D menuBg; 
 		Vector2 menuVec;
+
+		// Custom mouse texture.
+		Texture2D mouse;
+		Vector2 mousePos;
+		MouseState mouseState;
 
 		public Game()
 		{
@@ -122,8 +128,8 @@ namespace Flyatron
 
 			a = new Player(3, 8, 15, 0, Content.Load<Texture2D>("player\\astronaut"), Color.White);
 			a.Bounds(gameWidth, gameHeight);
-
-			scores = new Scoreboard("scores.txt");
+			mouse = Content.Load<Texture2D>("pointer");
+			scores = new Scoreboard(scoreFile);
 
 			base.Initialize();
 		}
@@ -135,6 +141,9 @@ namespace Flyatron
 		protected override void Update(GameTime gameTime)
 		{
 			currentKeyboardState = Keyboard.GetState();
+			currentMouseState = Mouse.GetState();
+
+			UpdateMouse();
 
 			if (Keypress(Keys.Escape))
 			{
@@ -145,7 +154,10 @@ namespace Flyatron
 			}
 
 			if (Keypress(Keys.C))
+			{
+				scores.Debug();
 				a.ZeroLives();
+			}
 			if ((a.RemainingLives() <= 0) && (screen == ScreenState.Play))
 				screen = ScreenState.GameOver;
 
@@ -160,10 +172,11 @@ namespace Flyatron
 			if (screen == ScreenState.AboutScreen)
 				UpdateScoreScreen();
 			if (screen == ScreenState.GameOver)
-				UpdateDeathScreen();
+				UpdateGameOverScreen();
 		
 			base.Update(gameTime);
 
+			lastMouseState = currentMouseState;
 			lastKeyboardState = currentKeyboardState;
 		}
 
@@ -172,7 +185,6 @@ namespace Flyatron
 			GraphicsDevice.Clear(Color.CornflowerBlue);
 
 			spriteBatch.Begin();
-
 			alpha.Draw(spriteBatch);
 
 			// Draw depending on state.
@@ -216,11 +228,14 @@ namespace Flyatron
 			if (Keypress(Keys.D2))
 				screen = ScreenState.New;
 			if (Keypress(Keys.D3))
-				screen = ScreenState.AboutScreen;
-			if (Keypress(Keys.D4))
 				screen = ScreenState.ScoresScreen;
+			if (Keypress(Keys.D4))
+				screen = ScreenState.AboutScreen;
 			if (Keypress(Keys.D5))
+			{
+				scores.Export(scoreFile);
 				this.Exit();
+			}
 		}
 
 		private void UpdateAboutScreenScreen()
@@ -229,10 +244,13 @@ namespace Flyatron
 				screen = ScreenState.Menu;
 		}
 
-		private void UpdateDeathScreen()
+		private void UpdateGameOverScreen()
 		{
 			if (Keypress(Keys.Escape))
+			{
+				scores.Collate();
 				screen = ScreenState.Menu;
+			}
 		}
 
 		private void UpdateScoreScreen()
@@ -244,6 +262,7 @@ namespace Flyatron
 		private void UpdatePlayScreen()
 		{
 			alpha.Update(currentKeyboardState, 6);
+			scores.Increment();
 			a.Update(currentKeyboardState, currentMouseState, new GameTime());
 
 			if (Keypress(Keys.N))
@@ -257,10 +276,9 @@ namespace Flyatron
 		private void Play(GameTime gameTime)
 		{
 			eightBitWeapon.Volume(0.7F);
-
 			HUD(gameTime);
-
 			a.Draw(spriteBatch);
+			spriteBatch.Draw(mouse, mousePos, Color.White);
 		}
 
 		private void Menu()
@@ -384,14 +402,30 @@ namespace Flyatron
 			}
 		}
 
+		private void UpdateMouse()
+		{
+			mouseState = Mouse.GetState();
+			mousePos.X = mouseState.X;
+			mousePos.Y = mouseState.Y;
+
+			// Restrict the Mouse so that it stays inside the current display
+			if (mousePos.X < 0)
+				mousePos.X = 0;
+			if (mousePos.X > gameWidth)
+				mousePos.X = gameWidth;
+			if (mousePos.Y < 0)
+				mousePos.Y = 0;
+			if (mousePos.Y > gameHeight)
+				mousePos.Y = gameHeight;
+		}
+
 		private void NewGame()
 		{
 			// NewGame() should run once, in one pass. 
 			// Set up the sprites, reset the appropriate counters. 
 			// Thereafter, switch to ScreenState.Play.
 
-			// if (!deathScreenTimer.IsRunning)
-				// scoreTimer.Start();
+			scores.Reset();
 
 			screen = ScreenState.Play;
 		}
@@ -403,7 +437,7 @@ namespace Flyatron
 			alpha.Demo(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
-			spriteBatch.DrawString(font14, "TODO", new Vector2(50, 120), Color.White);
+			spriteBatch.DrawString(font10, "Dedicated to Caira and Garrett.", new Vector2(50, 120), Color.White);
 		}
 
 		private void ScoresScreen()
@@ -413,7 +447,7 @@ namespace Flyatron
 			alpha.Demo(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
-			spriteBatch.DrawString(font14, "TODO", new Vector2(50, 120), Color.White);
+			scores.Report(font14, spriteBatch, 55, 100, Color.White);
 		}
 	}
 }
