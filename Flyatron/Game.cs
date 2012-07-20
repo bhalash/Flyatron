@@ -46,6 +46,9 @@ namespace Flyatron
 
 		// Player.
 		Player a;
+
+		// Score
+		Scoreboard scores;
 		
 		// Menu state.
 		enum ScreenState
@@ -120,6 +123,8 @@ namespace Flyatron
 			a = new Player(3, 8, 15, 0, Content.Load<Texture2D>("player\\astronaut"), Color.White);
 			a.Bounds(gameWidth, gameHeight);
 
+			scores = new Scoreboard("scores.txt");
+
 			base.Initialize();
 		}
 
@@ -140,7 +145,7 @@ namespace Flyatron
 			}
 
 			if (Keypress(Keys.C))
-				a.ArbLives(0);
+				a.ZeroLives();
 			if ((a.RemainingLives() <= 0) && (screen == ScreenState.Play))
 				screen = ScreenState.GameOver;
 
@@ -197,13 +202,13 @@ namespace Flyatron
 			return false;
 		}
 
-		public int Rng(int a, int b)
+		private int Rng(int a, int b)
 		{
 			Random random = new Random();
 			return random.Next(a, b);
 		}
-		
-		public void UpdateMenu()
+
+		private void UpdateMenu()
 		{
 			// Menu opts.
 			if (Keypress(Keys.D1))
@@ -218,28 +223,27 @@ namespace Flyatron
 				this.Exit();
 		}
 
-		public void UpdateAboutScreenScreen()
+		private void UpdateAboutScreenScreen()
 		{
 			if (Keypress(Keys.Escape))
 				screen = ScreenState.Menu;
 		}
 
-		public void UpdateDeathScreen()
+		private void UpdateDeathScreen()
 		{
 			if (Keypress(Keys.Escape))
 				screen = ScreenState.Menu;
 		}
 
-		public void UpdateScoreScreen()
+		private void UpdateScoreScreen()
 		{
 			if (Keypress(Keys.Escape))
 				screen = ScreenState.Menu;
 		}
 
-		public void UpdatePlayScreen()
+		private void UpdatePlayScreen()
 		{
 			alpha.Update(currentKeyboardState, 6);
-
 			a.Update(currentKeyboardState, currentMouseState, new GameTime());
 
 			if (Keypress(Keys.N))
@@ -250,14 +254,23 @@ namespace Flyatron
 				eightBitWeapon.Resume();
 		}
 
-		public void Menu()
+		private void Play(GameTime gameTime)
+		{
+			eightBitWeapon.Volume(0.7F);
+
+			HUD(gameTime);
+
+			a.Draw(spriteBatch);
+		}
+
+		private void Menu()
 		{
 			eightBitWeapon.Volume(0.5F);
 			int Y = 100;
 
 			if (a.RemainingLives() == 0)
 				for (int i = 0; i < 3; i++)
-					a.OneUp();
+					a.Lives(3);
 
 			string title = "Flyatron";
 
@@ -329,36 +342,57 @@ namespace Flyatron
 			}
 		}
 
-		private void Play(GameTime gameTime)
+		private void HUD(GameTime gameTime)
 		{
-			eightBitWeapon.Volume(0.7F);
+			int y = 30;
 
-			if (!debug)
+			List<string> hud = new List<string>()
+			{
+				"Score: " + Convert.ToString(scores.Current()),
+				"Lives: " + Convert.ToString(a.RemainingLives())
+			};
+
+			for (int i = 0; i < hud.Count; i++)
+			{
 				spriteBatch.DrawString(
-					font10,
-					eightBitWeapon.NameTime(),
-					new Vector2(GraphicsDevice.Viewport.X + 25, GraphicsDevice.Viewport.Height - 30),
+					font14,
+					hud[i],
+					new Vector2(30, y),
 					Color.Black
 				);
+
+				y += 30;
+			}
+
+			spriteBatch.DrawString(
+				font10,
+				eightBitWeapon.NameTime(),
+				new Vector2(GraphicsDevice.Viewport.X + 25, GraphicsDevice.Viewport.Height - 30),
+				Color.Black
+			);
 
 			if (debug)
 			{
 				a.Debug(font10, spriteBatch);
 
 				spriteBatch.DrawString(
-					font10, 
-					Convert.ToString(gameTime.TotalGameTime), 
-					new Vector2(30, gameHeight - 30), 
+					font10,
+					Convert.ToString(gameTime.TotalGameTime),
+					new Vector2(30, gameHeight - 30),
 					Color.Black
 				);
 			}
-
-			a.Draw(spriteBatch);
 		}
 
 		private void NewGame()
 		{
-			// TODO
+			// NewGame() should run once, in one pass. 
+			// Set up the sprites, reset the appropriate counters. 
+			// Thereafter, switch to ScreenState.Play.
+
+			// if (!deathScreenTimer.IsRunning)
+				// scoreTimer.Start();
+
 			screen = ScreenState.Play;
 		}
 

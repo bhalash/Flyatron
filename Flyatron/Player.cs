@@ -26,25 +26,18 @@ namespace Flyatron
 		int index;
 
 		// Default keys are WSAD, but are changable via Rebind().
-		Keys up				= Keys.W;
+		Keys up			= Keys.W;
 		Keys down		= Keys.S;
 		Keys left		= Keys.A;
 		Keys right		= Keys.D;
 		Keys dash		= Keys.Space;
 		Keys teleport	= Keys.F;
 
-		// Player abilities.
-		Stopwatch dashTimer, dashCooldown, teleportCooldown;
-
-		int dashDur		= 3000;
-		int dashCD		= 5000;
-		int teleportCD	= 5000;
-
 		enum Boundaries { Warp, Wall };
 		Boundaries boundType;
 
 		enum Velocity { Walking, Dashing };
-		Velocity velocityType;
+		Velocity velocityType = Velocity.Walking;
 
 		public Player(int inputLives, int inputVelocity, int inputDashVelocity, int inputIndex, Texture2D inputTexture, Color inputTint)
 		{
@@ -58,13 +51,6 @@ namespace Flyatron
 			velocity = walkingVel;
 			lives = inputLives;
 			index = inputIndex;
-
-			dashTimer = new Stopwatch();
-			dashCooldown = new Stopwatch();
-			teleportCooldown = new Stopwatch();
-
-			dashCooldown.Start();
-			teleportCooldown.Start();
 		}
 
 		public void Update(KeyboardState inputState, MouseState inputMouseState, GameTime inputGameTime)
@@ -72,6 +58,7 @@ namespace Flyatron
 			currentKeyboardState = inputState;
 			currentMouseState = inputMouseState;
 
+			/*
 			if (Keypress(dash))
 				if (dashCooldown.ElapsedMilliseconds > dashCD)
 				{
@@ -85,6 +72,7 @@ namespace Flyatron
 					teleportCooldown.Restart();
 					Teleport();
 				}
+			 */
 
 			if (velocityType == Velocity.Walking)
 				PlayerWalking();
@@ -141,13 +129,13 @@ namespace Flyatron
 				if (currentKeyboardState.IsKeyDown(up))
 					vector.Y -= velocity;
 
-			if (vector.Y + texture.Height < yBound)
-				if (currentKeyboardState.IsKeyDown(down))
-					vector.Y += velocity;
-
 			if (vector.X + texture.Width < xBound)
 				if (currentKeyboardState.IsKeyDown(right))
 					vector.X += velocity;
+
+			if (vector.Y + texture.Height < yBound)
+				if (currentKeyboardState.IsKeyDown(down))
+					vector.Y += velocity;
 		}
 
 		private void Warping()
@@ -184,10 +172,10 @@ namespace Flyatron
 			velocity = runningVel;
 			boundType = Boundaries.Warp;
 
-			dashTimer.Restart();
-
+			/*
 			if (dashTimer.ElapsedMilliseconds > 1000)
 				velocityType = Velocity.Walking;
+			 */
 		}
 
 		private void Teleport()
@@ -197,6 +185,24 @@ namespace Flyatron
 			vector.Y = Rng(0, yBound - 50);
 		}
 
+		public int RemainingLives()
+		{
+			return lives;
+		}
+
+		public void Lives(int inputLives)
+		{
+			if (inputLives > 0)
+				lives += inputLives;
+			if (inputLives < 0)
+				lives -= inputLives;
+		}
+
+		public void ZeroLives()
+		{
+			lives = 0;
+		}
+
 		// Helpers.
 		private bool Keypress(Keys inputKey)
 		{
@@ -204,26 +210,6 @@ namespace Flyatron
 				return true;
 
 			return false;
-		}
-
-		public int RemainingLives()
-		{
-			return lives;
-		}
-
-		public void OneDown()
-		{
-			lives--;
-		}
-
-		public void OneUp()
-		{
-			lives++;
-		}
-
-		public void ArbLives(int inputLives)
-		{
-			lives = inputLives;
 		}
 
 		private int Rng(int a, int b)
