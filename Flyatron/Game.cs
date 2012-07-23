@@ -25,9 +25,9 @@ namespace Flyatron
 		// Width, height, full screen.
 		// Laptop's native is 1366x768.
 		// A decent working size for me is 1024x600.
-		int gameWidth = 1024;
-		int gameHeight = 600;
-		bool fullScreen = false;
+		int gameWidth = 1366;
+		int gameHeight = 768;
+		bool fullScreen = true;
 		bool showMouse = false;
 
 		// Test if a key or button has been: 

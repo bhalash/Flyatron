@@ -66,7 +66,7 @@ namespace Flyatron
 		private void Dummy(string path)
 		{
 			using (StreamWriter file = new StreamWriter(path, true))
-				for (int i = 999999; i > 0; i -= 10000)
+				for (int i = 999; i > 0; i -= 111)
 					file.WriteLine(i);
 		}
 
@@ -75,7 +75,6 @@ namespace Flyatron
 			// Collate combines the current score along with the top 10 scores.
 			// It then sorts this list, and overwrites the saved scores with the
 			// new top ten scores.
-
 			scores.Add(score);
 			scores.Sort();
 			scores.RemoveAt(0);
