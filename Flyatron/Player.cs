@@ -48,6 +48,7 @@ namespace Flyatron
 		float gunRotation  = 0;
 
 		Stopwatch flamesTimer = new Stopwatch();
+		Stopwatch bobTimer = new Stopwatch();
 
 		// Initialize player animation data.
 		int[] frames = new int[]
@@ -77,10 +78,11 @@ namespace Flyatron
 
 			vectors = new Vector2[]
 			{		
-				new Vector2(117.5F,117.5F), // Head.
-				new Vector2(100,100),		 // Body.
-				new Vector2(117.5F, 145),	 // Gun.
-				new Vector2(106, 154)		 // Flames.
+				// Vectors should be updated relative to the body.
+				new Vector2(400 + 17.5F, 300 + 17.5F),
+				new Vector2(400, 300),
+				new Vector2(400 + 17.5F, 300 + 45),
+				new Vector2(400 + 6, 300 + 54)
 			};
 
 			rectangles = new Rectangle[]
@@ -102,10 +104,10 @@ namespace Flyatron
 			currentKeyboardState = inputState;
 			currentMouseState = inputMouseState;
 
-			UpdateBody(currentMouseState);
-			UpdateGun(currentMouseState);
-			UpdateHead(currentMouseState);
-			UpdateFlames();
+			UpdateBodyAnimation(currentMouseState);
+			UpdateGunAnimation(currentMouseState);
+			UpdateHeadAnimation(currentMouseState);
+			UpdateFlamesAnimation();
 
 			if (vectors[1].X > 0)
 				if (currentKeyboardState.IsKeyDown(left))
@@ -117,7 +119,7 @@ namespace Flyatron
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].Y -= velocity;
 			Vector2 blah = new Vector2(0, 0);
-			if (vectors[1].X  + textures[1].Width < xBound)
+			if (vectors[1].X + 35 < xBound)
 				if (currentKeyboardState.IsKeyDown(right))
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].X += velocity;
@@ -207,7 +209,7 @@ namespace Flyatron
 			return random.Next(a, b);
 		}
 
-		private void UpdateHead(MouseState mouse)
+		private void UpdateHeadAnimation(MouseState mouse)
 		{
 			Vector2 mouseLoc = new Vector2(mouse.X, mouse.Y);
 
@@ -229,7 +231,7 @@ namespace Flyatron
 			}
 		}
 
-		private void UpdateGun(MouseState mouse)
+		private void UpdateGunAnimation(MouseState mouse)
 		{
 			Vector2 mouseLoc = new Vector2(mouse.X, mouse.Y);
 
@@ -251,7 +253,7 @@ namespace Flyatron
 			}
 		}
 
-		private void UpdateBody(MouseState mouse)
+		private void UpdateBodyAnimation(MouseState mouse)
 		{
 			if (mouse.X < vectors[1].X)
 			{
@@ -263,7 +265,7 @@ namespace Flyatron
 			}
 		}
 
-		private void UpdateFlames()
+		private void UpdateFlamesAnimation()
 		{
 			if ((flamesTimer.ElapsedMilliseconds >= 0) && (flamesTimer.ElapsedMilliseconds < 300))
 				rectangles[3] = new Rectangle(52, 0, frames[6], frames[7]);

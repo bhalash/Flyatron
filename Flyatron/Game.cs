@@ -30,6 +30,12 @@ namespace Flyatron
 		bool fullScreen = true;
 		bool showMouse = false;
 
+		// Another gloabally used variable. 
+		// This is the default movement velocity of any sprite.
+		float velocity; 
+
+		Mine mine;
+
 		// Test if a key or button has been: 
 		KeyboardState lastKeyboardState, currentKeyboardState;
 		MouseState lastMouseState, currentMouseState;
@@ -47,6 +53,9 @@ namespace Flyatron
 		// Player.
 		Player a;
 		Texture2D[] playerTextures;
+
+		// Mines.
+		Texture2D[] mineTextures;
 
 		// Score
 		Scoreboard scores;
@@ -138,11 +147,20 @@ namespace Flyatron
 				Content.Load<Texture2D>("player\\flames")
 			};
 
+			mineTextures = new Texture2D[]
+			{
+				Content.Load<Texture2D>("mine\\core"),
+				Content.Load<Texture2D>("mine\\spikes")
+			};
+
 			// Initialize SpriteBatch.
 			spriteBatch = new SpriteBatch(GraphicsDevice);
 
 			// Load timers.
 			deathScreenTimer = new Stopwatch();
+
+			// Initialize demonstration mine.
+			mine = new Mine(mineTextures);
 
 			// Load player art/stats.
 			a = new Player(3, 8, 15, 0, Color.White, playerTextures);
@@ -231,7 +249,6 @@ namespace Flyatron
 				screen = ScreenState.AboutScreen;
 			if (Keypress(Keys.D5))
 			{
-				scores.Export(scoreFile);
 				this.Exit();
 			}
 		}
@@ -259,6 +276,7 @@ namespace Flyatron
 
 		private void UpdatePlayScreen()
 		{
+			mine.Update();
 			alpha.Update(currentKeyboardState, 6);
 			scores.Increment();
 			a.Update(currentKeyboardState, currentMouseState, new GameTime());
@@ -276,6 +294,8 @@ namespace Flyatron
 			eightBitWeapon.Volume(0.7F);
 			HUD(gameTime);
 			a.Draw(spriteBatch);
+			// Draw mine. Debug. 
+			mine.Draw(spriteBatch);
 			spriteBatch.Draw(mouse, mousePos, Color.White);
 		}
 
@@ -432,7 +452,7 @@ namespace Flyatron
 			alpha.Demo(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
-			spriteBatch.DrawString(font10, "Dedicated to Caira and Garrett.", new Vector2(50, 120), Color.White);
+			spriteBatch.DrawString(font10, "Dedicated to Ciara and Garrett.", new Vector2(50, 120), Color.White);
 		}
 
 		private void ScoresScreen()

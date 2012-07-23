@@ -83,6 +83,8 @@ namespace Flyatron
 
 		public void Report(SpriteFont font, SpriteBatch batch, int x, int y, Color color)
 		{
+			Collate();
+			Export(path);
 			for (int i = 0; i < scores.Count; i++)
 			{
 				batch.DrawString(font, Convert.ToString(i) + ": " + scores[i], new Vector2(x, y), color);
