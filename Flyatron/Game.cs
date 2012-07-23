@@ -17,7 +17,7 @@ namespace Flyatron
 
 		static double version = 0.1;
 		static string versionString = "Version " + version;
-		bool debug = false;
+		bool debug = true;
 
 		static SpriteBatch spriteBatch;
 		GraphicsDeviceManager graphics;
@@ -46,6 +46,7 @@ namespace Flyatron
 
 		// Player.
 		Player a;
+		Texture2D[] playerTextures;
 
 		// Score
 		Scoreboard scores;
@@ -100,11 +101,13 @@ namespace Flyatron
 		{
 			alphaTextures = new Texture2D[]
 			{
+				// Backdrop textures.
 				Content.Load<Texture2D>("sky\\cloud0"),
 				Content.Load<Texture2D>("sky\\cloud1"),
 				Content.Load<Texture2D>("sky\\cloud2")
 			};
 
+			// Initialize backdrop.
 			alpha = new Backdrop(alphaTextures, gameHeight);
 
 			// Numerical value equates to pixel size.
@@ -112,23 +115,43 @@ namespace Flyatron
 			font14 = Content.Load<SpriteFont>("fonts\\PressStart2P_14");
 			font25 = Content.Load<SpriteFont>("fonts\\PressStart2P_25");
 
+			// Initialize menu backdrop.
 			menuBg = Content.Load<Texture2D>("bg\\paused");
 			menuVec = new Vector2(0, 0);
 
+			// Initialize soundtrack audio.
 			eightBitWeapon = new Muzak();
 			eightBitWeapon.Play(Content.Load<Song>(playList[0]));
-			eightBitWeapon.Pause();
+
+			if (debug)
+				eightBitWeapon.Pause();
 		}
 
 		protected override void Initialize()
 		{
+			playerTextures = new Texture2D[]
+			{
+				// Player textures.
+				Content.Load<Texture2D>("player\\head"),
+				Content.Load<Texture2D>("player\\body"),
+				Content.Load<Texture2D>("player\\gun"),
+				Content.Load<Texture2D>("player\\flames")
+			};
+
+			// Initialize SpriteBatch.
 			spriteBatch = new SpriteBatch(GraphicsDevice);
 
+			// Load timers.
 			deathScreenTimer = new Stopwatch();
 
-			a = new Player(3, 8, 15, 0, Content.Load<Texture2D>("player\\astronaut"), Color.White);
+			// Load player art/stats.
+			a = new Player(3, 8, 15, 0, Color.White, playerTextures);
 			a.Bounds(gameWidth, gameHeight);
+
+			// Load mouse texture.
 			mouse = Content.Load<Texture2D>("pointer");
+
+			// Import top scores.
 			scores = new Scoreboard(scoreFile);
 
 			base.Initialize();
@@ -147,6 +170,7 @@ namespace Flyatron
 
 			if (Keypress(Keys.Escape))
 			{
+				// Toggle between menu and gameplay.
 				if (screen == ScreenState.Play)
 					screen = ScreenState.Menu;
 				else if (screen == ScreenState.Menu)
@@ -382,24 +406,21 @@ namespace Flyatron
 				y += 30;
 			}
 
-			spriteBatch.DrawString(
-				font10,
-				eightBitWeapon.NameTime(),
-				new Vector2(GraphicsDevice.Viewport.X + 25, GraphicsDevice.Viewport.Height - 30),
-				Color.Black
-			);
+			if (!debug)
+				spriteBatch.DrawString(
+					font10,
+					eightBitWeapon.NameTime(),
+					new Vector2(GraphicsDevice.Viewport.X + 25, GraphicsDevice.Viewport.Height - 30),
+					Color.Black
+				);
 
 			if (debug)
-			{
-				a.Debug(font10, spriteBatch);
-
 				spriteBatch.DrawString(
 					font10,
 					Convert.ToString(gameTime.TotalGameTime),
 					new Vector2(30, gameHeight - 30),
 					Color.Black
 				);
-			}
 		}
 
 		private void UpdateMouse()

@@ -10,10 +10,14 @@ namespace Flyatron
 {
 	class Player
 	{
+		Texture2D blah;
+
 		// The player's texture, assigned vector, and tint (if any).
-		Texture2D texture;
-		Vector2 vector;
 		Color tint;
+
+		Texture2D[] textures;
+		Vector2[] vectors;
+		Rectangle[] rectangles;
 
 		KeyboardState lastKeyboardState, currentKeyboardState;
 		MouseState lastMouseState, currentMouseState;
@@ -36,18 +40,61 @@ namespace Flyatron
 		enum Velocity { Walking, Dashing };
 		Velocity velocityType = Velocity.Walking;
 
-		public Player(int inputLives, int inputVelocity, int inputDashVelocity, int inputIndex, Texture2D inputTexture, Color inputTint)
-		{
-			// Input art: Texture, vector, and tint.
-			texture = inputTexture;
-			tint = inputTint;
+		// These are the centre of the respective texture frames, used to correctly rotate them.
+		Vector2 headOffset = new Vector2(17.5F, 17.5F);
+		Vector2 gunOffset = new Vector2(17.5F, 9F);
 
-			// Player stats: Walking speed, runningVel speed, lives, and index.
+		float headRotation = 0;
+		float gunRotation  = 0;
+
+		Stopwatch flamesTimer = new Stopwatch();
+
+		// Initialize player animation data.
+		int[] frames = new int[]
+		{
+			// Width, height.
+			// Head.
+			35,35,
+			// Body.
+			35,72,
+			// Gun.
+			35,18,
+			// Flames.
+			23,46
+		};
+
+		public Player(int inputLives, int inputVelocity, int inputDashVelocity, int inputIndex, Color inputTint, Texture2D[] inTex)
+		{
+			textures = inTex;
+			tint = inputTint;
 			runningVel = inputDashVelocity;
 			walkingVel = inputVelocity;
 			velocity = walkingVel;
 			lives = inputLives;
 			index = inputIndex;
+
+			flamesTimer.Start();
+
+			vectors = new Vector2[]
+			{		
+				new Vector2(117.5F,117.5F), // Head.
+				new Vector2(100,100),		 // Body.
+				new Vector2(117.5F, 145),	 // Gun.
+				new Vector2(106, 154)		 // Flames.
+			};
+
+			rectangles = new Rectangle[]
+			{
+				new Rectangle(0,0,35,35), // Head.
+				new Rectangle(0,0,35,72), // Body.
+				new Rectangle(0,0,35,18), // Gun.
+				new Rectangle(0,0,23,46)  // Flames.
+			};
+		}
+
+		public Vector2 Position()
+		{
+			return vectors[1];
 		}
 
 		public void Update(KeyboardState inputState, MouseState inputMouseState, GameTime inputGameTime)
@@ -55,21 +102,30 @@ namespace Flyatron
 			currentKeyboardState = inputState;
 			currentMouseState = inputMouseState;
 
-			if (vector.X > 0)
+			UpdateBody(currentMouseState);
+			UpdateGun(currentMouseState);
+			UpdateHead(currentMouseState);
+			UpdateFlames();
+
+			if (vectors[1].X > 0)
 				if (currentKeyboardState.IsKeyDown(left))
-					vector.X -= velocity;
+					for (int i = 0; i < vectors.Length; i++)
+						vectors[i].X -= velocity;
 
-			if (vector.Y > 0)
+			if (vectors[1].Y > 0)
 				if (currentKeyboardState.IsKeyDown(up))
-					vector.Y -= velocity;
-
-			if (vector.X + texture.Width < xBound)
+					for (int i = 0; i < vectors.Length; i++)
+						vectors[i].Y -= velocity;
+			Vector2 blah = new Vector2(0, 0);
+			if (vectors[1].X  + textures[1].Width < xBound)
 				if (currentKeyboardState.IsKeyDown(right))
-					vector.X += velocity;
+					for (int i = 0; i < vectors.Length; i++)
+						vectors[i].X += velocity;
 
-			if (vector.Y + texture.Height < yBound)
+			if (vectors[1].Y + textures[1].Height < yBound)
 				if (currentKeyboardState.IsKeyDown(down))
-					vector.Y += velocity;
+					for (int i = 0; i < vectors.Length; i++)
+						vectors[i].Y += velocity;
 
 			lastMouseState = currentMouseState;
 			lastKeyboardState = currentKeyboardState;
@@ -77,9 +133,14 @@ namespace Flyatron
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
-			spriteBatch.Draw(texture, vector, tint);
-			// Draw player HUD.
-			// TODO
+			// Player Flames.
+			spriteBatch.Draw(textures[3], vectors[3], rectangles[3], Color.White, 0, new Vector2(0, 0), 1, SpriteEffects.None, 0);
+			// Player body.
+			spriteBatch.Draw(textures[1], vectors[1], rectangles[1], Color.White, 0, new Vector2(0, 0), 1, SpriteEffects.None, 0);
+			// Player head.
+			spriteBatch.Draw(textures[0], vectors[0], rectangles[0], Color.White, headRotation, headOffset, 1, SpriteEffects.None, 0);
+			// Player weapon.
+			spriteBatch.Draw(textures[2], vectors[2], rectangles[2], Color.White, gunRotation, gunOffset, 1, SpriteEffects.None, 0);
 		}
 
 		public void Bounds(int inputXBound, int inputYBound)
@@ -92,9 +153,9 @@ namespace Flyatron
 		{
 			// Return a rectangle for the player based on the vector and texture. Used for collisions.
 			// The precision loss is negligible (~1-2px).
-			int x = (int)Math.Round(vector.X, 0);
-			int y = (int)Math.Round(vector.Y, 0);
-			return new Rectangle(x, y, texture.Width, texture.Height);
+			int x = (int)Math.Round(vectors[1].X, 0);
+			int y = (int)Math.Round(vectors[1].Y, 0);
+			return new Rectangle(x, y, textures[1].Width, textures[1].Height);
 		}
 
 		public void Rebind(Keys inputUp, Keys inputDown, Keys inputLeft, Keys inputRight)
@@ -103,13 +164,6 @@ namespace Flyatron
 			down = inputDown;
 			left = inputLeft;
 			right = inputRight;
-		}
-
-		private void Teleport()
-		{
-			// Blink, blonk.
-			vector.X = Rng(0, xBound - 50);
-			vector.Y = Rng(0, yBound - 50);
 		}
 
 		public int RemainingLives()
@@ -125,9 +179,11 @@ namespace Flyatron
 				lives -= inputLives;
 		}
 
-		public void ZeroLives()
+		private void Teleport()
 		{
-			lives = 0;
+			// Blink, blonk.
+			vectors[1].X = Rng(0, xBound - 50);
+			vectors[1].Y = Rng(0, yBound - 50);
 		}
 
 		// Helpers.
@@ -139,35 +195,85 @@ namespace Flyatron
 			return false;
 		}
 
+		public void ZeroLives()
+		{
+			// For debug.
+			lives = 0;
+		}
+
 		private int Rng(int a, int b)
 		{
 			Random random = new Random();
 			return random.Next(a, b);
 		}
 
-		// Debugging information.
-		public void Debug(SpriteFont font, SpriteBatch spriteBatch)
+		private void UpdateHead(MouseState mouse)
 		{
-			int x = 30;
-			int y = 30;
+			Vector2 mouseLoc = new Vector2(mouse.X, mouse.Y);
 
-			List<string> debug = new List<string>()
-			{
-				// Put 170.X between duplicate debug panels.
-				"Player #: "	+ index,
-				"X: " + vector.X,
-				"Y: " + vector.Y,
-				"Width: " + texture.Width,
-				"Height: " + texture.Height,
-				"Lives: " + lives,
-				"Velocity: " + velocity,
-			};
+			Vector2 leftFacing = new Vector2(vectors[0].X - mouse.X, vectors[0].Y - mouse.Y);
+			Vector2 rightFacing = new Vector2(mouse.X - vectors[0].X, mouse.Y - vectors[0].Y);
 
-			for (int i = 0; i < debug.Count; i++)
+			float leftAngle = (float)(Math.Atan2(leftFacing.Y, leftFacing.X));
+			float rightAngle = (float)(Math.Atan2(rightFacing.Y, rightFacing.X));
+
+			if (mouse.X < vectors[0].X)
 			{
-				spriteBatch.DrawString(font, debug[i], new Vector2(x, y), Color.Black);
-				y += 15;
+				headRotation = leftAngle;
+				rectangles[0] = new Rectangle(44, 0, frames[0], frames[1]);
 			}
+			if (mouse.X > vectors[0].X)
+			{
+				headRotation = rightAngle;
+				rectangles[0] = new Rectangle(0, 0, frames[0], frames[1]);
+			}
+		}
+
+		private void UpdateGun(MouseState mouse)
+		{
+			Vector2 mouseLoc = new Vector2(mouse.X, mouse.Y);
+
+			Vector2 leftFacing = new Vector2(vectors[2].X - mouse.X, vectors[2].Y - mouse.Y);
+			Vector2 rightFacing = new Vector2(mouse.X - vectors[2].X, mouse.Y - vectors[2].Y);
+
+			float leftAngle = (float)(Math.Atan2(leftFacing.Y, leftFacing.X));
+			float rightAngle = (float)(Math.Atan2(rightFacing.Y, rightFacing.X));
+
+			if (mouse.X < vectors[2].X)
+			{
+				gunRotation = leftAngle;
+				rectangles[2] = new Rectangle(39, 0, frames[4], frames[5]);
+			}
+			if (mouse.X > vectors[2].X)
+			{
+				gunRotation = rightAngle;
+				rectangles[2] = new Rectangle(0, 0, frames[4], frames[5]);
+			}
+		}
+
+		private void UpdateBody(MouseState mouse)
+		{
+			if (mouse.X < vectors[1].X)
+			{
+				rectangles[1] = new Rectangle(40, 0, frames[2], frames[3]);
+			}
+			if (mouse.X > vectors[1].X)
+			{
+				rectangles[1] = new Rectangle(0, 0, frames[2], frames[3]);
+			}
+		}
+
+		private void UpdateFlames()
+		{
+			if ((flamesTimer.ElapsedMilliseconds >= 0) && (flamesTimer.ElapsedMilliseconds < 300))
+				rectangles[3] = new Rectangle(52, 0, frames[6], frames[7]);
+			if ((flamesTimer.ElapsedMilliseconds >= 300) && (flamesTimer.ElapsedMilliseconds < 600))
+				rectangles[3] = new Rectangle(25, 0, frames[6], frames[7]);
+			if ((flamesTimer.ElapsedMilliseconds >= 600) && (flamesTimer.ElapsedMilliseconds < 900))
+				rectangles[3] = new Rectangle(0, 0, frames[6], frames[7]);
+
+			if (flamesTimer.ElapsedMilliseconds > 900)
+				flamesTimer.Restart();
 		}
 	}
 }
