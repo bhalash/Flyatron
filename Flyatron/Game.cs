@@ -25,10 +25,10 @@ namespace Flyatron
 		// Width, height, full screen.
 		// Laptop's native is 1366x768.
 		// A decent working size for me is 1024x600.
-		int gameWidth   = 1024;
-		int gameHeight	 = 600;
+		int gameWidth = 1024;
+		int gameHeight = 600;
 		bool fullScreen = false;
-		bool showMouse  = false;
+		bool showMouse = false;
 
 		// Test if a key or button has been: 
 		KeyboardState lastKeyboardState, currentKeyboardState;
@@ -51,10 +51,10 @@ namespace Flyatron
 		// Score
 		Scoreboard scores;
 		string scoreFile = "scores.txt";
-		
+
 		// Menu state.
 		enum ScreenState
-		{Menu, Play, New, ScoresScreen, AboutScreen, GameOver};
+		{ Menu, Play, New, ScoresScreen, AboutScreen, GameOver };
 
 		// Backdrop.
 		Texture2D[] alphaTextures;
@@ -76,7 +76,7 @@ namespace Flyatron
 		// Flyatron should start at the game menu.
 		ScreenState screen = ScreenState.Menu;
 		// Texture for the menu. Declared here since I use it in several places.
-		Texture2D menuBg; 
+		Texture2D menuBg;
 		Vector2 menuVec;
 
 		// Custom mouse texture.
@@ -166,7 +166,10 @@ namespace Flyatron
 			currentKeyboardState = Keyboard.GetState();
 			currentMouseState = Mouse.GetState();
 
-			UpdateMouse();
+			// Update mouse pointer.
+			UpdateMouse(currentMouseState);
+			// Update screen selection.
+			UpdateSwitchScreen(screen);
 
 			if (Keypress(Keys.Escape))
 			{
@@ -177,27 +180,9 @@ namespace Flyatron
 					screen = ScreenState.Play;
 			}
 
-			if (Keypress(Keys.C))
-			{
-				scores.Debug();
-				a.ZeroLives();
-			}
 			if ((a.RemainingLives() <= 0) && (screen == ScreenState.Play))
 				screen = ScreenState.GameOver;
 
-			if (screen == ScreenState.Menu)
-				UpdateMenu();
-			if (screen == ScreenState.Play)
-				UpdatePlayScreen();
-			if (screen == ScreenState.New)
-				NewGame();
-			if (screen == ScreenState.ScoresScreen)
-				UpdateAboutScreenScreen();
-			if (screen == ScreenState.AboutScreen)
-				UpdateScoreScreen();
-			if (screen == ScreenState.GameOver)
-				UpdateGameOverScreen();
-		
 			base.Update(gameTime);
 
 			lastMouseState = currentMouseState;
@@ -209,21 +194,10 @@ namespace Flyatron
 			GraphicsDevice.Clear(Color.CornflowerBlue);
 
 			spriteBatch.Begin();
+			// Draw the background.
 			alpha.Draw(spriteBatch);
-
-			// Draw depending on state.
-			if (screen == ScreenState.Menu)
-				Menu();
-			if (screen == ScreenState.Play)
-				Play(gameTime);
-			if (screen == ScreenState.New)
-				NewGame();
-			if (screen == ScreenState.ScoresScreen)
-				ScoresScreen();
-			if (screen == ScreenState.AboutScreen)
-				AboutScreen();
-			if (screen == ScreenState.GameOver)
-				GameOverScreen();
+			// Update game state.
+			SwitchScreen(screen, gameTime, spriteBatch);
 
 			spriteBatch.End();
 
@@ -423,9 +397,9 @@ namespace Flyatron
 				);
 		}
 
-		private void UpdateMouse()
+		private void UpdateMouse(MouseState inputMousestate)
 		{
-			mouseState = Mouse.GetState();
+			mouseState = inputMousestate;
 			mousePos.X = mouseState.X;
 			mousePos.Y = mouseState.Y;
 
@@ -469,6 +443,80 @@ namespace Flyatron
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
 			scores.Report(font14, spriteBatch, 55, 100, Color.White);
+		}
+
+		private void SwitchScreen(ScreenState screenState, GameTime gameTime, SpriteBatch spriteBatch)
+		{
+			switch (screen)
+			{
+				case ScreenState.Menu:
+					{
+						Menu();
+						break;
+					}
+				case ScreenState.Play:
+					{
+						Play(gameTime);
+						break;
+					}
+				case ScreenState.New:
+					{
+						NewGame();
+						break;
+					}
+				case ScreenState.ScoresScreen:
+					{
+						ScoresScreen();
+						break;
+					}
+				case ScreenState.AboutScreen:
+					{
+						AboutScreen();
+						break;
+					}
+				case ScreenState.GameOver:
+					{
+						GameOverScreen();
+						break;
+					}
+			}
+		}
+
+		private void UpdateSwitchScreen(ScreenState screenState)
+		{
+			switch (screen)
+			{
+				case ScreenState.Menu:
+					{
+						UpdateMenu();
+						break;
+					}
+				case ScreenState.Play:
+					{
+						UpdatePlayScreen();
+						break;
+					}
+				case ScreenState.New:
+					{
+						NewGame();
+						break;
+					}
+				case ScreenState.ScoresScreen:
+					{
+						UpdateScoreScreen();
+						break;
+					}
+				case ScreenState.AboutScreen:
+					{
+						UpdateAboutScreenScreen();
+						break;
+					}
+				case ScreenState.GameOver:
+					{
+						UpdateGameOverScreen();
+						break;
+					}
+			}
 		}
 	}
 }
