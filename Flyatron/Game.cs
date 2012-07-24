@@ -160,7 +160,7 @@ namespace Flyatron
 			deathScreenTimer = new Stopwatch();
 
 			// Initialize demonstration mine.
-			mine = new Mine(mineTextures);
+			mine = new Mine(mineTextures, 2);
 
 			// Load player art/stats.
 			a = new Player(3, 8, 15, 0, Color.White, playerTextures);

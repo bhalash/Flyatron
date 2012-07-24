@@ -16,14 +16,17 @@ namespace Flyatron
 		float angle1 = 0;
 		float angle2 = 0;
 
+		float velocity;
+
 		Texture2D[] textures;
 		Vector2 vector = new Vector2(300, 300);
 		Rectangle rectangle = new Rectangle(0, 0, 40, 40);
 		Vector2 offset = new Vector2(20, 20);
 
-		public Mine(Texture2D[] inputTextures)
+		public Mine(Texture2D[] inputTextures, float inputVelocity)
 		{
 			textures = inputTextures;
+			velocity = inputVelocity;
 
 			rotation = new Stopwatch();
 			rotation.Start();
@@ -45,9 +48,6 @@ namespace Flyatron
 
 		private void Move(KeyboardState keyboardState)
 		{
-			// Mofidul, here is one example: 
-			// I want the mine to move in lockstep with the player, but in the opposite direction, to give the illusion of
-			// a bigger arena than actually exists. 
 		}
 
 		private void UpdateAnimation()

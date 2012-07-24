@@ -137,8 +137,6 @@ namespace Flyatron
 			lastKeyboardState = currentKeyboardState;
 		}
 
-		private void Move();
-
 		public void Draw(SpriteBatch spriteBatch)
 		{
 			// Player Flames.
