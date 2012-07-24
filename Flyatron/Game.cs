@@ -222,6 +222,10 @@ namespace Flyatron
 			base.Draw(gameTime);
 		}
 
+		private void Movement()
+		{
+		}
+
 		private bool Keypress(Keys inputKey)
 		{
 			if (currentKeyboardState.IsKeyUp(inputKey) && (lastKeyboardState.IsKeyDown(inputKey)))
@@ -276,7 +280,7 @@ namespace Flyatron
 
 		private void UpdatePlayScreen()
 		{
-			mine.Update();
+			mine.Update(currentKeyboardState);
 			alpha.Update(currentKeyboardState, 6);
 			scores.Increment();
 			a.Update(currentKeyboardState, currentMouseState, new GameTime());

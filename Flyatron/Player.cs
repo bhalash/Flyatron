@@ -109,6 +109,10 @@ namespace Flyatron
 			UpdateHeadAnimation(currentMouseState);
 			UpdateFlamesAnimation();
 
+			// Mofidul: Here is the movement code I use.
+			// Works absolutely fine for me, but I am moving a lot of things.
+			// I have separate code (see backgrounds.cs) for passing x/y values.
+
 			if (vectors[1].X > 0)
 				if (currentKeyboardState.IsKeyDown(left))
 					for (int i = 0; i < vectors.Length; i++)
@@ -132,6 +136,8 @@ namespace Flyatron
 			lastMouseState = currentMouseState;
 			lastKeyboardState = currentKeyboardState;
 		}
+
+		private void Move();
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
