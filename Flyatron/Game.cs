@@ -12,6 +12,8 @@ namespace Flyatron
 {
 	public class Game : Microsoft.Xna.Framework.Game
 	{
+		public static Random RANDOM;
+
 		// Welcome to Flyatron!
 		public static Game Instance;
 
@@ -25,16 +27,10 @@ namespace Flyatron
 		// Width, height, full screen.
 		// Laptop's native is 1366x768.
 		// A decent working size for me is 1024x600.
-		int gameWidth = 1366;
+		int gameWidth = 1376;
 		int gameHeight = 768;
 		bool fullScreen = true;
 		bool showMouse = false;
-
-		// Another gloabally used variable. 
-		// This is the default movement velocity of any sprite.
-		float velocity; 
-
-		Mine mine;
 
 		// Test if a key or button has been: 
 		KeyboardState lastKeyboardState, currentKeyboardState;
@@ -56,6 +52,8 @@ namespace Flyatron
 
 		// Mines.
 		Texture2D[] mineTextures;
+		List <Mine> mines;
+		int totalMines = 30;
 
 		// Score
 		Scoreboard scores;
@@ -67,7 +65,7 @@ namespace Flyatron
 
 		// Backdrop.
 		Texture2D[] alphaTextures;
-		Backdrop alpha;
+		Backdrop cloudyBackdrop;
 
 		Stopwatch deathScreenTimer;
 
@@ -97,6 +95,8 @@ namespace Flyatron
 		{
 			Instance = this;
 
+			RANDOM = new Random();
+
 			graphics = new GraphicsDeviceManager(this);
 			graphics.PreferredBackBufferWidth = gameWidth;
 			graphics.PreferredBackBufferHeight = gameHeight;
@@ -117,7 +117,7 @@ namespace Flyatron
 			};
 
 			// Initialize backdrop.
-			alpha = new Backdrop(alphaTextures, gameHeight);
+			cloudyBackdrop = new Backdrop(alphaTextures, gameHeight);
 
 			// Numerical value equates to pixel size.
 			font10 = Content.Load<SpriteFont>("fonts\\PressStart2P_10");
@@ -141,8 +141,8 @@ namespace Flyatron
 			playerTextures = new Texture2D[]
 			{
 				// Player textures.
-				Content.Load<Texture2D>("player\\head"),
 				Content.Load<Texture2D>("player\\body"),
+				Content.Load<Texture2D>("player\\head"),
 				Content.Load<Texture2D>("player\\gun"),
 				Content.Load<Texture2D>("player\\flames")
 			};
@@ -159,12 +159,14 @@ namespace Flyatron
 			// Load timers.
 			deathScreenTimer = new Stopwatch();
 
-			// Initialize demonstration mine.
-			mine = new Mine(mineTextures, 2);
+			// Initialize foe mines.
+			mines = new List<Mine>();
+
+			for (int i = 0; i < totalMines; i ++)
+				mines.Add(new Mine(mineTextures, 5, gameWidth, gameHeight));
 
 			// Load player art/stats.
-			a = new Player(3, 8, 15, 0, Color.White, playerTextures);
-			a.Bounds(gameWidth, gameHeight);
+			a = new Player(5, 10, Color.White, playerTextures, gameWidth, gameHeight);
 
 			// Load mouse texture.
 			mouse = Content.Load<Texture2D>("pointer");
@@ -213,10 +215,9 @@ namespace Flyatron
 
 			spriteBatch.Begin();
 			// Draw the background.
-			alpha.Draw(spriteBatch);
+			cloudyBackdrop.Draw(spriteBatch);
 			// Update game state.
 			SwitchScreen(screen, gameTime, spriteBatch);
-
 			spriteBatch.End();
 
 			base.Draw(gameTime);
@@ -236,8 +237,7 @@ namespace Flyatron
 
 		private int Rng(int a, int b)
 		{
-			Random random = new Random();
-			return random.Next(a, b);
+			return RANDOM.Next(a, b);
 		}
 
 		private void UpdateMenu()
@@ -280,10 +280,14 @@ namespace Flyatron
 
 		private void UpdatePlayScreen()
 		{
-			mine.Update(currentKeyboardState);
-			alpha.Update(currentKeyboardState, 6);
+			cloudyBackdrop.Update(5);
+
+			// cloudyBackdrop.Update(currentKeyboardState, 6);
 			scores.Increment();
 			a.Update(currentKeyboardState, currentMouseState, new GameTime());
+
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].Update();
 
 			if (Keypress(Keys.N))
 				eightBitWeapon.Play(Content.Load<Song>(playList[Rng(0, playList.Count - 1)]));
@@ -293,24 +297,24 @@ namespace Flyatron
 				eightBitWeapon.Resume();
 		}
 
-		private void Play(GameTime gameTime)
+		private void DrawPlay(GameTime gameTime)
 		{
 			eightBitWeapon.Volume(0.7F);
-			HUD(gameTime);
+
+			DrawHud(gameTime);
+
 			a.Draw(spriteBatch);
-			// Draw mine. Debug. 
-			mine.Draw(spriteBatch);
+
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].Draw(spriteBatch);
+
 			spriteBatch.Draw(mouse, mousePos, Color.White);
 		}
 
-		private void Menu()
+		private void DrawMenu()
 		{
 			eightBitWeapon.Volume(0.5F);
 			int Y = 100;
-
-			if (a.RemainingLives() == 0)
-				for (int i = 0; i < 3; i++)
-					a.Lives(3);
 
 			string title = "Flyatron";
 
@@ -323,7 +327,7 @@ namespace Flyatron
 				"Exit"
 			};
 
-			alpha.Demo(3);
+			cloudyBackdrop.Update(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
 			// Draw the menu.
@@ -349,7 +353,7 @@ namespace Flyatron
 
 			string message = "GAME OVER";
 
-			alpha.Demo(3);
+			cloudyBackdrop.Update(3);
 
 			Vector2 fontVector = new Vector2(gameWidth / 2 - font25.MeasureString(message).Length() / 2, gameHeight / 2 - 25);
 			Color color = Color.White;
@@ -382,7 +386,7 @@ namespace Flyatron
 			}
 		}
 
-		private void HUD(GameTime gameTime)
+		private void DrawHud(GameTime gameTime)
 		{
 			int y = 30;
 
@@ -451,19 +455,40 @@ namespace Flyatron
 
 		private void AboutScreen()
 		{
+			int x = 50;
+			int y = 120;
+
+			List<string> messages = new List<string>()
+			{
+				"Dedicated to Ciara and Garrett.",
+				"",
+				"Big thanks to:",
+				"The 091 Labs Hackerspace",
+				"8 Bit Weapon",
+				"Alanna Kelly",
+				"Domhall Walsh",
+				"Duncan Thomas",
+				"Jennifer Tidmore (just because :)",
+			};
+
 			string title = "About Flyatron";
 
-			alpha.Demo(3);
+			cloudyBackdrop.Update(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
-			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
-			spriteBatch.DrawString(font10, "Dedicated to Ciara and Garrett.", new Vector2(50, 120), Color.White);
+			spriteBatch.DrawString(font25, title, new Vector2(x, 50), Color.White);
+
+			for (int i = 0; i < messages.Count; i++)
+			{
+				spriteBatch.DrawString(font10, messages[i], new Vector2(x, y), Color.White);
+				y += 20;
+			}
 		}
 
 		private void ScoresScreen()
 		{
 			string title = "Top Scores";
 
-			alpha.Demo(3);
+			cloudyBackdrop.Update(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
 			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
 			scores.Report(font14, spriteBatch, 55, 100, Color.White);
@@ -475,12 +500,12 @@ namespace Flyatron
 			{
 				case ScreenState.Menu:
 					{
-						Menu();
+						DrawMenu();
 						break;
 					}
 				case ScreenState.Play:
 					{
-						Play(gameTime);
+						DrawPlay(gameTime);
 						break;
 					}
 				case ScreenState.New:

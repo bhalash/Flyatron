@@ -10,35 +10,46 @@ namespace Flyatron
 {
 	class Player
 	{
-		Texture2D blah;
-
-		// The player's texture, assigned vector, and tint (if any).
-		Color tint;
+		float scale = 0.7F; 
 
 		Texture2D[] textures;
-		Vector2[] vectors;
-		Rectangle[] rectangles;
+
+		static int[] frames = new int[] { 35, 72, 35, 35, 35, 18, 23, 46 };
+		static int[] frameOffset = new int[] { 0, 0, 13, 13, 13, 35, 4, 40 };
+
+		static int x = 400;
+		static int y = 300;
+
+		Vector2[] vectors = new Vector2[]
+		{		
+			// Vectors should be updated relative to index 0.
+			new Vector2(x + frameOffset[0], y + frameOffset[1]),
+			new Vector2(x + frameOffset[2], y + frameOffset[3]),
+			new Vector2(x + frameOffset[4], y + frameOffset[5]),
+			new Vector2(x + frameOffset[6], y + frameOffset[7])
+		};
+
+		Rectangle[] rectangles = new Rectangle[]
+		{
+			new Rectangle(0,0,35,72), // Body.
+			new Rectangle(0,0,35,35), // Head.
+			new Rectangle(0,0,35,18), // Gun.
+			new Rectangle(0,0,23,46)  // Flames.
+		};
 
 		KeyboardState lastKeyboardState, currentKeyboardState;
 		MouseState lastMouseState, currentMouseState;
 
 		// Player speed.
-		int lives, velocity, walkingVel, runningVel;
+		int lives, velocity, walkingVel;
 		// Player bounds.
 		int xBound, yBound;
-		// Player index. For multiplayer.
-		int index;
 
 		// Default keys are WSAD, but are changable via Rebind().
 		Keys up			= Keys.W;
 		Keys down		= Keys.S;
 		Keys left		= Keys.A;
 		Keys right		= Keys.D;
-		Keys dash		= Keys.Space;
-		Keys teleport	= Keys.F;
-
-		enum Velocity { Walking, Dashing };
-		Velocity velocityType = Velocity.Walking;
 
 		// These are the centre of the respective texture frames, used to correctly rotate them.
 		Vector2 headOffset = new Vector2(17.5F, 17.5F);
@@ -50,48 +61,17 @@ namespace Flyatron
 		Stopwatch flamesTimer = new Stopwatch();
 		Stopwatch bobTimer = new Stopwatch();
 
-		// Initialize player animation data.
-		int[] frames = new int[]
-		{
-			// Width, height.
-			// Head.
-			35,35,
-			// Body.
-			35,72,
-			// Gun.
-			35,18,
-			// Flames.
-			23,46
-		};
-
-		public Player(int inputLives, int inputVelocity, int inputDashVelocity, int inputIndex, Color inputTint, Texture2D[] inTex)
+		public Player(int inputLives, int inputVelocity,Color inputTint, Texture2D[] inTex, int inputXBound, int inputYBound)
 		{
 			textures = inTex;
-			tint = inputTint;
-			runningVel = inputDashVelocity;
 			walkingVel = inputVelocity;
 			velocity = walkingVel;
 			lives = inputLives;
-			index = inputIndex;
+
+			xBound = inputXBound;
+			yBound = inputYBound;
 
 			flamesTimer.Start();
-
-			vectors = new Vector2[]
-			{		
-				// Vectors should be updated relative to the body.
-				new Vector2(400 + 17.5F, 300 + 17.5F),
-				new Vector2(400, 300),
-				new Vector2(400 + 17.5F, 300 + 45),
-				new Vector2(400 + 6, 300 + 54)
-			};
-
-			rectangles = new Rectangle[]
-			{
-				new Rectangle(0,0,35,35), // Head.
-				new Rectangle(0,0,35,72), // Body.
-				new Rectangle(0,0,35,18), // Gun.
-				new Rectangle(0,0,23,46)  // Flames.
-			};
 		}
 
 		public Vector2 Position()
@@ -113,23 +93,23 @@ namespace Flyatron
 			// Works absolutely fine for me, but I am moving a lot of things.
 			// I have separate code (see backgrounds.cs) for passing x/y values.
 
-			if (vectors[1].X > 0)
+			if (vectors[0].X > 0)
 				if (currentKeyboardState.IsKeyDown(left))
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].X -= velocity;
 
-			if (vectors[1].Y > 0)
+			if (vectors[0].Y > 0)
 				if (currentKeyboardState.IsKeyDown(up))
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].Y -= velocity;
-			Vector2 blah = new Vector2(0, 0);
-			if (vectors[1].X + 35 < xBound)
+
+			if (vectors[0].X + textures[0].Width < xBound)
 				if (currentKeyboardState.IsKeyDown(right))
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].X += velocity;
 
-			if (vectors[1].Y + textures[1].Height < yBound)
-				if (currentKeyboardState.IsKeyDown(down))
+			if (currentKeyboardState.IsKeyDown(down))
+				if (vectors[0].Y + textures[0].Height < yBound)
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].Y += velocity;
 
@@ -140,36 +120,35 @@ namespace Flyatron
 		public void Draw(SpriteBatch spriteBatch)
 		{
 			// Player Flames.
-			spriteBatch.Draw(textures[3], vectors[3], rectangles[3], Color.White, 0, new Vector2(0, 0), 1, SpriteEffects.None, 0);
+			spriteBatch.Draw(textures[3], vectors[3], rectangles[3], Color.White, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
 			// Player body.
-			spriteBatch.Draw(textures[1], vectors[1], rectangles[1], Color.White, 0, new Vector2(0, 0), 1, SpriteEffects.None, 0);
+			spriteBatch.Draw(textures[0], vectors[0], rectangles[0], Color.White, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
 			// Player head.
-			spriteBatch.Draw(textures[0], vectors[0], rectangles[0], Color.White, headRotation, headOffset, 1, SpriteEffects.None, 0);
+			spriteBatch.Draw(textures[1], vectors[1], rectangles[1], Color.White, headRotation, headOffset, scale, SpriteEffects.None, 0);
 			// Player weapon.
-			spriteBatch.Draw(textures[2], vectors[2], rectangles[2], Color.White, gunRotation, gunOffset, 1, SpriteEffects.None, 0);
+			spriteBatch.Draw(textures[2], vectors[2], rectangles[2], Color.White, gunRotation, gunOffset, scale, SpriteEffects.None, 0);
 		}
 
-		public void Bounds(int inputXBound, int inputYBound)
+		public Rectangle Rectangle()
 		{
-			xBound = inputXBound;
-			yBound = inputYBound;
+			return new Rectangle((int)vectors[0].X, (int)vectors[0].Y, textures[0].Width, textures[0].Height);
 		}
 
-		public Rectangle Rect()
+		public void X(int newX)
 		{
-			// Return a rectangle for the player based on the vector and texture. Used for collisions.
-			// The precision loss is negligible (~1-2px).
-			int x = (int)Math.Round(vectors[1].X, 0);
-			int y = (int)Math.Round(vectors[1].Y, 0);
-			return new Rectangle(x, y, textures[1].Width, textures[1].Height);
+			// Streamline.
+			vectors[0].X = newX;
+			vectors[1].X = newX + 13;
+			vectors[2].X = newX + 13;
+			vectors[3].X = newX + 4;
 		}
 
-		public void Rebind(Keys inputUp, Keys inputDown, Keys inputLeft, Keys inputRight)
+		public void Y(int newY)
 		{
-			up = inputUp;
-			down = inputDown;
-			left = inputLeft;
-			right = inputRight;
+			vectors[0].Y = newY;
+			vectors[1].Y = newY + 13;
+			vectors[2].Y = newY + 45;
+			vectors[3].Y = newY + 40;
 		}
 
 		public int RemainingLives()
@@ -179,17 +158,7 @@ namespace Flyatron
 
 		public void Lives(int inputLives)
 		{
-			if (inputLives > 0)
-				lives += inputLives;
-			if (inputLives < 0)
-				lives -= inputLives;
-		}
-
-		private void Teleport()
-		{
-			// Blink, blonk.
-			vectors[1].X = Rng(0, xBound - 50);
-			vectors[1].Y = Rng(0, yBound - 50);
+			lives += inputLives;
 		}
 
 		// Helpers.
@@ -201,37 +170,30 @@ namespace Flyatron
 			return false;
 		}
 
-		public void ZeroLives()
-		{
-			// For debug.
-			lives = 0;
-		}
-
 		private int Rng(int a, int b)
 		{
-			Random random = new Random();
-			return random.Next(a, b);
+			return Game.RANDOM.Next(a, b);
 		}
 
 		private void UpdateHeadAnimation(MouseState mouse)
 		{
 			Vector2 mouseLoc = new Vector2(mouse.X, mouse.Y);
 
-			Vector2 leftFacing = new Vector2(vectors[0].X - mouse.X, vectors[0].Y - mouse.Y);
-			Vector2 rightFacing = new Vector2(mouse.X - vectors[0].X, mouse.Y - vectors[0].Y);
+			Vector2 leftFacing = new Vector2(vectors[1].X - mouse.X, vectors[1].Y - mouse.Y);
+			Vector2 rightFacing = new Vector2(mouse.X - vectors[1].X, mouse.Y - vectors[1].Y);
 
 			float leftAngle = (float)(Math.Atan2(leftFacing.Y, leftFacing.X));
 			float rightAngle = (float)(Math.Atan2(rightFacing.Y, rightFacing.X));
 
-			if (mouse.X < vectors[0].X)
+			if (mouse.X < vectors[1].X)
 			{
 				headRotation = leftAngle;
-				rectangles[0] = new Rectangle(44, 0, frames[0], frames[1]);
+				rectangles[1] = new Rectangle(44, 0, frames[2], frames[3]);
 			}
 			if (mouse.X > vectors[0].X)
 			{
 				headRotation = rightAngle;
-				rectangles[0] = new Rectangle(0, 0, frames[0], frames[1]);
+				rectangles[1] = new Rectangle(0, 0, frames[2], frames[3]);
 			}
 		}
 
@@ -259,13 +221,13 @@ namespace Flyatron
 
 		private void UpdateBodyAnimation(MouseState mouse)
 		{
-			if (mouse.X < vectors[1].X)
+			if (mouse.X < vectors[0].X)
 			{
-				rectangles[1] = new Rectangle(40, 0, frames[2], frames[3]);
+				rectangles[0] = new Rectangle(40, 0, frames[0], frames[1]);
 			}
-			if (mouse.X > vectors[1].X)
+			if (mouse.X > vectors[0].X)
 			{
-				rectangles[1] = new Rectangle(0, 0, frames[2], frames[3]);
+				rectangles[0] = new Rectangle(0, 0, frames[0], frames[1]);
 			}
 		}
 

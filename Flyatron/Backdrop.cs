@@ -31,8 +31,6 @@ namespace Flyatron
 {
 	class Backdrop
 	{
-		KeyboardState currentState, previousState;
-
 		Texture2D[] texture;
 		Vector2[][]	vector;
 
@@ -76,32 +74,7 @@ namespace Flyatron
 			right = newRight;
 		}
 
-		public void Update(KeyboardState inputState, int speed)
-		{
-			currentState = inputState;
-			// Scroll each of the textures. 
-			LoopLayers();
-
-			if (currentState.IsKeyDown(up))
-				ScrollUp(speed);
-			if (currentState.IsKeyDown(down))
-				ScrollDown(speed);
-			if (currentState.IsKeyDown(left))
-				ScrollLeft(speed);
-			if (currentState.IsKeyDown(right))
-				ScrollRight(speed);
-	
-			previousState = currentState;
-		}
-
-		public void Draw(SpriteBatch spriteBatch)
-		{
-			for (int i = 0; i < layers; i++)
-				for (int j = 0; j < 2; j++)
-					spriteBatch.Draw(texture[i], vector[i][j], Color.White);
-		}
-
-		public void Demo(int speed)
+		public void Update(int speed)
 		{
 			// Demo() is intended for use on menu screens. 
 			for (int i = 0; i < layers; i++)
@@ -113,6 +86,13 @@ namespace Flyatron
 			}
 
 			LoopLayers();
+		}
+
+		public void Draw(SpriteBatch spriteBatch)
+		{
+			for (int i = 0; i < layers; i++)
+				for (int j = 0; j < 2; j++)
+					spriteBatch.Draw(texture[i], vector[i][j], Color.White);
 		}
 
 		public void ScrollLeft(int speed)

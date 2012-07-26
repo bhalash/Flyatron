@@ -11,60 +11,116 @@ namespace Flyatron
 	class Mine
 	{
 		Stopwatch rotation;
-		Stopwatch spawn;
+		Stopwatch halt;
 
-		float angle1 = 0;
-		float angle2 = 0;
+		int haltSeconds = 3;
+		int haltDuration;
+
+		enum Minestate { Halted, Mobile };
+		Minestate state = Minestate.Mobile;
+
+		int xBound;
+		int yBound;
+
+		float[] angle = new float[] {0,0};
 
 		float velocity;
 
-		Texture2D[] textures;
-		Vector2 vector = new Vector2(300, 300);
-		Rectangle rectangle = new Rectangle(0, 0, 40, 40);
-		Vector2 offset = new Vector2(20, 20);
+		Texture2D[] texture;
+		Vector2 vector;
+		Vector2 offset;
+		Rectangle rectangle;
 
-		public Mine(Texture2D[] inputTextures, float inputVelocity)
+		public Mine(Texture2D[] inputTextures, float inputVelocity, int newXBound, int newYBound)
 		{
-			textures = inputTextures;
+			texture = inputTextures;
 			velocity = inputVelocity;
+
+			xBound = newXBound;
+			yBound = newYBound;
+
+			vector  = new Vector2(0 - texture[0].Width, Rng(0,yBound - texture[0].Height));
+			offset  = new Vector2(20, 20);
+			rectangle = new Rectangle(0, 0, 40, 40);
 
 			rotation = new Stopwatch();
 			rotation.Start();
-
-			spawn = new Stopwatch();
+			halt = new Stopwatch();
 		}
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
-			spriteBatch.Draw(textures[0], vector, rectangle, Color.White, angle1, offset, 1, SpriteEffects.None, 0);
-			spriteBatch.Draw(textures[1], vector, rectangle, Color.White, angle2, offset, 1, SpriteEffects.None, 0);
+			for (int i = 0; i < texture.Length; i++)
+				spriteBatch.Draw(texture[i], vector, rectangle, Color.White, angle[i], offset, 1, SpriteEffects.None, 0);
 		}
 
-		public void Update(KeyboardState keyboardState)
+		public void Update()
+		{
+			switch (state)
+			{
+				case (Minestate.Halted):
+					{
+						MineHalted();
+						break;
+					}
+				case (Minestate.Mobile):
+					{
+						MineMobile();
+						break;
+					}
+			}
+		}
+
+		private void MineMobile()
 		{
 			UpdateAnimation();
-			Move(keyboardState);
+
+			vector.X -= velocity;
+
+			if (vector.X + texture[0].Width < 0)
+			{
+				vector.X = xBound + texture[0].Width;
+				vector.Y = Rng(0, yBound - texture[0].Height);
+				state = Minestate.Halted;
+				haltDuration = Rng(0, haltSeconds * 1000);
+				halt.Restart();
+			}
 		}
 
-		private void Move(KeyboardState keyboardState)
+		private void MineHalted()
 		{
+			if (halt.ElapsedMilliseconds > haltDuration)
+				state = Minestate.Mobile;
+		}
+
+		public Rectangle Rectangle()
+		{
+			return new Rectangle((int)vector.X, (int)vector.Y, texture[0].Width, texture[0].Height);
+		}
+
+		public Vector2 Position()
+		{
+			return vector;
 		}
 
 		private void UpdateAnimation()
 		{
 			if (rotation.ElapsedMilliseconds >= 20F)
 			{
-				angle1 += 0.3F;
-				angle2 -= 1;
+				angle[0] += 0.3F;
+				angle[1] -= 1;
 				rotation.Restart();
 			}
 
-			if (angle1 >= 360)
-				angle1 = 0;
-			if (angle2 >= 360)
-				angle2 = 0;
+			if (angle[0] >= 360)
+				angle[0] = 0;
+			if (angle[1] >= 360)
+				angle[1] = 0;
 		}
 
-
+		private int Rng(int a, int b)
+		{
+			return Game.RANDOM.Next(a, b);
+		}
 	}
 }
