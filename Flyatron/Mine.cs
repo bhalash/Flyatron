@@ -29,7 +29,11 @@ namespace Flyatron
 		Texture2D[] texture;
 		Vector2 vector;
 		Vector2 offset;
-		Rectangle rectangle;
+		Rectangle[] rectangle;
+
+		// Collision reference.
+		Vector2 reference;
+		float distance;
 
 		public Mine(Texture2D[] inputTextures, float inputVelocity, int newXBound, int newYBound)
 		{
@@ -41,7 +45,12 @@ namespace Flyatron
 
 			vector  = new Vector2(0 - texture[0].Width, Rng(0,yBound - texture[0].Height));
 			offset  = new Vector2(20, 20);
-			rectangle = new Rectangle(0, 0, 40, 40);
+
+			rectangle = new Rectangle[]
+				{
+					new Rectangle(0, 0, 40, 40),
+					new Rectangle(0, 0, 40, 40),
+				};
 
 			rotation = new Stopwatch();
 			rotation.Start();
@@ -51,11 +60,13 @@ namespace Flyatron
 		public void Draw(SpriteBatch spriteBatch)
 		{
 			for (int i = 0; i < texture.Length; i++)
-				spriteBatch.Draw(texture[i], vector, rectangle, Color.White, angle[i], offset, 1, SpriteEffects.None, 0);
+				spriteBatch.Draw(texture[i], vector, rectangle[i], Color.White, angle[i], offset, 1, SpriteEffects.None, 0);
 		}
 
-		public void Update()
+		public void Update(Vector2 inputReference)
 		{
+			reference = inputReference;
+
 			switch (state)
 			{
 				case (Minestate.Halted):
@@ -75,16 +86,21 @@ namespace Flyatron
 		{
 			UpdateAnimation();
 
+			distance = Vector2.Distance(vector, reference);
+
 			vector.X -= velocity;
 
-			if (vector.X + texture[0].Width < 0)
-			{
-				vector.X = xBound + texture[0].Width;
-				vector.Y = Rng(0, yBound - texture[0].Height);
-				state = Minestate.Halted;
-				haltDuration = Rng(0, haltSeconds * 1000);
-				halt.Restart();
-			}
+			if ((vector.X + texture[0].Width < 0) || (distance < 35))
+				Halt();
+		}
+
+		private void Halt()
+		{
+			vector.X = xBound + texture[0].Width;
+			vector.Y = Rng(0, yBound - texture[0].Height);
+			state = Minestate.Halted;
+			haltDuration = Rng(0, haltSeconds * 1000);
+			halt.Restart();
 		}
 
 		private void MineHalted()
@@ -111,6 +127,13 @@ namespace Flyatron
 				angle[1] -= 1;
 				rotation.Restart();
 			}
+
+			if (distance >= 200)
+				rectangle[0].X = 0;
+			if ((distance < 200) && (distance >= 100))
+				rectangle[0].X = 40;
+			if (distance < 100)
+				rectangle[0].X = 80;
 
 			if (angle[0] >= 360)
 				angle[0] = 0;

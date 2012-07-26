@@ -19,7 +19,7 @@ namespace Flyatron
 
 		static double version = 0.1;
 		static string versionString = "Version " + version;
-		bool debug = true;
+		bool debug = false;
 
 		static SpriteBatch spriteBatch;
 		GraphicsDeviceManager graphics;
@@ -27,9 +27,9 @@ namespace Flyatron
 		// Width, height, full screen.
 		// Laptop's native is 1366x768.
 		// A decent working size for me is 1024x600.
-		int gameWidth = 1376;
-		int gameHeight = 768;
-		bool fullScreen = true;
+		int gameWidth = 1024;
+		int gameHeight = 600;
+		bool fullScreen = false;
 		bool showMouse = false;
 
 		// Test if a key or button has been: 
@@ -41,7 +41,7 @@ namespace Flyatron
 		// this project under it, along with creator attribution.
 		// Font download page:	 http://www.zone38.net/font/
 		// OFL license homepage: http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL
-		static SpriteFont font10, font14, font25;
+		static SpriteFont font10, font14, font25;	
 
 		// Soundtrack instance.
 		Muzak eightBitWeapon;
@@ -287,7 +287,7 @@ namespace Flyatron
 			a.Update(currentKeyboardState, currentMouseState, new GameTime());
 
 			for (int i = 0; i < mines.Count; i++)
-				mines[i].Update();
+				mines[i].Update(a.Position());
 
 			if (Keypress(Keys.N))
 				eightBitWeapon.Play(Content.Load<Song>(playList[Rng(0, playList.Count - 1)]));

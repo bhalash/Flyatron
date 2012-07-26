@@ -165,15 +165,15 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="mine\core.png">
-      <Name>core</Name>
+    <Compile Include="box.png">
+      <Name>box</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="box.png">
-      <Name>box</Name>
+    <Compile Include="mine\core.png">
+      <Name>core</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
