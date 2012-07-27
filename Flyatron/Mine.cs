@@ -13,7 +13,6 @@ namespace Flyatron
 		Stopwatch rotation;
 		Stopwatch halt;
 
-		int haltSeconds = 3;
 		int haltDuration;
 
 		enum Minestate { Halted, Mobile };
@@ -88,12 +87,12 @@ namespace Flyatron
 				Halt();
 		}
 
-		private void Halt()
+		public void Halt(int seconds = 3)
 		{
 			vector.X = Game.WIDTH + texture[0].Width;
 			vector.Y = Helper.Rng(0, Game.WIDTH - texture[0].Height);
 			state = Minestate.Halted;
-			haltDuration = Helper.Rng(0, haltSeconds * 1000);
+			haltDuration = Helper.Rng(0, seconds * 1000);
 			halt.Restart();
 		}
 

@@ -12,13 +12,19 @@ namespace Flyatron
 	{
 		float scale = 0.7F; 
 
-		Texture2D[] textures;
+		List<Texture2D> textures;
 
 		static int[] frames = new int[] { 35, 72, 35, 35, 35, 18, 23, 46 };
 		static int[] frameOffset = new int[] { 0, 0, 13, 13, 13, 35, 4, 40 };
 
 		static int x = 400;
 		static int y = 300;
+
+		// Default keys are WSAD, but are changable via Rebind().
+		Keys up    = Keys.W;
+		Keys down  = Keys.S;
+		Keys left  = Keys.A;
+		Keys right = Keys.D;
 
 		Vector2[] vectors = new Vector2[]
 		{		
@@ -38,13 +44,7 @@ namespace Flyatron
 		};
 
 		// Player speed.
-		int lives, velocity, walkingVel;
-
-		// Default keys are WSAD, but are changable via Rebind().
-		Keys up			= Keys.W;
-		Keys down		= Keys.S;
-		Keys left		= Keys.A;
-		Keys right		= Keys.D;
+		int lives, currentLives, velocity, walkingVel;
 
 		// These are the centre of the respective texture frames, used to correctly rotate them.
 		Vector2 headOffset = new Vector2(17.5F, 17.5F);
@@ -56,12 +56,12 @@ namespace Flyatron
 		Stopwatch flamesTimer = new Stopwatch();
 		Stopwatch bobTimer = new Stopwatch();
 
-		public Player(int inputLives, int inputVelocity,Color inputTint, Texture2D[] inTex)
+		public Player(int inputLives, int inputVelocity,Color inputTint, List<Texture2D> inTex)
 		{
 			textures = inTex;
 			walkingVel = inputVelocity;
 			velocity = walkingVel;
-			lives = inputLives;
+			lives = currentLives = inputLives;
 
 			flamesTimer.Start();
 		}
@@ -82,18 +82,18 @@ namespace Flyatron
 			// Works absolutely fine for me, but I am moving a lot of things.
 			// I have separate code (see backgrounds.cs) for passing x/y values.
 
-			if (vectors[0].X > 0)
-				if (Game.currentKeyboardState.IsKeyDown(left))
+			if (Game.currentKeyboardState.IsKeyDown(left))
+				if (vectors[0].X > 0)
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].X -= velocity;
 
-			if (vectors[0].Y > 0)
-				if (Game.currentKeyboardState.IsKeyDown(up))
+			if (Game.currentKeyboardState.IsKeyDown(up))
+				if (vectors[0].Y > 0)
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].Y -= velocity;
 
-			if (vectors[0].X + textures[0].Width < Game.WIDTH)
-				if (Game.currentKeyboardState.IsKeyDown(right))
+			if (Game.currentKeyboardState.IsKeyDown(right))
+				if (vectors[0].X + textures[0].Width < Game.WIDTH)
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].X += velocity;
 
@@ -139,12 +139,17 @@ namespace Flyatron
 
 		public int RemainingLives()
 		{
-			return lives;
+			return currentLives;
 		}
 
 		public void Lives(int inputLives)
 		{
-			lives += inputLives;
+			currentLives += inputLives;
+		}
+
+		public void ResetLives()
+		{
+			currentLives = lives;
 		}
 
 		private void UpdateHeadAnimation(MouseState mouse)

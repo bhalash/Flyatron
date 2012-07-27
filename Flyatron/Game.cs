@@ -19,6 +19,9 @@ namespace Flyatron
 		public static int WIDTH = 1024;
 		public static int HEIGHT = 600;
 
+		public enum   Screen { Menu, Play, New, Scores, About, End, Death };
+		public static Screen SCREEN = Screen.Menu;
+
 		bool fullScreen = false;
 		bool showMouse = false;
 
@@ -45,7 +48,7 @@ namespace Flyatron
 
 		// Player.
 		Player a;
-		Texture2D[] playerTextures;
+		List <Texture2D> playerTextures;
 
 		// Fear, fire foes.
 		Texture2D[] mineTextures;
@@ -55,12 +58,6 @@ namespace Flyatron
 		// Scoreboard.
 		Scoreboard scores;
 		string scoreFile = "scores.txt";
-
-		// Collision detection.
-		Collider collider;
-
-		// Menu state.
-		enum ScreenState { Menu, Play, New, ScoresScreen, AboutScreen, GameOver };
 
 		// Backdrop.
 		Texture2D[] alphaTextures;
@@ -80,8 +77,6 @@ namespace Flyatron
 			"8 Bit Weapon/Times Changing" 
 		};
 
-		// Flyatron should start at the game menu.
-		ScreenState screen = ScreenState.Menu;
 		// Texture for the menu. Declared here since I use it in several places.
 		Texture2D menuBg;
 		Vector2 menuVec;
@@ -135,7 +130,7 @@ namespace Flyatron
 
 		protected override void Initialize()
 		{
-			playerTextures = new Texture2D[]
+			playerTextures = new List<Texture2D>()
 			{
 				// Player textures.
 				Content.Load<Texture2D>("player\\body"),
@@ -152,9 +147,6 @@ namespace Flyatron
 
 			// Initialize SpriteBatch.
 			spriteBatch = new SpriteBatch(GraphicsDevice);
-
-			// Initialize collisions.
-			collider = new Collider();
 
 			// Load timers.
 			deathScreenTimer = new Stopwatch();
@@ -188,20 +180,17 @@ namespace Flyatron
 
 			// Update mouse pointer.
 			UpdateMouse(currentMouseState);
-			// Update screen selection.
-			UpdateSwitchScreen(screen);
+			// Update SCREEN selection.
+			UpdateSwitch(SCREEN);
 
 			if (Keypress(Keys.Escape))
 			{
 				// Toggle between menu and gameplay.
-				if (screen == ScreenState.Play)
-					screen = ScreenState.Menu;
-				else if (screen == ScreenState.Menu)
-					screen = ScreenState.Play;
+				if (SCREEN == Screen.Play)
+					SCREEN = Screen.Menu;
+				else if (SCREEN == Screen.Menu)
+					SCREEN = Screen.Play;
 			}
-
-			if ((a.RemainingLives() <= 0) && (screen == ScreenState.Play))
-				screen = ScreenState.GameOver;
 
 			base.Update(gameTime);
 
@@ -217,14 +206,10 @@ namespace Flyatron
 			// Draw the background.
 			cloudyBackdrop.Draw(spriteBatch);
 			// Update game state.
-			SwitchScreen(screen, gameTime, spriteBatch);
+			Switch(SCREEN, gameTime, spriteBatch);
 			spriteBatch.End();
 
 			base.Draw(gameTime);
-		}
-
-		private void Movement()
-		{
 		}
 
 		public static bool Keypress(Keys inputKey)
@@ -235,79 +220,50 @@ namespace Flyatron
 			return false;
 		}
 
+		private void NewGame()
+		{
+			// NewGame() should run once, in one pass. 
+			// Set up the sprites, reset the appropriate counters. 
+			// Thereafter, switch to Screen.Play.
+
+			scores.Reset();
+
+			SCREEN = Screen.Play;
+		}
+
+		private void UpdateDeath()
+		{
+			SCREEN = Screen.Play;
+		}
+
+		private void DrawDeath()
+		{
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].Halt(6);
+
+			a.X(100);
+			a.Y(HEIGHT / 2 - a.Rectangle().Height / 2);
+			a.Lives(-1);
+
+			if (a.RemainingLives() <= 0)
+				SCREEN = Screen.End;
+		}
+
 		private void UpdateMenu()
 		{
 			// Menu opts.
 			if (Keypress(Keys.D1))
-				screen = ScreenState.Play;
+				SCREEN = Screen.Play;
 			if (Keypress(Keys.D2))
-				screen = ScreenState.New;
+				SCREEN = Screen.New;
 			if (Keypress(Keys.D3))
-				screen = ScreenState.ScoresScreen;
+				SCREEN = Screen.Scores;
 			if (Keypress(Keys.D4))
-				screen = ScreenState.AboutScreen;
+				SCREEN = Screen.About;
 			if (Keypress(Keys.D5))
 			{
 				this.Exit();
 			}
-		}
-
-		private void UpdateAboutScreenScreen()
-		{
-			if (Keypress(Keys.Escape))
-				screen = ScreenState.Menu;
-		}
-
-		private void UpdateGameOverScreen()
-		{
-			if (Keypress(Keys.Escape))
-			{
-				scores.Collate();
-				screen = ScreenState.Menu;
-			}
-		}
-
-		private void UpdateScoreScreen()
-		{
-			if (Keypress(Keys.Escape))
-				screen = ScreenState.Menu;
-		}
-
-		private void UpdatePlayScreen()
-		{
-			cloudyBackdrop.Update(5);
-
-			// cloudyBackdrop.Update(currentKeyboardState, 6);
-			scores.Increment();
-			a.Update(new GameTime());
-
-			for (int i = 0; i < mines.Count; i++)
-				mines[i].Update(a.Position());
-
-			for (int i = 0; i < mines.Count; i++)
-				if (Helper.Circle(a.Rectangle(), mines[i].Rectangle()))
-					screen = ScreenState.GameOver; 
-
-			if (Keypress(Keys.N))
-				eightBitWeapon.Play(Content.Load<Song>(playList[Helper.Rng(0, playList.Count - 1)]));
-			if (Keypress(Keys.P))
-				eightBitWeapon.Pause();
-			if (Keypress(Keys.U))
-				eightBitWeapon.Resume();
-		}
-
-		private void DrawPlay(GameTime gameTime)
-		{
-			eightBitWeapon.Volume(0.7F);
-
-			DrawHud(gameTime);
-
-			a.Draw(spriteBatch);
-
-			for (int i = 0; i < mines.Count; i++)
-				mines[i].Draw(spriteBatch);
-
-			spriteBatch.Draw(mouse, mousePos, Color.White);
 		}
 
 		private void DrawMenu()
@@ -345,7 +301,50 @@ namespace Flyatron
 				);
 		}
 
-		private void GameOverScreen()
+		private void UpdateAbout()
+		{
+			if (Keypress(Keys.Escape))
+				SCREEN = Screen.Menu;
+		}
+
+		private void DrawAbout()
+		{
+			int x = 50;
+			int y = 120;
+
+			List<string> messages = new List<string>()
+			{
+				"Dedicated to Ciara and Garrett.",
+				"",
+				"Big thanks to:",
+				"The 091 Labs Hackerspace",
+				"8 Bit Weapon",
+				"Alanna Kelly",
+				"Domhall Walsh",
+				"Duncan Thomas",
+				"Jennifer Tidmore (just because :)",
+			};
+
+			string title = "About Flyatron";
+
+			cloudyBackdrop.Update(3);
+			spriteBatch.Draw(menuBg, menuVec, Color.White);
+			spriteBatch.DrawString(font25, title, new Vector2(x, 50), Color.White);
+
+			for (int i = 0; i < messages.Count; i++)
+			{
+				spriteBatch.DrawString(font10, messages[i], new Vector2(x, y), Color.White);
+				y += 20;
+			}
+		}
+
+		private void UpdateEnd()
+		{
+			if (Keypress(Keys.Escape))
+				SCREEN = Screen.Scores;
+		}
+
+		private void DrawEnd()
 		{
 			if (!deathScreenTimer.IsRunning)
 				deathScreenTimer.Start();
@@ -377,12 +376,59 @@ namespace Flyatron
 				spriteBatch.Draw(menuBg, menuVec, color * 1.0F);
 				spriteBatch.DrawString(font25, message, fontVector, color * 1.0F);
 			}
+		}
 
+		private void UpdateScores()
+		{
 			if (Keypress(Keys.Escape))
-			{
-				deathScreenTimer.Reset();
-				screen = ScreenState.Menu;
-			}
+				SCREEN = Screen.Menu;
+		}
+
+		private void DrawScores()
+		{
+			string title = "Top Scores";
+
+			cloudyBackdrop.Update(3);
+			spriteBatch.Draw(menuBg, menuVec, Color.White);
+			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
+			scores.Report(font14, spriteBatch, 55, 100, Color.White);
+		}
+
+		private void UpdatePlay()
+		{
+			cloudyBackdrop.Update(5);
+
+			// cloudyBackdrop.Update(currentKeyboardState, 6);
+			scores.Increment();
+			a.Update(new GameTime());
+
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].Update(a.Position());
+
+			for (int i = 0; i < mines.Count; i++)
+				if (Helper.Circle(a.Rectangle(), mines[i].Rectangle()))
+					SCREEN = Screen.Death;
+
+			if (Keypress(Keys.N))
+				eightBitWeapon.Play(Content.Load<Song>(playList[Helper.Rng(0, playList.Count - 1)]));
+			if (Keypress(Keys.P))
+				eightBitWeapon.Pause();
+			if (Keypress(Keys.U))
+				eightBitWeapon.Resume();
+		}
+
+		private void DrawPlay(GameTime gameTime)
+		{
+			eightBitWeapon.Volume(0.7F);
+
+			DrawHud(gameTime);
+
+			a.Draw(spriteBatch);
+
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].Draw(spriteBatch);
+
+			spriteBatch.Draw(mouse, mousePos, Color.White);
 		}
 
 		private void DrawHud(GameTime gameTime)
@@ -441,127 +487,85 @@ namespace Flyatron
 				mousePos.Y = HEIGHT;
 		}
 
-		private void NewGame()
+		private void Switch(Screen screenState, GameTime gameTime, SpriteBatch spriteBatch)
 		{
-			// NewGame() should run once, in one pass. 
-			// Set up the sprites, reset the appropriate counters. 
-			// Thereafter, switch to ScreenState.Play.
-
-			scores.Reset();
-
-			screen = ScreenState.Play;
-		}
-
-		private void AboutScreen()
-		{
-			int x = 50;
-			int y = 120;
-
-			List<string> messages = new List<string>()
+			switch (SCREEN)
 			{
-				"Dedicated to Ciara and Garrett.",
-				"",
-				"Big thanks to:",
-				"The 091 Labs Hackerspace",
-				"8 Bit Weapon",
-				"Alanna Kelly",
-				"Domhall Walsh",
-				"Duncan Thomas",
-				"Jennifer Tidmore (just because :)",
-			};
-
-			string title = "About Flyatron";
-
-			cloudyBackdrop.Update(3);
-			spriteBatch.Draw(menuBg, menuVec, Color.White);
-			spriteBatch.DrawString(font25, title, new Vector2(x, 50), Color.White);
-
-			for (int i = 0; i < messages.Count; i++)
-			{
-				spriteBatch.DrawString(font10, messages[i], new Vector2(x, y), Color.White);
-				y += 20;
-			}
-		}
-
-		private void ScoresScreen()
-		{
-			string title = "Top Scores";
-
-			cloudyBackdrop.Update(3);
-			spriteBatch.Draw(menuBg, menuVec, Color.White);
-			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
-			scores.Report(font14, spriteBatch, 55, 100, Color.White);
-		}
-
-		private void SwitchScreen(ScreenState screenState, GameTime gameTime, SpriteBatch spriteBatch)
-		{
-			switch (screen)
-			{
-				case ScreenState.Menu:
+				case Screen.Menu:
 					{
 						DrawMenu();
 						break;
 					}
-				case ScreenState.Play:
+				case Screen.Play:
 					{
 						DrawPlay(gameTime);
 						break;
 					}
-				case ScreenState.New:
+				case Screen.New:
 					{
 						NewGame();
 						break;
 					}
-				case ScreenState.ScoresScreen:
+				case Screen.Scores:
 					{
-						ScoresScreen();
+						DrawScores();
 						break;
 					}
-				case ScreenState.AboutScreen:
+				case Screen.About:
 					{
-						AboutScreen();
+						DrawAbout();
 						break;
 					}
-				case ScreenState.GameOver:
+				case Screen.End:
 					{
-						GameOverScreen();
+						DrawEnd();
+						break;
+					}
+				case Screen.Death:
+					{
+						DrawDeath();
 						break;
 					}
 			}
 		}
 
-		private void UpdateSwitchScreen(ScreenState screenState)
+		private void UpdateSwitch(Screen screenState)
 		{
-			switch (screen)
+			switch (SCREEN)
 			{
-				case ScreenState.Menu:
+				case Screen.Menu:
 					{
 						UpdateMenu();
 						break;
 					}
-				case ScreenState.Play:
+				case Screen.Play:
 					{
-						UpdatePlayScreen();
+						UpdatePlay();
 						break;
 					}
-				case ScreenState.New:
+				case Screen.New:
 					{
 						NewGame();
 						break;
 					}
-				case ScreenState.ScoresScreen:
+				case Screen.Scores:
 					{
-						UpdateScoreScreen();
+						UpdateScores();
 						break;
 					}
-				case ScreenState.AboutScreen:
+				case Screen.About:
 					{
-						UpdateAboutScreenScreen();
+						UpdateAbout();
 						break;
 					}
-				case ScreenState.GameOver:
+				case Screen.End:
 					{
-						UpdateGameOverScreen();
+						UpdateEnd();
+						break;
+					}
+				case Screen.Death:
+					{
+						UpdateDeath();
 						break;
 					}
 			}

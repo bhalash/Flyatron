@@ -108,7 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Backdrop.cs" />
-    <Compile Include="Collider.cs" />
+    <Compile Include="Gun.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Mine.cs" />
     <Compile Include="Music.cs" />
@@ -119,7 +119,6 @@
     <Compile Include="Scores.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="credits.txt" />
     <Content Include="Game.ico" />
     <Content Include="GameThumbnail.png" />
   </ItemGroup>

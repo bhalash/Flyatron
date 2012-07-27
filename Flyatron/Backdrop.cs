@@ -9,7 +9,7 @@
  *		2. The Demo() method. It will gradually scroll toward the left. Intended for use in game menus.
  *		
  * You call this class pretty simply: Create an array of textures, 0-whatever and pass it to this class
- * along with the vertical size of the screen. 
+ * along with the vertical size of the SCREEN. 
  *  
  *		Backdrop alpha = new Backdrop(textures, 768);
  *		
@@ -119,7 +119,7 @@ namespace Flyatron
 			// *.Y bounding is handled implicitly, bassed upon the position of
 			//  the frontmost (read: last in array) layer. 
 			// Vertical moves only occur if it would not move the front layer
-			// off of the screen in either direction.
+			// off of the SCREEN in either direction.
 			for (int i = 0; i < layers; i++)
 			{
 				for (int j = 0; j < 2; j++)
@@ -150,8 +150,8 @@ namespace Flyatron
 		public void LoopLayers()
 		{
 			// This method silently manages the scrolling background. 
-			// If either texture is completely off the screen to either side, it is 
-			// moved to the far side of the on-screen texture, dependent on which
+			// If either texture is completely off the SCREEN to either side, it is 
+			// moved to the far side of the on-SCREEN texture, dependent on which
 			// direction is being scrolled. 
 			for (int i = 0; i < layers; i++)
 			{
