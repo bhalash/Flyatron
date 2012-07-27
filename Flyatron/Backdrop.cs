@@ -34,18 +34,11 @@ namespace Flyatron
 		Texture2D[] texture;
 		Vector2[][]	vector;
 
-		Keys left = Keys.D;
-		Keys right = Keys.A;
-		Keys down = Keys.W;
-		Keys up = Keys.S;
-
-		int yBounds;
 		int layers;
 
-		public Backdrop(Texture2D[] inputTexture, int inputYBounds)
+		public Backdrop(Texture2D[] inputTexture)
 		{
 			texture = inputTexture;
-			yBounds = inputYBounds;
 			layers  = inputTexture.Length;
 
 			// I need to explicitly initialize all of the vector arrays here, or the content
@@ -64,14 +57,6 @@ namespace Flyatron
 				vector[i][1] = new Vector2(texture[i].Width, sep);
 				sep += 100; 
 			}
-		}
-
-		public void Rebind(Keys newUp, Keys newDown, Keys newRight, Keys newLeft)
-		{
-			up = newUp;
-			down = newDown;
-			left = newLeft;
-			right = newRight;
 		}
 
 		public void Update(int speed)
@@ -138,7 +123,7 @@ namespace Flyatron
 			for (int i = 0; i < layers; i++)
 			{
 				for (int j = 0; j < 2; j++)
-					if (vector[2][j].Y < yBounds)
+					if (vector[2][j].Y < Game.HEIGHT)
 						vector[i][j].Y += speed;
 
 				speed += 2;

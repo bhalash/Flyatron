@@ -19,9 +19,6 @@ namespace Flyatron
 		enum Minestate { Halted, Mobile };
 		Minestate state = Minestate.Mobile;
 
-		int xBound;
-		int yBound;
-
 		float[] angle = new float[] {0,0};
 
 		float velocity;
@@ -35,15 +32,12 @@ namespace Flyatron
 		Vector2 reference;
 		float distance;
 
-		public Mine(Texture2D[] inputTextures, float inputVelocity, int newXBound, int newYBound)
+		public Mine(Texture2D[] inputTextures, float inputVelocity)
 		{
 			texture = inputTextures;
 			velocity = inputVelocity;
 
-			xBound = newXBound;
-			yBound = newYBound;
-
-			vector  = new Vector2(0 - texture[0].Width, Rng(0,yBound - texture[0].Height));
+			vector  = new Vector2(0 - texture[0].Width, Helper.Rng(0,Game.HEIGHT - texture[0].Height));
 			offset  = new Vector2(20, 20);
 
 			rectangle = new Rectangle[]
@@ -96,10 +90,10 @@ namespace Flyatron
 
 		private void Halt()
 		{
-			vector.X = xBound + texture[0].Width;
-			vector.Y = Rng(0, yBound - texture[0].Height);
+			vector.X = Game.WIDTH + texture[0].Width;
+			vector.Y = Helper.Rng(0, Game.WIDTH - texture[0].Height);
 			state = Minestate.Halted;
-			haltDuration = Rng(0, haltSeconds * 1000);
+			haltDuration = Helper.Rng(0, haltSeconds * 1000);
 			halt.Restart();
 		}
 
@@ -111,7 +105,7 @@ namespace Flyatron
 
 		public Rectangle Rectangle()
 		{
-			return new Rectangle((int)vector.X, (int)vector.Y, texture[0].Width, texture[0].Height);
+			return new Rectangle((int)vector.X, (int)vector.Y, 40, 40);
 		}
 
 		public Vector2 Position()
@@ -139,11 +133,6 @@ namespace Flyatron
 				angle[0] = 0;
 			if (angle[1] >= 360)
 				angle[1] = 0;
-		}
-
-		private int Rng(int a, int b)
-		{
-			return Game.RANDOM.Next(a, b);
 		}
 	}
 }

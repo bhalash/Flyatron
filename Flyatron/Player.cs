@@ -37,13 +37,8 @@ namespace Flyatron
 			new Rectangle(0,0,23,46)  // Flames.
 		};
 
-		KeyboardState lastKeyboardState, currentKeyboardState;
-		MouseState lastMouseState, currentMouseState;
-
 		// Player speed.
 		int lives, velocity, walkingVel;
-		// Player bounds.
-		int xBound, yBound;
 
 		// Default keys are WSAD, but are changable via Rebind().
 		Keys up			= Keys.W;
@@ -61,15 +56,12 @@ namespace Flyatron
 		Stopwatch flamesTimer = new Stopwatch();
 		Stopwatch bobTimer = new Stopwatch();
 
-		public Player(int inputLives, int inputVelocity,Color inputTint, Texture2D[] inTex, int inputXBound, int inputYBound)
+		public Player(int inputLives, int inputVelocity,Color inputTint, Texture2D[] inTex)
 		{
 			textures = inTex;
 			walkingVel = inputVelocity;
 			velocity = walkingVel;
 			lives = inputLives;
-
-			xBound = inputXBound;
-			yBound = inputYBound;
 
 			flamesTimer.Start();
 		}
@@ -79,14 +71,11 @@ namespace Flyatron
 			return vectors[1];
 		}
 
-		public void Update(KeyboardState inputState, MouseState inputMouseState, GameTime inputGameTime)
+		public void Update(GameTime inputGameTime)
 		{
-			currentKeyboardState = inputState;
-			currentMouseState = inputMouseState;
-
-			UpdateBodyAnimation(currentMouseState);
-			UpdateGunAnimation(currentMouseState);
-			UpdateHeadAnimation(currentMouseState);
+			UpdateBodyAnimation(Game.currentMouseState);
+			UpdateGunAnimation(Game.currentMouseState);
+			UpdateHeadAnimation(Game.currentMouseState);
 			UpdateFlamesAnimation();
 
 			// Mofidul: Here is the movement code I use.
@@ -94,27 +83,24 @@ namespace Flyatron
 			// I have separate code (see backgrounds.cs) for passing x/y values.
 
 			if (vectors[0].X > 0)
-				if (currentKeyboardState.IsKeyDown(left))
+				if (Game.currentKeyboardState.IsKeyDown(left))
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].X -= velocity;
 
 			if (vectors[0].Y > 0)
-				if (currentKeyboardState.IsKeyDown(up))
+				if (Game.currentKeyboardState.IsKeyDown(up))
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].Y -= velocity;
 
-			if (vectors[0].X + textures[0].Width < xBound)
-				if (currentKeyboardState.IsKeyDown(right))
+			if (vectors[0].X + textures[0].Width < Game.WIDTH)
+				if (Game.currentKeyboardState.IsKeyDown(right))
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].X += velocity;
 
-			if (currentKeyboardState.IsKeyDown(down))
-				if (vectors[0].Y + textures[0].Height < yBound)
+			if (Game.currentKeyboardState.IsKeyDown(down))
+				if (vectors[0].Y + textures[0].Height < Game.WIDTH)
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].Y += velocity;
-
-			lastMouseState = currentMouseState;
-			lastKeyboardState = currentKeyboardState;
 		}
 
 		public void Draw(SpriteBatch spriteBatch)
@@ -159,20 +145,6 @@ namespace Flyatron
 		public void Lives(int inputLives)
 		{
 			lives += inputLives;
-		}
-
-		// Helpers.
-		private bool Keypress(Keys inputKey)
-		{
-			if (currentKeyboardState.IsKeyUp(inputKey) && (lastKeyboardState.IsKeyDown(inputKey)))
-				return true;
-
-			return false;
-		}
-
-		private int Rng(int a, int b)
-		{
-			return Game.RANDOM.Next(a, b);
 		}
 
 		private void UpdateHeadAnimation(MouseState mouse)

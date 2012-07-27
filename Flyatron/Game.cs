@@ -12,29 +12,26 @@ namespace Flyatron
 {
 	public class Game : Microsoft.Xna.Framework.Game
 	{
-		public static Random RANDOM;
-
 		// Welcome to Flyatron!
-		public static Game Instance;
 
-		static double version = 0.1;
-		static string versionString = "Version " + version;
-		bool debug = false;
+		public static bool DEBUG = false;
+
+		public static int WIDTH = 1024;
+		public static int HEIGHT = 600;
+
+		bool fullScreen = false;
+		bool showMouse = false;
+
+		static double VERSION = 0.1;
+		static string versionString = "Version " + VERSION;
+
+		public static Game Instance;
 
 		static SpriteBatch spriteBatch;
 		GraphicsDeviceManager graphics;
 
-		// Width, height, full screen.
-		// Laptop's native is 1366x768.
-		// A decent working size for me is 1024x600.
-		int gameWidth = 1024;
-		int gameHeight = 600;
-		bool fullScreen = false;
-		bool showMouse = false;
-
-		// Test if a key or button has been: 
-		KeyboardState lastKeyboardState, currentKeyboardState;
-		MouseState lastMouseState, currentMouseState;
+		public static KeyboardState lastKeyboardState, currentKeyboardState;
+		public static MouseState lastMouseState, currentMouseState;
 
 		// Flyatron uses the font "Press Start 2P". The font was created by William Cody of Zone38.
 		// The font is distributed under the permissive SIL Open Font License (OFL), and included in
@@ -50,23 +47,26 @@ namespace Flyatron
 		Player a;
 		Texture2D[] playerTextures;
 
-		// Mines.
+		// Fear, fire foes.
 		Texture2D[] mineTextures;
 		List <Mine> mines;
 		int totalMines = 30;
 
-		// Score
+		// Scoreboard.
 		Scoreboard scores;
 		string scoreFile = "scores.txt";
 
+		// Collision detection.
+		Collider collider;
+
 		// Menu state.
-		enum ScreenState
-		{ Menu, Play, New, ScoresScreen, AboutScreen, GameOver };
+		enum ScreenState { Menu, Play, New, ScoresScreen, AboutScreen, GameOver };
 
 		// Backdrop.
 		Texture2D[] alphaTextures;
 		Backdrop cloudyBackdrop;
 
+		// Event timer.
 		Stopwatch deathScreenTimer;
 
 		// Music sourced from the chiptunes group "8-Bit Weapon". Used with permission.
@@ -94,12 +94,9 @@ namespace Flyatron
 		public Game()
 		{
 			Instance = this;
-
-			RANDOM = new Random();
-
 			graphics = new GraphicsDeviceManager(this);
-			graphics.PreferredBackBufferWidth = gameWidth;
-			graphics.PreferredBackBufferHeight = gameHeight;
+			graphics.PreferredBackBufferWidth = WIDTH;
+			graphics.PreferredBackBufferHeight = HEIGHT;
 			this.graphics.IsFullScreen = fullScreen;
 			this.IsMouseVisible = showMouse;
 
@@ -117,7 +114,7 @@ namespace Flyatron
 			};
 
 			// Initialize backdrop.
-			cloudyBackdrop = new Backdrop(alphaTextures, gameHeight);
+			cloudyBackdrop = new Backdrop(alphaTextures);
 
 			// Numerical value equates to pixel size.
 			font10 = Content.Load<SpriteFont>("fonts\\PressStart2P_10");
@@ -132,7 +129,7 @@ namespace Flyatron
 			eightBitWeapon = new Muzak();
 			eightBitWeapon.Play(Content.Load<Song>(playList[0]));
 
-			if (debug)
+			if (DEBUG)
 				eightBitWeapon.Pause();
 		}
 
@@ -156,6 +153,9 @@ namespace Flyatron
 			// Initialize SpriteBatch.
 			spriteBatch = new SpriteBatch(GraphicsDevice);
 
+			// Initialize collisions.
+			collider = new Collider();
+
 			// Load timers.
 			deathScreenTimer = new Stopwatch();
 
@@ -163,10 +163,10 @@ namespace Flyatron
 			mines = new List<Mine>();
 
 			for (int i = 0; i < totalMines; i ++)
-				mines.Add(new Mine(mineTextures, 5, gameWidth, gameHeight));
+				mines.Add(new Mine(mineTextures, 5));
 
 			// Load player art/stats.
-			a = new Player(5, 10, Color.White, playerTextures, gameWidth, gameHeight);
+			a = new Player(5, 10, Color.White, playerTextures);
 
 			// Load mouse texture.
 			mouse = Content.Load<Texture2D>("pointer");
@@ -227,17 +227,12 @@ namespace Flyatron
 		{
 		}
 
-		private bool Keypress(Keys inputKey)
+		public static bool Keypress(Keys inputKey)
 		{
 			if (currentKeyboardState.IsKeyUp(inputKey) && (lastKeyboardState.IsKeyDown(inputKey)))
 				return true;
 
 			return false;
-		}
-
-		private int Rng(int a, int b)
-		{
-			return RANDOM.Next(a, b);
 		}
 
 		private void UpdateMenu()
@@ -284,13 +279,17 @@ namespace Flyatron
 
 			// cloudyBackdrop.Update(currentKeyboardState, 6);
 			scores.Increment();
-			a.Update(currentKeyboardState, currentMouseState, new GameTime());
+			a.Update(new GameTime());
 
 			for (int i = 0; i < mines.Count; i++)
 				mines[i].Update(a.Position());
 
+			for (int i = 0; i < mines.Count; i++)
+				if (Helper.Circle(a.Rectangle(), mines[i].Rectangle()))
+					screen = ScreenState.GameOver; 
+
 			if (Keypress(Keys.N))
-				eightBitWeapon.Play(Content.Load<Song>(playList[Rng(0, playList.Count - 1)]));
+				eightBitWeapon.Play(Content.Load<Song>(playList[Helper.Rng(0, playList.Count - 1)]));
 			if (Keypress(Keys.P))
 				eightBitWeapon.Pause();
 			if (Keypress(Keys.U))
@@ -337,11 +336,11 @@ namespace Flyatron
 				Y += 35;
 			}
 
-			if (debug)
+			if (DEBUG)
 				spriteBatch.DrawString(
 					font10,
 					versionString,
-					new Vector2(gameWidth - 30 - font10.MeasureString(versionString).Length(), gameHeight - 30),
+					new Vector2(WIDTH - 30 - font10.MeasureString(versionString).Length(), HEIGHT - 30),
 					Color.White
 				);
 		}
@@ -355,7 +354,7 @@ namespace Flyatron
 
 			cloudyBackdrop.Update(3);
 
-			Vector2 fontVector = new Vector2(gameWidth / 2 - font25.MeasureString(message).Length() / 2, gameHeight / 2 - 25);
+			Vector2 fontVector = new Vector2(WIDTH / 2 - font25.MeasureString(message).Length() / 2, HEIGHT / 2 - 25);
 			Color color = Color.White;
 
 			if ((deathScreenTimer.ElapsedMilliseconds > 1000) && (deathScreenTimer.ElapsedMilliseconds <= 2000))
@@ -408,7 +407,7 @@ namespace Flyatron
 				y += 30;
 			}
 
-			if (!debug)
+			if (!DEBUG)
 				spriteBatch.DrawString(
 					font10,
 					eightBitWeapon.NameTime(),
@@ -416,11 +415,11 @@ namespace Flyatron
 					Color.Black
 				);
 
-			if (debug)
+			if (DEBUG)
 				spriteBatch.DrawString(
 					font10,
 					Convert.ToString(gameTime.TotalGameTime),
-					new Vector2(30, gameHeight - 30),
+					new Vector2(30, HEIGHT - 30),
 					Color.Black
 				);
 		}
@@ -434,12 +433,12 @@ namespace Flyatron
 			// Restrict the Mouse so that it stays inside the current display
 			if (mousePos.X < 0)
 				mousePos.X = 0;
-			if (mousePos.X > gameWidth)
-				mousePos.X = gameWidth;
+			if (mousePos.X > WIDTH)
+				mousePos.X = WIDTH;
 			if (mousePos.Y < 0)
 				mousePos.Y = 0;
-			if (mousePos.Y > gameHeight)
-				mousePos.Y = gameHeight;
+			if (mousePos.Y > HEIGHT)
+				mousePos.Y = HEIGHT;
 		}
 
 		private void NewGame()
