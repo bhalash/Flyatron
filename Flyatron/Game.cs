@@ -14,7 +14,7 @@ namespace Flyatron
 	{
 		// Welcome to Flyatron!
 
-		public static bool DEBUG = false;
+		public static bool DEBUG = true;
 
 		public static int WIDTH = 1024;
 		public static int HEIGHT = 600;
@@ -23,12 +23,14 @@ namespace Flyatron
 		public static Screen SCREEN = Screen.Menu;
 
 		bool fullScreen = false;
-		bool showMouse = false;
 
 		static double VERSION = 0.1;
 		static string versionString = "Version " + VERSION;
 
 		public static Game Instance;
+
+		Texture2D border;
+		float bOpacity = 0.3F;
 
 		static SpriteBatch spriteBatch;
 		GraphicsDeviceManager graphics;
@@ -49,11 +51,12 @@ namespace Flyatron
 		// Player.
 		Player a;
 		List <Texture2D> playerTextures;
+		Gun gun;
 
 		// Fear, fire foes.
 		Texture2D[] mineTextures;
-		List <Mine> mines;
-		int totalMines = 30;
+		List <Mine> mine;
+		int totalMines = 35;
 
 		// Scoreboard.
 		Scoreboard scores;
@@ -62,6 +65,9 @@ namespace Flyatron
 		// Backdrop.
 		Texture2D[] alphaTextures;
 		Backdrop cloudyBackdrop;
+
+		// Mouse.
+		Flymouse mouse;
 
 		// Event timer.
 		Stopwatch deathScreenTimer;
@@ -82,9 +88,6 @@ namespace Flyatron
 		Vector2 menuVec;
 
 		// Custom mouse texture.
-		Texture2D mouse;
-		Vector2 mousePos;
-		MouseState mouseState;
 
 		public Game()
 		{
@@ -93,7 +96,11 @@ namespace Flyatron
 			graphics.PreferredBackBufferWidth = WIDTH;
 			graphics.PreferredBackBufferHeight = HEIGHT;
 			this.graphics.IsFullScreen = fullScreen;
-			this.IsMouseVisible = showMouse;
+
+			if (!DEBUG)
+				this.IsMouseVisible = false;
+			else if (DEBUG)
+				this.IsMouseVisible = true;
 
 			Content.RootDirectory = "Content";
 		}
@@ -130,12 +137,13 @@ namespace Flyatron
 
 		protected override void Initialize()
 		{
+			border = Content.Load<Texture2D>("border");
+
 			playerTextures = new List<Texture2D>()
 			{
 				// Player textures.
 				Content.Load<Texture2D>("player\\body"),
 				Content.Load<Texture2D>("player\\head"),
-				Content.Load<Texture2D>("player\\gun"),
 				Content.Load<Texture2D>("player\\flames")
 			};
 
@@ -145,23 +153,25 @@ namespace Flyatron
 				Content.Load<Texture2D>("mine\\spikes")
 			};
 
+			// Load player art/stats.
+			a = new Player(5, 10, Color.White, playerTextures);
+			// Gun.
+			gun = new Gun(Content.Load<Texture2D>("gun\\gun"));
+
+			// Initialize mouse.
+			mouse = new Flymouse(Content.Load<Texture2D>("pointer"));
+
 			// Initialize SpriteBatch.
 			spriteBatch = new SpriteBatch(GraphicsDevice);
 
 			// Load timers.
 			deathScreenTimer = new Stopwatch();
 
-			// Initialize foe mines.
-			mines = new List<Mine>();
+			// Initialize foe mine.
+			mine = new List<Mine>();
 
 			for (int i = 0; i < totalMines; i ++)
-				mines.Add(new Mine(mineTextures, 5));
-
-			// Load player art/stats.
-			a = new Player(5, 10, Color.White, playerTextures);
-
-			// Load mouse texture.
-			mouse = Content.Load<Texture2D>("pointer");
+				mine.Add(new Mine(mineTextures, 5));
 
 			// Import top scores.
 			scores = new Scoreboard(scoreFile);
@@ -179,7 +189,7 @@ namespace Flyatron
 			currentMouseState = Mouse.GetState();
 
 			// Update mouse pointer.
-			UpdateMouse(currentMouseState);
+			mouse.Update();
 			// Update SCREEN selection.
 			UpdateSwitch(SCREEN);
 
@@ -238,8 +248,8 @@ namespace Flyatron
 
 		private void DrawDeath()
 		{
-			for (int i = 0; i < mines.Count; i++)
-				mines[i].Halt(6);
+			for (int i = 0; i < mine.Count; i++)
+				mine[i].Halt(6);
 
 			a.X(100);
 			a.Y(HEIGHT / 2 - a.Rectangle().Height / 2);
@@ -396,19 +406,26 @@ namespace Flyatron
 
 		private void UpdatePlay()
 		{
-			cloudyBackdrop.Update(5);
+			mouse.Update();
 
-			// cloudyBackdrop.Update(currentKeyboardState, 6);
-			scores.Increment();
-			a.Update(new GameTime());
+			for (int i = 0; i < mine.Count; i++)
+				mine[i].Update(a.Position());
 
-			for (int i = 0; i < mines.Count; i++)
-				mines[i].Update(a.Position());
-
-			for (int i = 0; i < mines.Count; i++)
-				if (Helper.Circle(a.Rectangle(), mines[i].Rectangle()))
+			// Collision detection.
+			for (int i = 0; i < mine.Count; i++)
+				if (Helper.Rectangle(a.Rectangle(), mine[i].Rectangle()))
 					SCREEN = Screen.Death;
 
+			// Update backdrop.
+			cloudyBackdrop.Update(5);
+			// Tick scores.
+			scores.Increment();
+			// Update player.
+			a.Update(new GameTime());
+			// Update gun.
+			gun.Update(a.Position());
+
+			// Audio controls: Pause, unpause, skip forward.
 			if (Keypress(Keys.N))
 				eightBitWeapon.Play(Content.Load<Song>(playList[Helper.Rng(0, playList.Count - 1)]));
 			if (Keypress(Keys.P))
@@ -421,14 +438,28 @@ namespace Flyatron
 		{
 			eightBitWeapon.Volume(0.7F);
 
+			// Draw HUD.
 			DrawHud(gameTime);
-
+			// Draw player.
 			a.Draw(spriteBatch);
+			// Draw gun. Should always be drawn after the player!
+			gun.Draw(spriteBatch);
 
-			for (int i = 0; i < mines.Count; i++)
-				mines[i].Draw(spriteBatch);
+			// Draw mine.
+			for (int i = 0; i < mine.Count; i++)
+				mine[i].Draw(spriteBatch);
 
-			spriteBatch.Draw(mouse, mousePos, Color.White);
+			if (DEBUG)
+			{
+				// Outline textures if debug is enabled.
+				spriteBatch.Draw(border, a.Rectangle(), Color.White * bOpacity);
+				spriteBatch.Draw(border, mouse.Rectangle(), Color.White * bOpacity);
+
+				for (int i = 0; i < mine.Count; i++)
+					spriteBatch.Draw(border, mine[i].Rectangle(), Color.White * bOpacity);
+			}
+
+			mouse.Draw(spriteBatch);
 		}
 
 		private void DrawHud(GameTime gameTime)
@@ -468,23 +499,6 @@ namespace Flyatron
 					new Vector2(30, HEIGHT - 30),
 					Color.Black
 				);
-		}
-
-		private void UpdateMouse(MouseState inputMousestate)
-		{
-			mouseState = inputMousestate;
-			mousePos.X = mouseState.X;
-			mousePos.Y = mouseState.Y;
-
-			// Restrict the Mouse so that it stays inside the current display
-			if (mousePos.X < 0)
-				mousePos.X = 0;
-			if (mousePos.X > WIDTH)
-				mousePos.X = WIDTH;
-			if (mousePos.Y < 0)
-				mousePos.Y = 0;
-			if (mousePos.Y > HEIGHT)
-				mousePos.Y = HEIGHT;
 		}
 
 		private void Switch(Screen screenState, GameTime gameTime, SpriteBatch spriteBatch)

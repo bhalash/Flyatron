@@ -12,7 +12,7 @@ namespace Flyatron
 	{
 		Stopwatch rotation;
 		Stopwatch halt;
-
+		
 		int haltDuration;
 
 		enum Minestate { Halted, Mobile };
@@ -104,7 +104,7 @@ namespace Flyatron
 
 		public Rectangle Rectangle()
 		{
-			return new Rectangle((int)vector.X, (int)vector.Y, 40, 40);
+			return new Rectangle((int)vector.X - 20, (int)vector.Y - 20, 40, 40);
 		}
 
 		public Vector2 Position()
