@@ -188,17 +188,17 @@ namespace Flyatron
 			currentKeyboardState = Keyboard.GetState();
 			currentMouseState = Mouse.GetState();
 
-			// Update mouse pointer.
 			mouse.Update();
+
 			// Update SCREEN selection.
-			UpdateSwitch(SCREEN);
+			UpdateSwitch();
 
 			if (Keypress(Keys.Escape))
 			{
 				// Toggle between menu and gameplay.
 				if (SCREEN == Screen.Play)
 					SCREEN = Screen.Menu;
-				else if (SCREEN == Screen.Menu)
+				else if ((SCREEN == Screen.Menu) && (a.RemainingLives() > 0))
 					SCREEN = Screen.Play;
 			}
 
@@ -216,7 +216,8 @@ namespace Flyatron
 			// Draw the background.
 			cloudyBackdrop.Draw(spriteBatch);
 			// Update game state.
-			Switch(SCREEN, gameTime, spriteBatch);
+			Switch(gameTime, spriteBatch);
+			mouse.Draw(spriteBatch);
 			spriteBatch.End();
 
 			base.Draw(gameTime);
@@ -230,13 +231,29 @@ namespace Flyatron
 			return false;
 		}
 
+		public static bool LeftClick()
+		{
+			if ((currentMouseState.LeftButton == ButtonState.Released) && (lastMouseState.LeftButton == ButtonState.Pressed))
+				return true;
+
+			else return false;
+		}
+
+		public static bool RightClick()
+		{
+			if ((currentMouseState.RightButton == ButtonState.Released) && (lastMouseState.RightButton == ButtonState.Pressed))
+				return true;
+
+			else return false;
+		}
+
 		private void NewGame()
 		{
-			// NewGame() should run once, in one pass. 
-			// Set up the sprites, reset the appropriate counters. 
-			// Thereafter, switch to Screen.Play.
-
 			scores.Reset();
+			a.Lives(5);
+
+			for (int i = 0; i < mine.Count; i++)
+				mine[i].Halt();
 
 			SCREEN = Screen.Play;
 		}
@@ -262,7 +279,7 @@ namespace Flyatron
 		private void UpdateMenu()
 		{
 			// Menu opts.
-			if (Keypress(Keys.D1))
+			if ((Keypress(Keys.D1)) && (a.RemainingLives() > 0))
 				SCREEN = Screen.Play;
 			if (Keypress(Keys.D2))
 				SCREEN = Screen.New;
@@ -271,9 +288,7 @@ namespace Flyatron
 			if (Keypress(Keys.D4))
 				SCREEN = Screen.About;
 			if (Keypress(Keys.D5))
-			{
 				this.Exit();
-			}
 		}
 
 		private void DrawMenu()
@@ -351,11 +366,16 @@ namespace Flyatron
 		private void UpdateEnd()
 		{
 			if (Keypress(Keys.Escape))
+			{
 				SCREEN = Screen.Scores;
+				deathScreenTimer.Reset();
+			}
 		}
 
 		private void DrawEnd()
 		{
+			Color color = Color.White;
+
 			if (!deathScreenTimer.IsRunning)
 				deathScreenTimer.Start();
 
@@ -364,7 +384,6 @@ namespace Flyatron
 			cloudyBackdrop.Update(3);
 
 			Vector2 fontVector = new Vector2(WIDTH / 2 - font25.MeasureString(message).Length() / 2, HEIGHT / 2 - 25);
-			Color color = Color.White;
 
 			if ((deathScreenTimer.ElapsedMilliseconds > 1000) && (deathScreenTimer.ElapsedMilliseconds <= 2000))
 			{
@@ -406,10 +425,8 @@ namespace Flyatron
 
 		private void UpdatePlay()
 		{
-			mouse.Update();
-
 			for (int i = 0; i < mine.Count; i++)
-				mine[i].Update(a.Position());
+				mine[i].Update();
 
 			// Collision detection.
 			for (int i = 0; i < mine.Count; i++)
@@ -458,8 +475,6 @@ namespace Flyatron
 				for (int i = 0; i < mine.Count; i++)
 					spriteBatch.Draw(border, mine[i].Rectangle(), Color.White * bOpacity);
 			}
-
-			mouse.Draw(spriteBatch);
 		}
 
 		private void DrawHud(GameTime gameTime)
@@ -501,7 +516,7 @@ namespace Flyatron
 				);
 		}
 
-		private void Switch(Screen screenState, GameTime gameTime, SpriteBatch spriteBatch)
+		private void Switch(GameTime gameTime, SpriteBatch spriteBatch)
 		{
 			switch (SCREEN)
 			{
@@ -543,7 +558,7 @@ namespace Flyatron
 			}
 		}
 
-		private void UpdateSwitch(Screen screenState)
+		private void UpdateSwitch()
 		{
 			switch (SCREEN)
 			{

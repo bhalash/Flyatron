@@ -27,8 +27,6 @@ namespace Flyatron
 		Vector2 offset;
 		Rectangle[] rectangle;
 
-		// Collision reference.
-		Vector2 reference;
 		float distance;
 
 		public Mine(Texture2D[] inputTextures, float inputVelocity)
@@ -56,10 +54,8 @@ namespace Flyatron
 				spriteBatch.Draw(texture[i], vector, rectangle[i], Color.White, angle[i], offset, 1, SpriteEffects.None, 0);
 		}
 
-		public void Update(Vector2 inputReference)
+		public void Update()
 		{
-			reference = inputReference;
-
 			switch (state)
 			{
 				case (Minestate.Halted):
