@@ -10,7 +10,7 @@ namespace Flyatron
 {
 	class Scoreboard
 	{
-		int score = 0;
+		public static int score = 0;
 		List<int> scores;
 		Stopwatch timer;
 		string path;
@@ -83,6 +83,8 @@ namespace Flyatron
 
 		public void Report(SpriteFont font, SpriteBatch batch, int x, int y, Color color)
 		{
+			// Report() is used on the scores screen.
+			// Current() is drawn during gameplay.
 			Collate();
 			Export(path);
 			for (int i = 0; i < scores.Count; i++)
@@ -106,9 +108,9 @@ namespace Flyatron
 					file.WriteLine(scores[i]);
 		}
 
-		public void Debug()
+		public static void Bump(int amount)
 		{
-			score += 12345678;
+			score += amount;
 		}
 	}
 }

@@ -21,7 +21,7 @@ namespace Flyatron
 		Minestate state = Minestate.Traverse;
 
 		// Mine traverse speed.
-		float velocity = 12;
+		float velocity = 7;
 
 		// Animation: Texture, vector, rotation offset, and frame rectangle.
 		Texture2D[] texture;
@@ -32,7 +32,7 @@ namespace Flyatron
 		float[] angle = new float[] { 0, 0 };
 
 		// Explosion.
-		float expOpacity = 1;
+		float expOpacity;
 		float expScale;
 		Vector2 expVector;
 
@@ -171,7 +171,10 @@ namespace Flyatron
 
 		private void Explosion()
 		{
-			float elapsed = expTimer.ElapsedMilliseconds * 0.001F;
+			float elapsed = expTimer.ElapsedMilliseconds * 0.002F;
+
+			// Bump score 10 points.
+			Scoreboard.Bump(10);
 
 			expVector.X = vector.X - texture[2].Width / 3 * expScale;
 			expVector.Y = vector.Y - texture[2].Height / 3 * expScale;
@@ -182,7 +185,7 @@ namespace Flyatron
 			expScale = elapsed;
 			expOpacity = 1 - elapsed;
 
-			if (expTimer.ElapsedMilliseconds >= 1000)
+			if (expTimer.ElapsedMilliseconds >= 500)
 			{
 				expTimer.Stop();
 				state = Minestate.Halted;

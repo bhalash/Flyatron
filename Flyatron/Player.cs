@@ -10,6 +10,9 @@ namespace Flyatron
 {
 	class Player
 	{
+		// Flames under the player.
+		Stopwatch flamesTimer;
+
 		// Default keys are WSAD, but are changable via Rebind().
 		Keys up = Keys.W;
 		Keys down = Keys.S;
@@ -49,8 +52,6 @@ namespace Flyatron
 
 		float headRotation = 0;
 
-		Stopwatch flamesTimer = new Stopwatch();
-
 		public Player(int inputLives, int inputVelocity,Color inputTint, List<Texture2D> inTex)
 		{
 			textures = inTex;
@@ -58,6 +59,7 @@ namespace Flyatron
 			velocity = walkingVel;
 			lives = currentLives = inputLives;
 
+			flamesTimer = new Stopwatch();
 			flamesTimer.Start();
 		}
 
@@ -71,10 +73,6 @@ namespace Flyatron
 			UpdateBodyAnimation(Game.currentMouseState);
 			UpdateHeadAnimation(Game.currentMouseState);
 			UpdateFlamesAnimation();
-
-			// Mofidul: Here is the movement code I use.
-			// Works absolutely fine for me, but I am moving a lot of things.
-			// I have separate code (see backgrounds.cs) for passing x/y values.
 
 			if (Game.currentKeyboardState.IsKeyDown(left))
 				if (vectors[0].X > 0)

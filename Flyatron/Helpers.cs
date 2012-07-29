@@ -1,5 +1,10 @@
-﻿using System;
+﻿/*
+ * Miscellaneous helper functions.
+ */
+
+using System;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace Flyatron
 {
@@ -13,13 +18,12 @@ namespace Flyatron
 
 		public static int Rng(int a, int b)
 		{
-			// RNG.
 			return RANDOM.Next(a, b);
 		}
 
 		public static bool Rectangle(Rectangle a, Rectangle b)
 		{
-			// Rectangular collisions.
+			// Generic collisions.
 			if (a.Intersects(b))
 				return true;
 
@@ -28,8 +32,34 @@ namespace Flyatron
 
 		public static bool Circle(Rectangle a, Rectangle b)
 		{
-			// Circular collisions.
+			// Circular generic collisions.
 			if (Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y)) < (a.Width / 2 + b.Width / 2))
+				return true;
+
+			return false;
+		}
+
+		public static bool LeftClick()
+		{
+			// Left mouse click.
+			if ((Game.currentMouseState.LeftButton == ButtonState.Released) && (Game.lastMouseState.LeftButton == ButtonState.Pressed))
+				return true;
+
+			else return false;
+		}
+
+		public static bool RightClick()
+		{
+			// Right mouse click.
+			if ((Game.currentMouseState.RightButton == ButtonState.Released) && (Game.lastMouseState.RightButton == ButtonState.Pressed))
+				return true;
+
+			else return false;
+		}
+
+		public static bool Keypress(Keys inputKey)
+		{
+			if (Game.currentKeyboardState.IsKeyUp(inputKey) && (Game.lastKeyboardState.IsKeyDown(inputKey)))
 				return true;
 
 			return false;

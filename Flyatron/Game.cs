@@ -56,7 +56,7 @@ namespace Flyatron
 		// Fear, fire foes.
 		Texture2D[] mineTextures;
 		List <Mine> mine;
-		int totalMines = 35;
+		int totalMines = 25;
 
 		// Scoreboard.
 		Scoreboard scores;
@@ -194,7 +194,7 @@ namespace Flyatron
 			// Update SCREEN selection.
 			UpdateSwitch();
 
-			if (Keypress(Keys.Escape))
+			if (Helper.Keypress(Keys.Escape))
 			{
 				// Toggle between menu and gameplay.
 				if (SCREEN == Screen.Play)
@@ -222,30 +222,6 @@ namespace Flyatron
 			spriteBatch.End();
 
 			base.Draw(gameTime);
-		}
-
-		public static bool Keypress(Keys inputKey)
-		{
-			if (currentKeyboardState.IsKeyUp(inputKey) && (lastKeyboardState.IsKeyDown(inputKey)))
-				return true;
-
-			return false;
-		}
-
-		public static bool LeftClick()
-		{
-			if ((currentMouseState.LeftButton == ButtonState.Released) && (lastMouseState.LeftButton == ButtonState.Pressed))
-				return true;
-
-			else return false;
-		}
-
-		public static bool RightClick()
-		{
-			if ((currentMouseState.RightButton == ButtonState.Released) && (lastMouseState.RightButton == ButtonState.Pressed))
-				return true;
-
-			else return false;
 		}
 
 		private void NewGame()
@@ -280,15 +256,15 @@ namespace Flyatron
 		private void UpdateMenu()
 		{
 			// Menu opts.
-			if ((Keypress(Keys.D1)) && (a.RemainingLives() > 0))
+			if ((Helper.Keypress(Keys.D1)) && (a.RemainingLives() > 0))
 				SCREEN = Screen.Play;
-			if (Keypress(Keys.D2))
+			if (Helper.Keypress(Keys.D2))
 				SCREEN = Screen.New;
-			if (Keypress(Keys.D3))
+			if (Helper.Keypress(Keys.D3))
 				SCREEN = Screen.Scores;
-			if (Keypress(Keys.D4))
+			if (Helper.Keypress(Keys.D4))
 				SCREEN = Screen.About;
-			if (Keypress(Keys.D5))
+			if (Helper.Keypress(Keys.D5))
 				this.Exit();
 		}
 
@@ -329,7 +305,7 @@ namespace Flyatron
 
 		private void UpdateAbout()
 		{
-			if (Keypress(Keys.Escape))
+			if (Helper.Keypress(Keys.Escape))
 				SCREEN = Screen.Menu;
 		}
 
@@ -366,7 +342,7 @@ namespace Flyatron
 
 		private void UpdateEnd()
 		{
-			if (Keypress(Keys.Escape))
+			if (Helper.Keypress(Keys.Escape))
 			{
 				SCREEN = Screen.Scores;
 				deathScreenTimer.Reset();
@@ -410,7 +386,7 @@ namespace Flyatron
 
 		private void UpdateScores()
 		{
-			if (Keypress(Keys.Escape))
+			if (Helper.Keypress(Keys.Escape))
 				SCREEN = Screen.Menu;
 		}
 
@@ -439,11 +415,11 @@ namespace Flyatron
 			gun.Update(a.Position());
 
 			// Audio controls: Pause, unpause, skip forward.
-			if (Keypress(Keys.N))
+			if (Helper.Keypress(Keys.N))
 				eightBitWeapon.Play(Content.Load<Song>(playList[Helper.Rng(0, playList.Count - 1)]));
-			if (Keypress(Keys.P))
+			if (Helper.Keypress(Keys.P))
 				eightBitWeapon.Pause();
-			if (Keypress(Keys.U))
+			if (Helper.Keypress(Keys.U))
 				eightBitWeapon.Resume();
 		}
 
