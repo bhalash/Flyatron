@@ -10,21 +10,13 @@ namespace Flyatron
 {
 	class Player
 	{
-		float scale = 0.7F; 
+		// Default keys are WSAD, but are changable via Rebind().
+		Keys up = Keys.W;
+		Keys down = Keys.S;
+		Keys left = Keys.A;
+		Keys right = Keys.D;
 
 		List<Texture2D> textures;
-
-		static int[] frames = new int[] { 35, 72, 35, 35, 23, 46 };
-		static int[] frameOffset = new int[] { 0, 0, 13, 13, 4, 40 };
-
-		static int x = 400;
-		static int y = 300;
-
-		// Default keys are WSAD, but are changable via Rebind().
-		Keys up    = Keys.W;
-		Keys down  = Keys.S;
-		Keys left  = Keys.A;
-		Keys right = Keys.D;
 
 		Vector2[] vectors = new Vector2[]
 		{		
@@ -40,6 +32,14 @@ namespace Flyatron
 			new Rectangle(0,0,35,35), // Head.
 			new Rectangle(0,0,23,46)  // Flames.
 		};
+
+		float scale = 0.7F; 
+
+		static int[] frames = new int[] { 35, 72, 35, 35, 23, 46 };
+		static int[] frameOffset = new int[] { 0, 0, 13, 13, 4, 40 };
+
+		static int x = 400;
+		static int y = 300;
 
 		// Player speed.
 		int lives, currentLives, velocity, walkingVel;

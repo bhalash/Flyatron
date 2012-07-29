@@ -4,43 +4,59 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Flyatron;
 
 namespace Flyatron
 {
 	class Mine
 	{
+		// Animate.
 		Stopwatch rotation;
+		// Respawn.
 		Stopwatch halt;
-		
-		int haltDuration;
+		// Explosion.
+		Stopwatch explosion;
 
-		enum Minestate { Halted, Mobile };
-		Minestate state = Minestate.Mobile;
+		// Current state of the mine.
+		enum Minestate { Halted, Traverse, Explosion };
+		Minestate state = Minestate.Traverse;
 
-		float[] angle = new float[] {0,0};
+		// Mine traverse speed.
+		float velocity = 25;
 
-		float velocity;
-
+		// Animation: Texture, vector, rotation offset, and frame rectangle.
 		Texture2D[] texture;
 		Vector2 vector;
 		Vector2 offset;
 		Rectangle[] rectangle;
+		// Rotation.
+		float[] angle = new float[] { 0, 0 };
 
+		// Explosion.
+		float expOpacity = 0.3F;
+		float expScale = 0.9F;
+		Vector2 expVector;
+
+		// Halt/loop timer.
+		int haltDuration;
+		int seconds = 1;
+
+		// Reference vector (for animaiton/collision).
+		Vector2 reference;
+		// Distance to reference vector.
 		float distance;
 
-		public Mine(Texture2D[] inputTextures, float inputVelocity)
+		public Mine(Texture2D[] inputTextures)
 		{
 			texture = inputTextures;
-			velocity = inputVelocity;
 
-			vector  = new Vector2(0 - texture[0].Width, Helper.Rng(0,Game.HEIGHT - texture[0].Height));
-			offset  = new Vector2(20, 20);
+			vector = new Vector2(0 - texture[0].Width, Helper.Rng(0, Game.HEIGHT - texture[0].Height));
+			offset = new Vector2(20, 20);
 
 			rectangle = new Rectangle[]
 				{
 					new Rectangle(0, 0, 40, 40),
 					new Rectangle(0, 0, 40, 40),
+					new Rectangle(0, 0, 125, 125)
 				};
 
 			rotation = new Stopwatch();
@@ -50,65 +66,77 @@ namespace Flyatron
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
-			for (int i = 0; i < texture.Length; i++)
-				spriteBatch.Draw(texture[i], vector, rectangle[i], Color.White, angle[i], offset, 1, SpriteEffects.None, 0);
+			if (state == Minestate.Traverse)
+				for (int i = 0; i < texture.Length - 1; i++)
+					spriteBatch.Draw(texture[i], vector, rectangle[i], Color.White, angle[i], offset, 1, SpriteEffects.None, 0);
+
+			if (state == Minestate.Explosion)
+				spriteBatch.Draw(texture[2], expVector, rectangle[2], Color.White * expOpacity, 0, offset, expScale, SpriteEffects.None, 0);
 		}
 
-		public void Update()
+		public void Update(Vector2 newReference)
 		{
+			reference = newReference;
+
 			switch (state)
 			{
 				case (Minestate.Halted):
 					{
-						MineHalted();
+						Halt();
 						break;
 					}
-				case (Minestate.Mobile):
+				case (Minestate.Traverse):
 					{
-						MineMobile();
+						Traverse();
+						break;
+					}
+				case (Minestate.Explosion):
+					{
+						Explosion();
 						break;
 					}
 			}
 		}
 
-		private void MineMobile()
+		private void Traverse()
 		{
-			UpdateAnimation();
+			Animate();
 
 			distance = Vector2.Distance(vector, reference);
 
+			// Traverse left.
 			vector.X -= velocity;
 
-			if ((vector.X + texture[0].Width < 0) || (distance < 35))
-				Halt();
+			// Check if it needs to be drawn.
+			if (vector.X + texture[0].Width < 0)
+			{
+				state = Minestate.Halted;
+				halt.Start();
+			}
 		}
 
-		public void Halt(int seconds = 3)
+		private void Halt()
 		{
 			vector.X = Game.WIDTH + texture[0].Width;
 			vector.Y = Helper.Rng(0, Game.WIDTH - texture[0].Height);
-			state = Minestate.Halted;
+
 			haltDuration = Helper.Rng(0, seconds * 1000);
-			halt.Restart();
-		}
 
-		private void MineHalted()
-		{
+			// Check if it needs to be drawn.
 			if (halt.ElapsedMilliseconds > haltDuration)
-				state = Minestate.Mobile;
+			{
+				state = Minestate.Traverse;
+				halt.Reset();
+			}
 		}
 
-		public Rectangle Rectangle()
+		private void Explosion()
 		{
-			return new Rectangle((int)vector.X - 20, (int)vector.Y - 20, 40, 40);
+			expVector.X = vector.X - texture[2].Width / 3 * expScale;
+			expVector.Y = vector.Y - texture[2].Height / 3 * expScale;
 		}
 
-		public Vector2 Position()
-		{
-			return vector;
-		}
-
-		private void UpdateAnimation()
+		private void Animate()
 		{
 			if (rotation.ElapsedMilliseconds >= 20F)
 			{
@@ -128,6 +156,39 @@ namespace Flyatron
 				angle[0] = 0;
 			if (angle[1] >= 360)
 				angle[1] = 0;
+		}
+
+		public Rectangle Rectangle()
+		{
+			// Rectangles for the explosion animation are coming back all fucked. 
+			// I'm not going to worry about it too much because the player has already died at that point.
+			return new Rectangle((int)vector.X - 20, (int)vector.Y - 20, rectangle[0].Width, rectangle[0].Height);
+		}
+
+		public Vector2 Position()
+		{
+			return vector;
+		}
+
+		// DEBUG
+		public void Switch(int newState)
+		{
+			if (newState == 1)
+				state = Minestate.Traverse;
+			if (newState == 2)
+				state = Minestate.Halted;
+			if (newState == 3)
+				state = Minestate.Explosion;
+		}
+
+		public void X(int newX)
+		{
+			vector.X = newX;
+		}
+
+		public void Y(int newY)
+		{
+			vector.Y = newY;
 		}
 	}
 }

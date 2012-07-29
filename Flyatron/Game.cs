@@ -150,7 +150,8 @@ namespace Flyatron
 			mineTextures = new Texture2D[]
 			{
 				Content.Load<Texture2D>("mine\\core"),
-				Content.Load<Texture2D>("mine\\spikes")
+				Content.Load<Texture2D>("mine\\spikes"),
+				Content.Load<Texture2D>("mine\\explosion")
 			};
 
 			// Load player art/stats.
@@ -171,7 +172,7 @@ namespace Flyatron
 			mine = new List<Mine>();
 
 			for (int i = 0; i < totalMines; i ++)
-				mine.Add(new Mine(mineTextures, 5));
+				mine.Add(new Mine(mineTextures));
 
 			// Import top scores.
 			scores = new Scoreboard(scoreFile);
@@ -253,7 +254,7 @@ namespace Flyatron
 			a.Lives(5);
 
 			for (int i = 0; i < mine.Count; i++)
-				mine[i].Halt();
+				mine[i].Switch(2);
 
 			SCREEN = Screen.Play;
 		}
@@ -266,7 +267,7 @@ namespace Flyatron
 		private void DrawDeath()
 		{
 			for (int i = 0; i < mine.Count; i++)
-				mine[i].Halt(6);
+				mine[i].Switch(2);
 
 			a.X(100);
 			a.Y(HEIGHT / 2 - a.Rectangle().Height / 2);
@@ -426,7 +427,7 @@ namespace Flyatron
 		private void UpdatePlay()
 		{
 			for (int i = 0; i < mine.Count; i++)
-				mine[i].Update();
+				mine[i].Update(a.Position());
 
 			// Collision detection.
 			for (int i = 0; i < mine.Count; i++)
