@@ -14,7 +14,7 @@ namespace Flyatron
 	{
 		// Welcome to Flyatron!
 
-		public static bool DEBUG = true;
+		public static bool DEBUG = false;
 
 		public static int WIDTH = 1024;
 		public static int HEIGHT = 600;
@@ -427,12 +427,7 @@ namespace Flyatron
 		private void UpdatePlay()
 		{
 			for (int i = 0; i < mine.Count; i++)
-				mine[i].Update(a.Position());
-
-			// Collision detection.
-			for (int i = 0; i < mine.Count; i++)
-				if (Helper.Rectangle(a.Rectangle(), mine[i].Rectangle()))
-					SCREEN = Screen.Death;
+				mine[i].Update(a.Rectangle());
 
 			// Update backdrop.
 			cloudyBackdrop.Update(5);

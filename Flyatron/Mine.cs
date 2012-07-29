@@ -14,14 +14,14 @@ namespace Flyatron
 		// Respawn.
 		Stopwatch halt;
 		// Explosion.
-		Stopwatch explosion;
+		Stopwatch expTimer;
 
 		// Current state of the mine.
 		enum Minestate { Halted, Traverse, Explosion };
 		Minestate state = Minestate.Traverse;
 
 		// Mine traverse speed.
-		float velocity = 25;
+		float velocity = 12;
 
 		// Animation: Texture, vector, rotation offset, and frame rectangle.
 		Texture2D[] texture;
@@ -32,16 +32,15 @@ namespace Flyatron
 		float[] angle = new float[] { 0, 0 };
 
 		// Explosion.
-		float expOpacity;
+		float expOpacity = 1;
 		float expScale;
 		Vector2 expVector;
 
 		// Halt/loop timer.
 		int haltDuration;
-		int seconds = 1;
 
 		// Reference vector (for animaiton/collision).
-		Vector2 reference;
+		Rectangle reference;
 		// Distance to reference vector.
 		float distance;
 
@@ -59,22 +58,59 @@ namespace Flyatron
 					new Rectangle(0, 0, 125, 125)
 				};
 
+			// Animation timer.
 			rotation = new Stopwatch();
 			rotation.Start();
+			// Respawn timer.
 			halt = new Stopwatch();
+			// Explosion.
+			expTimer = new Stopwatch();
 		}
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
-			if (state == Minestate.Traverse)
-				for (int i = 0; i < texture.Length - 1; i++)
-					spriteBatch.Draw(texture[i], vector, rectangle[i], Color.White, angle[i], offset, 1, SpriteEffects.None, 0);
+			switch (state)
+			{
+				case Minestate.Traverse:
+					{
+						for (int i = 0; i < texture.Length - 1; i++)
+							spriteBatch.Draw(
+								texture[i],
+								vector,
+								rectangle[i],
+								Color.White,
+								angle[i],
+								offset,
+								1,
+								SpriteEffects.None,
+								0
+							);
 
-			if (state == Minestate.Explosion)
-				spriteBatch.Draw(texture[2], expVector, rectangle[2], Color.White * expOpacity, 0, offset, expScale, SpriteEffects.None, 0);
+						break;
+					}
+
+				case Minestate.Explosion:
+					{
+						if (state == Minestate.Explosion)
+							spriteBatch.Draw(
+								texture[2],
+								expVector,
+								rectangle[2],
+								Color.White * expOpacity,
+								0,
+								offset,
+								expScale,
+								SpriteEffects.None,
+								0
+							);
+
+						break;
+					}
+			}
+
 		}
 
-		public void Update(Vector2 newReference)
+		public void Update(Rectangle newReference)
 		{
 			reference = newReference;
 
@@ -102,25 +138,28 @@ namespace Flyatron
 		{
 			Animate();
 
-			distance = Vector2.Distance(vector, reference);
+			distance = Vector2.Distance(vector, new Vector2(reference.X + (reference.Width / 2), reference.Y + (reference.Height / 2)));
 
 			// Traverse left.
 			vector.X -= velocity;
 
+			if (Rectangle().Intersects(reference))
+				state = Minestate.Explosion;
+
 			// Check if it needs to be drawn.
 			if (vector.X + texture[0].Width < 0)
-			{
 				state = Minestate.Halted;
-				halt.Start();
-			}
 		}
 
 		private void Halt()
 		{
-			vector.X = Game.WIDTH + texture[0].Width;
-			vector.Y = Helper.Rng(0, Game.WIDTH - texture[0].Height);
+			if (!halt.IsRunning)
+				halt.Start();
 
-			haltDuration = Helper.Rng(0, seconds * 1000);
+			vector.X = Game.WIDTH + texture[0].Width;
+			vector.Y = Helper.Rng(0, Game.HEIGHT - texture[0].Height);
+
+			haltDuration = Helper.Rng(0, 4000);
 
 			// Check if it needs to be drawn.
 			if (halt.ElapsedMilliseconds > haltDuration)
