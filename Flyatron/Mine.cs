@@ -32,8 +32,8 @@ namespace Flyatron
 		float[] angle = new float[] { 0, 0 };
 
 		// Explosion.
-		float expOpacity = 0.3F;
-		float expScale = 0.9F;
+		float expOpacity;
+		float expScale;
 		Vector2 expVector;
 
 		// Halt/loop timer.
@@ -132,8 +132,22 @@ namespace Flyatron
 
 		private void Explosion()
 		{
+			float elapsed = expTimer.ElapsedMilliseconds * 0.001F;
+
 			expVector.X = vector.X - texture[2].Width / 3 * expScale;
 			expVector.Y = vector.Y - texture[2].Height / 3 * expScale;
+
+			if (!expTimer.IsRunning)
+				expTimer.Restart();
+
+			expScale = elapsed;
+			expOpacity = 1 - elapsed;
+
+			if (expTimer.ElapsedMilliseconds >= 1000)
+			{
+				expTimer.Stop();
+				state = Minestate.Halted;
+			}
 		}
 
 		private void Animate()
