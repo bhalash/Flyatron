@@ -12,7 +12,7 @@ Contact mark@bhalash.com with any and all queries.
 
 ## LICENSE
 
-Code and sprite assets copyright 2012 Mark Grealish.
+Code and sprite assets copyright 2012 Mark Grealish (http://www.bhalash.com).
 
 Music copyright 1999-2012 8-Bit Weapon (http://8bitweapon.com/). 
 
