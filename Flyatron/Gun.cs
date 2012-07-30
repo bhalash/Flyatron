@@ -7,35 +7,51 @@ namespace Flyatron
 {
 	class Gun
 	{
-		Texture2D texture;
-		Vector2 vector = new Vector2(150, 150);
-		Rectangle rectangle = new Rectangle(0, 0, 35, 18);
-		Color color = Color.White;
-		float rotation = 0;
-		Vector2 origin = new Vector2(17, 9);
-		SpriteEffects effects = SpriteEffects.None;
+		// Gun/bullet.
+		Texture2D[] texture;
+		Vector2 vector;
+		Vector2 vector2;
+		Rectangle[] rectangle;
+		Color color;
+		float rotation;
+		Vector2 origin;
+		SpriteEffects effects;
 
 		Vector2 mouse;
 
 		int xOffset = 0;
 		int yOffset = 25;
 
-		public Gun(Texture2D inputTexture)
+		public Gun(Texture2D[] inputTexture)
 		{
 			texture = inputTexture;
+
+			vector = new Vector2(150, 150);
+			vector2 = new Vector2(vector.X + 150, 150);
+
+			rectangle = new Rectangle[]
+			{
+				new Rectangle(0, 0, 35, 18),
+				new Rectangle(0, 0, 55, 11),
+			};
+
+			color = Color.White;
+			rotation = 0;
+			origin = new Vector2(17, 9);
+			effects = SpriteEffects.None;
 		}
 
 		public void Update(Vector2 reference)
 		{
 			vector.X = reference.X + xOffset;
 			vector.Y = reference.Y + yOffset;
-
 			Animate();
 		}
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
-			spriteBatch.Draw(texture, vector, rectangle, color, rotation, origin, 1, effects, 0);
+			spriteBatch.Draw(texture[0], vector, rectangle[0], color, rotation, origin, 1, effects, 0);
+			spriteBatch.Draw(texture[1], vector2, rectangle[1], color, rotation, origin, 1, effects, 0);
 		}
 
 		private void Animate()
@@ -52,13 +68,18 @@ namespace Flyatron
 			if (mouse.X < vector.X)
 			{
 				rotation = leftAngle;
-				rectangle = new Rectangle(39, 0, 35, 18);
+				rectangle[0] = new Rectangle(39, 0, 35, 18);
 			}
 			if (mouse.X > vector.X)
 			{
 				rotation = rightAngle;
-				rectangle = new Rectangle(0, 0, 35, 18);
+				rectangle[0] = new Rectangle(0, 0, 35, 18);
 			}
+		}
+
+		public Rectangle Rectangle()
+		{
+			return new Rectangle((int)vector.X, (int)vector.Y, texture[0].Width, texture[0].Height);
 		}
 	}
 }

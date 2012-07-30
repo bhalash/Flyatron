@@ -16,12 +16,15 @@ namespace Flyatron
 		// Explosion.
 		Stopwatch expTimer;
 
+		// Health.
+		int health = 100;
+
 		// Current state of the mine.
 		enum Minestate { Halted, Traverse, Explosion };
 		Minestate state = Minestate.Traverse;
 
 		// Mine traverse speed.
-		float velocity = 7;
+		float velocity = 4 + Helper.Rng(7);
 
 		// Animation: Texture, vector, rotation offset, and frame rectangle.
 		Texture2D[] texture;
@@ -48,7 +51,7 @@ namespace Flyatron
 		{
 			texture = inputTextures;
 
-			vector = new Vector2(0 - texture[0].Width, Helper.Rng(0, Game.HEIGHT - texture[0].Height));
+			vector = new Vector2(0 - texture[0].Width, Helper.Rng(Game.HEIGHT - texture[0].Height));
 			offset = new Vector2(20, 20);
 
 			rectangle = new Rectangle[]
@@ -138,13 +141,15 @@ namespace Flyatron
 		{
 			Animate();
 
+			// Proximity.
 			distance = Vector2.Distance(vector, new Vector2(reference.X + (reference.Width / 2), reference.Y + (reference.Height / 2)));
+
+			// Player mine collision.
+			if (Helper.CircleCollision(Rectangle(), reference))
+				State(3);
 
 			// Traverse left.
 			vector.X -= velocity;
-
-			if (Rectangle().Intersects(reference))
-				state = Minestate.Explosion;
 
 			// Check if it needs to be drawn.
 			if (vector.X + texture[0].Width < 0)
@@ -157,9 +162,9 @@ namespace Flyatron
 				halt.Start();
 
 			vector.X = Game.WIDTH + texture[0].Width;
-			vector.Y = Helper.Rng(0, Game.HEIGHT - texture[0].Height);
+			vector.Y = Helper.Rng(Game.HEIGHT - texture[0].Height);
 
-			haltDuration = Helper.Rng(0, 4000);
+			haltDuration = Helper.Rng(10000);
 
 			// Check if it needs to be drawn.
 			if (halt.ElapsedMilliseconds > haltDuration)
@@ -227,7 +232,7 @@ namespace Flyatron
 		}
 
 		// DEBUG
-		public void Switch(int newState)
+		public void State(int newState)
 		{
 			if (newState == 1)
 				state = Minestate.Traverse;

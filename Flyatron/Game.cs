@@ -19,16 +19,17 @@ namespace Flyatron
 		public static int WIDTH = 1024;
 		public static int HEIGHT = 600;
 
-		public enum   Screen { Menu, Play, New, Scores, About, End, Death };
-		public static Screen SCREEN = Screen.Menu;
-
 		bool fullScreen = false;
+
+		enum   Gamestate { Menu, Play, New, Scores, About, End, Death };
+		Gamestate state = Gamestate.Menu;
 
 		static double VERSION = 0.1;
 		static string versionString = "Version " + VERSION;
 
 		public static Game Instance;
 
+		Texture2D cross;
 		Texture2D border;
 		float bOpacity = 0.3F;
 
@@ -51,12 +52,21 @@ namespace Flyatron
 		// Player.
 		Player a;
 		List <Texture2D> playerTextures;
+		
+		// Gun.
 		Gun gun;
+		Texture2D[] gunTex;
+		// Bullet.
+		Bullet bullet;
 
 		// Fear, fire foes.
 		Texture2D[] mineTextures;
 		List <Mine> mine;
-		int totalMines = 25;
+		int totalMines = 35;
+
+		// Bonuses.
+		Bonus bonus;
+		Texture2D[] bonusTex;
 
 		// Scoreboard.
 		Scoreboard scores;
@@ -138,7 +148,8 @@ namespace Flyatron
 		protected override void Initialize()
 		{
 			border = Content.Load<Texture2D>("border");
-
+			cross = Content.Load<Texture2D>("zero");
+			
 			playerTextures = new List<Texture2D>()
 			{
 				// Player textures.
@@ -154,10 +165,29 @@ namespace Flyatron
 				Content.Load<Texture2D>("mine\\explosion")
 			};
 
+			bonusTex = new Texture2D[]
+			{				
+				Content.Load<Texture2D>("bonus\\1"),
+				Content.Load<Texture2D>("bonus\\2"),
+				Content.Load<Texture2D>("bonus\\3"),
+				Content.Load<Texture2D>("bonus\\4"),
+				Content.Load<Texture2D>("bonus\\5")
+			};
+
 			// Load player art/stats.
 			a = new Player(5, 10, Color.White, playerTextures);
 			// Gun.
-			gun = new Gun(Content.Load<Texture2D>("gun\\gun"));
+			gunTex = new Texture2D[]
+			{
+				Content.Load<Texture2D>("gun\\gun"),
+				Content.Load<Texture2D>("gun\\bullet")
+			};
+
+			gun = new Gun(gunTex);
+			bullet = new Bullet(Content.Load<Texture2D>("border"));
+
+			// Initialize bonus.
+			bonus = new Bonus(bonusTex);
 
 			// Initialize mouse.
 			mouse = new Flymouse(Content.Load<Texture2D>("pointer"));
@@ -197,10 +227,10 @@ namespace Flyatron
 			if (Helper.Keypress(Keys.Escape))
 			{
 				// Toggle between menu and gameplay.
-				if (SCREEN == Screen.Play)
-					SCREEN = Screen.Menu;
-				else if ((SCREEN == Screen.Menu) && (a.RemainingLives() > 0))
-					SCREEN = Screen.Play;
+				if (state == Gamestate.Play)
+					state = Gamestate.Menu;
+				else if ((state == Gamestate.Menu) && (a.RemainingLives() > 0))
+					state = Gamestate.Play;
 			}
 
 			base.Update(gameTime);
@@ -214,6 +244,7 @@ namespace Flyatron
 			GraphicsDevice.Clear(Color.CornflowerBlue);
 
 			spriteBatch.Begin();
+			bullet.Draw(spriteBatch);
 			// Draw the background.
 			cloudyBackdrop.Draw(spriteBatch);
 			// Update game state.
@@ -230,40 +261,44 @@ namespace Flyatron
 			a.Lives(5);
 
 			for (int i = 0; i < mine.Count; i++)
-				mine[i].Switch(2);
+				mine[i].State(2);
 
-			SCREEN = Screen.Play;
+			state = Gamestate.Play;
 		}
 
 		private void UpdateDeath()
 		{
-			SCREEN = Screen.Play;
-		}
+			// This function should be called if and when the player dies.
 
-		private void DrawDeath()
-		{
 			for (int i = 0; i < mine.Count; i++)
-				mine[i].Switch(2);
+				mine[i].State(3);
 
 			a.X(100);
 			a.Y(HEIGHT / 2 - a.Rectangle().Height / 2);
 			a.Lives(-1);
 
 			if (a.RemainingLives() <= 0)
-				SCREEN = Screen.End;
+				state = Gamestate.End;
+			else
+				state = Gamestate.Play;
+		}
+
+		private void DrawDeath()
+		{
+			// Nothing to draw here. Included for completeness.
 		}
 
 		private void UpdateMenu()
 		{
 			// Menu opts.
 			if ((Helper.Keypress(Keys.D1)) && (a.RemainingLives() > 0))
-				SCREEN = Screen.Play;
+				state = Gamestate.Play;
 			if (Helper.Keypress(Keys.D2))
-				SCREEN = Screen.New;
+				state = Gamestate.New;
 			if (Helper.Keypress(Keys.D3))
-				SCREEN = Screen.Scores;
+				state = Gamestate.Scores;
 			if (Helper.Keypress(Keys.D4))
-				SCREEN = Screen.About;
+				state = Gamestate.About;
 			if (Helper.Keypress(Keys.D5))
 				this.Exit();
 		}
@@ -306,7 +341,7 @@ namespace Flyatron
 		private void UpdateAbout()
 		{
 			if (Helper.Keypress(Keys.Escape))
-				SCREEN = Screen.Menu;
+				state = Gamestate.Menu;
 		}
 
 		private void DrawAbout()
@@ -342,9 +377,14 @@ namespace Flyatron
 
 		private void UpdateEnd()
 		{
-			if (Helper.Keypress(Keys.Escape))
+			for (int i = 0; i < mine.Count; i++)
+				mine[i].State(2);
+
+			bonus.State(2);
+
+			if ((Helper.Keypress(Keys.Escape)) || (Helper.LeftClick()))
 			{
-				SCREEN = Screen.Scores;
+				state = Gamestate.Menu;
 				deathScreenTimer.Reset();
 			}
 		}
@@ -387,7 +427,7 @@ namespace Flyatron
 		private void UpdateScores()
 		{
 			if (Helper.Keypress(Keys.Escape))
-				SCREEN = Screen.Menu;
+				state = Gamestate.Menu;
 		}
 
 		private void DrawScores()
@@ -402,21 +442,40 @@ namespace Flyatron
 
 		private void UpdatePlay()
 		{
-			for (int i = 0; i < mine.Count; i++)
-				mine[i].Update(a.Rectangle());
+			if (a.RemainingLives() <= 0)
+				state = Gamestate.End;
 
 			// Update backdrop.
 			cloudyBackdrop.Update(5);
 			// Tick scores.
 			scores.Increment();
-			// Update player.
-			a.Update(new GameTime());
-			// Update gun.
+
+			bonus.Update(a.Rectangle());
+
+			// Update mine.
+			for (int i = 0; i < mine.Count; i++)
+				mine[i].Update(a.Rectangle());
+
+			// Player/mine collision.
+			for (int i = 0; i < mine.Count; i++)
+				if (Helper.CircleCollision(a.Rectangle(), mine[i].Rectangle()))
+					state = Gamestate.Death;
+
+			// Player/bonus collision.
+			if (Helper.CircleCollision(a.Rectangle(), bonus.Rectangle()))
+				if (bonus.Type() == 1)
+					a.Lives(1);
+				else if (bonus.Type() == 2)
+					for (int i = 0; i < mine.Count; i++)
+						mine[i].State(3);
+
+			// Update player + gun.
+			a.Update(); 
 			gun.Update(a.Position());
 
 			// Audio controls: Pause, unpause, skip forward.
 			if (Helper.Keypress(Keys.N))
-				eightBitWeapon.Play(Content.Load<Song>(playList[Helper.Rng(0, playList.Count - 1)]));
+				eightBitWeapon.Play(Content.Load<Song>(playList[Helper.Rng(playList.Count - 1)]));
 			if (Helper.Keypress(Keys.P))
 				eightBitWeapon.Pause();
 			if (Helper.Keypress(Keys.U))
@@ -433,6 +492,8 @@ namespace Flyatron
 			a.Draw(spriteBatch);
 			// Draw gun. Should always be drawn after the player!
 			gun.Draw(spriteBatch);
+			// Bonus.
+			bonus.Draw(spriteBatch);
 
 			// Draw mine.
 			for (int i = 0; i < mine.Count; i++)
@@ -443,6 +504,8 @@ namespace Flyatron
 				// Outline textures if debug is enabled.
 				spriteBatch.Draw(border, a.Rectangle(), Color.White * bOpacity);
 				spriteBatch.Draw(border, mouse.Rectangle(), Color.White * bOpacity);
+				spriteBatch.Draw(border, bonus.Rectangle(), Color.White * bOpacity);
+				spriteBatch.Draw(border, gun.Rectangle(), Color.White * bOpacity);
 
 				for (int i = 0; i < mine.Count; i++)
 					spriteBatch.Draw(border, mine[i].Rectangle(), Color.White * bOpacity);
@@ -490,39 +553,39 @@ namespace Flyatron
 
 		private void Switch(GameTime gameTime, SpriteBatch spriteBatch)
 		{
-			switch (SCREEN)
+			switch (state)
 			{
-				case Screen.Menu:
+				case Gamestate.Menu:
 					{
 						DrawMenu();
 						break;
 					}
-				case Screen.Play:
+				case Gamestate.Play:
 					{
 						DrawPlay(gameTime);
 						break;
 					}
-				case Screen.New:
+				case Gamestate.New:
 					{
 						NewGame();
 						break;
 					}
-				case Screen.Scores:
+				case Gamestate.Scores:
 					{
 						DrawScores();
 						break;
 					}
-				case Screen.About:
+				case Gamestate.About:
 					{
 						DrawAbout();
 						break;
 					}
-				case Screen.End:
+				case Gamestate.End:
 					{
 						DrawEnd();
 						break;
 					}
-				case Screen.Death:
+				case Gamestate.Death:
 					{
 						DrawDeath();
 						break;
@@ -532,39 +595,39 @@ namespace Flyatron
 
 		private void UpdateSwitch()
 		{
-			switch (SCREEN)
+			switch (state)
 			{
-				case Screen.Menu:
+				case Gamestate.Menu:
 					{
 						UpdateMenu();
 						break;
 					}
-				case Screen.Play:
+				case Gamestate.Play:
 					{
 						UpdatePlay();
 						break;
 					}
-				case Screen.New:
+				case Gamestate.New:
 					{
 						NewGame();
 						break;
 					}
-				case Screen.Scores:
+				case Gamestate.Scores:
 					{
 						UpdateScores();
 						break;
 					}
-				case Screen.About:
+				case Gamestate.About:
 					{
 						UpdateAbout();
 						break;
 					}
-				case Screen.End:
+				case Gamestate.End:
 					{
 						UpdateEnd();
 						break;
 					}
-				case Screen.Death:
+				case Gamestate.Death:
 					{
 						UpdateDeath();
 						break;

@@ -10,8 +10,11 @@ namespace Flyatron
 {
 	class Player
 	{
+		enum Playerstate { Alive, Dead };
+		Playerstate state;
+
 		// Flames under the player.
-		Stopwatch flamesTimer;
+		Stopwatch exhaust;
 
 		// Default keys are WSAD, but are changable via Rebind().
 		Keys up = Keys.W;
@@ -59,8 +62,8 @@ namespace Flyatron
 			velocity = walkingVel;
 			lives = currentLives = inputLives;
 
-			flamesTimer = new Stopwatch();
-			flamesTimer.Start();
+			exhaust = new Stopwatch();
+			exhaust.Start();
 		}
 
 		public Vector2 Position()
@@ -68,7 +71,49 @@ namespace Flyatron
 			return vectors[1];
 		}
 
-		public void Update(GameTime inputGameTime)
+		public void Update()
+		{
+			switch (state)
+			{
+				case Playerstate.Alive:
+					{
+						Living();
+						break;
+					}
+				case Playerstate.Dead:
+					{
+						Dead();
+						break;
+					}
+			};
+		}
+
+		public void Draw(SpriteBatch spriteBatch)
+		{
+			if (state == Playerstate.Alive)
+			{
+				// Player Flames.
+				spriteBatch.Draw(textures[2], vectors[2], rectangles[2], Color.White, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
+				// Player body.
+				spriteBatch.Draw(textures[0], vectors[0], rectangles[0], Color.White, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
+				// Player head.
+				spriteBatch.Draw(textures[1], vectors[1], rectangles[1], Color.White, headRotation, headOffset, scale, SpriteEffects.None, 0);
+			}
+		}
+
+		private void Dead()
+		{
+			if (lives > 0)
+			{
+				Lives(-1);
+				X(50);
+				Y(Game.HEIGHT / 2 - textures[0].Height / 2);
+			}
+
+			state = Playerstate.Alive;
+		}
+
+		private void Living()
 		{
 			UpdateBodyAnimation(Game.currentMouseState);
 			UpdateHeadAnimation(Game.currentMouseState);
@@ -93,16 +138,6 @@ namespace Flyatron
 				if (vectors[0].Y + 50 < Game.HEIGHT)
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].Y += velocity;
-		}
-
-		public void Draw(SpriteBatch spriteBatch)
-		{
-			// Player Flames.
-			spriteBatch.Draw(textures[2], vectors[2], rectangles[2], Color.White, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
-			// Player body.
-			spriteBatch.Draw(textures[0], vectors[0], rectangles[0], Color.White, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
-			// Player head.
-			spriteBatch.Draw(textures[1], vectors[1], rectangles[1], Color.White, headRotation, headOffset, scale, SpriteEffects.None, 0);
 		}
 
 		public Rectangle Rectangle()
@@ -138,6 +173,14 @@ namespace Flyatron
 		public void ResetLives()
 		{
 			currentLives = lives;
+		}
+
+		public void State(int newState)
+		{
+			if (newState == 1)
+				state = Playerstate.Alive;
+			if (newState == 2)
+				state = Playerstate.Dead;
 		}
 
 		private void UpdateHeadAnimation(MouseState mouse)
@@ -176,15 +219,15 @@ namespace Flyatron
 
 		private void UpdateFlamesAnimation()
 		{
-			if ((flamesTimer.ElapsedMilliseconds >= 0) && (flamesTimer.ElapsedMilliseconds < 300))
+			if ((exhaust.ElapsedMilliseconds >= 0) && (exhaust.ElapsedMilliseconds < 300))
 				rectangles[2] = new Rectangle(52, 0, frames[4], frames[5]);
-			if ((flamesTimer.ElapsedMilliseconds >= 300) && (flamesTimer.ElapsedMilliseconds < 600))
+			if ((exhaust.ElapsedMilliseconds >= 300) && (exhaust.ElapsedMilliseconds < 600))
 				rectangles[2] = new Rectangle(25, 0, frames[4], frames[5]);
-			if ((flamesTimer.ElapsedMilliseconds >= 600) && (flamesTimer.ElapsedMilliseconds < 900))
+			if ((exhaust.ElapsedMilliseconds >= 600) && (exhaust.ElapsedMilliseconds < 900))
 				rectangles[2] = new Rectangle(0, 0, frames[4], frames[5]);
 
-			if (flamesTimer.ElapsedMilliseconds > 900)
-				flamesTimer.Restart();
+			if (exhaust.ElapsedMilliseconds > 900)
+				exhaust.Restart();
 		}
 	}
 }

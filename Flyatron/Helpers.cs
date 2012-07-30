@@ -16,12 +16,17 @@ namespace Flyatron
 		{
 		}
 
-		public static int Rng(int a, int b)
+		public static int Rng(int a)
+		{
+			return RANDOM.Next(a);
+		}
+
+		public static int Rng2(int a, int b)
 		{
 			return RANDOM.Next(a, b);
 		}
 
-		public static bool Rectangle(Rectangle a, Rectangle b)
+		public static bool SquareCollision(Rectangle a, Rectangle b)
 		{
 			// Generic collisions.
 			if (a.Intersects(b))
@@ -30,7 +35,7 @@ namespace Flyatron
 			return false;
 		}
 
-		public static bool Circle(Rectangle a, Rectangle b)
+		public static bool CircleCollision(Rectangle a, Rectangle b)
 		{
 			// Circular generic collisions.
 			if (Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y)) < (a.Width / 2 + b.Width / 2))

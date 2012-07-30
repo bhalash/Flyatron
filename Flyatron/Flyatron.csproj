@@ -108,6 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Backdrop.cs" />
+    <Compile Include="Bullet.cs" />
     <Compile Include="Gun.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Mine.cs" />
