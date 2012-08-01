@@ -1,10 +1,4 @@
-﻿/*
- * Bit of commentary on this section: I duplicate existing features, in part.
- * However, I do this so I can insert code, or otherwise make changes without
- * frontend mucking around.
- */
-
-using System;
+﻿using System;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;

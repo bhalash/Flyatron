@@ -14,30 +14,29 @@ namespace Flyatron
 	{
 		// Welcome to Flyatron!
 
-		public static bool DEBUG = false;
+		public static bool DEBUG = true;
 
-		public static int WIDTH = 1024;
+		public static int WIDTH  = 1024;
 		public static int HEIGHT = 600;
-
-		bool fullScreen = false;
-
-		enum   Gamestate { Menu, Play, New, Scores, About, End, Death };
-		Gamestate state = Gamestate.Menu;
+		static bool FULLSCREEN   = false;
 
 		static double VERSION = 0.1;
-		static string versionString = "Version " + VERSION;
+		static string VERSIONSTRING = "Version " + VERSION;
+
+		enum Gamestate { Menu, Play, New, Scores, About, End, Death };
+		Gamestate state = Gamestate.Menu;
+
+		public static KeyboardState PREV_KEYBOARD, CURRENT_KEYBOARD;
+		public static MouseState PREV_MOUSE, CURR_MOUSE;
 
 		public static Game Instance;
 
 		Texture2D cross;
 		Texture2D border;
-		float bOpacity = 0.3F;
+		float bOpacity;
 
 		static SpriteBatch spriteBatch;
 		GraphicsDeviceManager graphics;
-
-		public static KeyboardState lastKeyboardState, currentKeyboardState;
-		public static MouseState lastMouseState, currentMouseState;
 
 		// Flyatron uses the font "Press Start 2P". The font was created by William Cody of Zone38.
 		// The font is distributed under the permissive SIL Open Font License (OFL), and included in
@@ -56,8 +55,6 @@ namespace Flyatron
 		// Gun.
 		Gun gun;
 		Texture2D[] gunTex;
-		// Bullet.
-		Bullet bullet;
 
 		// Fear, fire foes.
 		Texture2D[] mineTextures;
@@ -70,7 +67,6 @@ namespace Flyatron
 
 		// Scoreboard.
 		Scoreboard scores;
-		string scoreFile = "scores.txt";
 
 		// Backdrop.
 		Texture2D[] alphaTextures;
@@ -105,7 +101,7 @@ namespace Flyatron
 			graphics = new GraphicsDeviceManager(this);
 			graphics.PreferredBackBufferWidth = WIDTH;
 			graphics.PreferredBackBufferHeight = HEIGHT;
-			this.graphics.IsFullScreen = fullScreen;
+			this.graphics.IsFullScreen = FULLSCREEN;
 
 			if (!DEBUG)
 				this.IsMouseVisible = false;
@@ -180,11 +176,11 @@ namespace Flyatron
 			gunTex = new Texture2D[]
 			{
 				Content.Load<Texture2D>("gun\\gun"),
-				Content.Load<Texture2D>("gun\\bullet")
+				Content.Load<Texture2D>("gun\\bullet"),
+				Content.Load<Texture2D>("border")
 			};
 
 			gun = new Gun(gunTex);
-			bullet = new Bullet(Content.Load<Texture2D>("border"));
 
 			// Initialize bonus.
 			bonus = new Bonus(bonusTex);
@@ -201,11 +197,14 @@ namespace Flyatron
 			// Initialize foe mine.
 			mine = new List<Mine>();
 
+			// Debug. Border opacity.
+			bOpacity = 0.3F;
+
 			for (int i = 0; i < totalMines; i ++)
 				mine.Add(new Mine(mineTextures));
 
 			// Import top scores.
-			scores = new Scoreboard(scoreFile);
+			scores = new Scoreboard();
 
 			base.Initialize();
 		}
@@ -216,8 +215,8 @@ namespace Flyatron
 
 		protected override void Update(GameTime gameTime)
 		{
-			currentKeyboardState = Keyboard.GetState();
-			currentMouseState = Mouse.GetState();
+			CURRENT_KEYBOARD = Keyboard.GetState();
+			CURR_MOUSE = Mouse.GetState();
 
 			mouse.Update();
 
@@ -235,8 +234,8 @@ namespace Flyatron
 
 			base.Update(gameTime);
 
-			lastMouseState = currentMouseState;
-			lastKeyboardState = currentKeyboardState;
+			PREV_MOUSE = CURR_MOUSE;
+			PREV_KEYBOARD = CURRENT_KEYBOARD;
 		}
 
 		protected override void Draw(GameTime gameTime)
@@ -244,7 +243,6 @@ namespace Flyatron
 			GraphicsDevice.Clear(Color.CornflowerBlue);
 
 			spriteBatch.Begin();
-			bullet.Draw(spriteBatch);
 			// Draw the background.
 			cloudyBackdrop.Draw(spriteBatch);
 			// Update game state.
@@ -332,8 +330,8 @@ namespace Flyatron
 			if (DEBUG)
 				spriteBatch.DrawString(
 					font10,
-					versionString,
-					new Vector2(WIDTH - 30 - font10.MeasureString(versionString).Length(), HEIGHT - 30),
+					VERSIONSTRING,
+					new Vector2(WIDTH - 30 - font10.MeasureString(VERSIONSTRING).Length(), HEIGHT - 30),
 					Color.White
 				);
 		}

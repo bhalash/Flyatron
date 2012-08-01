@@ -2,15 +2,21 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Collections.Generic;
 
 namespace Flyatron
 {
 	class Gun
 	{
+		int xSize;
+		int ySize;
+
+		float xOffset;
+		float yOffset;
+
 		// Gun/bullet.
 		Texture2D[] texture;
 		Vector2 vector;
-		Vector2 vector2;
 		Rectangle[] rectangle;
 		Color color;
 		float rotation;
@@ -19,15 +25,19 @@ namespace Flyatron
 
 		Vector2 mouse;
 
-		int xOffset = 0;
-		int yOffset = 25;
+		List<Bullet> bullets;
 
 		public Gun(Texture2D[] inputTexture)
 		{
-			texture = inputTexture;
+			xSize = 35;
+			ySize = 18;
 
+			xOffset = 0;
+			yOffset = 25;
+
+			texture = inputTexture;
 			vector = new Vector2(150, 150);
-			vector2 = new Vector2(vector.X + 150, 150);
+			bullets = new List<Bullet>();
 
 			rectangle = new Rectangle[]
 			{
@@ -46,20 +56,31 @@ namespace Flyatron
 			vector.X = reference.X + xOffset;
 			vector.Y = reference.Y + yOffset;
 			Animate();
+
+			if (Helper.LeftClick())
+				bullets.Add(new Bullet(texture, Rectangle()));
+
+			if (bullets.Count > 0)
+				for (int i = 0; i < bullets.Count; i++)
+				{
+					bullets[i].Update();
+
+					if (bullets[i].Expired())
+						bullets.RemoveAt(i);
+				}
 		}
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
 			spriteBatch.Draw(texture[0], vector, rectangle[0], color, rotation, origin, 1, effects, 0);
-			spriteBatch.Draw(texture[1], vector2, rectangle[1], color, rotation, origin, 1, effects, 0);
 		}
 
 		private void Animate()
 		{
-			mouse.X = Game.currentMouseState.X;
-			mouse.Y = Game.currentMouseState.Y;
+			mouse.X = Game.CURR_MOUSE.X;
+			mouse.Y = Game.CURR_MOUSE.Y;
 
-			Vector2 leftFacing = new Vector2(vector.X - Game.currentMouseState.X, vector.Y - mouse.Y);
+			Vector2 leftFacing = new Vector2(vector.X - Game.CURR_MOUSE.X, vector.Y - mouse.Y);
 			Vector2 rightFacing = new Vector2(mouse.X - vector.X, mouse.Y - vector.Y);
 
 			float leftAngle = (float)(Math.Atan2(leftFacing.Y, leftFacing.X));
@@ -79,7 +100,7 @@ namespace Flyatron
 
 		public Rectangle Rectangle()
 		{
-			return new Rectangle((int)vector.X, (int)vector.Y, texture[0].Width, texture[0].Height);
+			return new Rectangle((int)vector.X - xSize / 2, (int)vector.Y - ySize / 2, xSize, ySize);
 		}
 	}
 }

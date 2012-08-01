@@ -10,53 +10,59 @@ namespace Flyatron
 {
 	class Player
 	{
+		// Default keys are WSAD, but are changable via Rebind().
+		Keys up;
+		Keys down;
+		Keys left;
+		Keys right;
+
 		enum Playerstate { Alive, Dead };
 		Playerstate state;
 
-		// Flames under the player.
 		Stopwatch exhaust;
-
-		// Default keys are WSAD, but are changable via Rebind().
-		Keys up = Keys.W;
-		Keys down = Keys.S;
-		Keys left = Keys.A;
-		Keys right = Keys.D;
-
 		List<Texture2D> textures;
-
-		Vector2[] vectors = new Vector2[]
-		{		
-			// Vectors should be updated relative to index 0.
-			new Vector2(x + frameOffset[0], y + frameOffset[1]),
-			new Vector2(x + frameOffset[2], y + frameOffset[3]),
-			new Vector2(x + frameOffset[4], y + frameOffset[5]),
-		};
-
-		Rectangle[] rectangles = new Rectangle[]
-		{
-			new Rectangle(0,0,35,72), // Body.
-			new Rectangle(0,0,35,35), // Head.
-			new Rectangle(0,0,23,46)  // Flames.
-		};
-
-		float scale = 0.7F; 
-
-		static int[] frames = new int[] { 35, 72, 35, 35, 23, 46 };
-		static int[] frameOffset = new int[] { 0, 0, 13, 13, 4, 40 };
-
-		static int x = 400;
-		static int y = 300;
-
-		// Player speed.
+		Vector2[] vectors;
+		float scale, headRotation;
+		Rectangle[] rectangles;
+		int[] frames, frameOffset;
+		int x, y;
 		int lives, currentLives, velocity, walkingVel;
-
-		// These are the centre of the respective texture frames, used to correctly rotate them.
-		Vector2 headOffset = new Vector2(17.5F, 17.5F);
-
-		float headRotation = 0;
+		Vector2 headOffset;
 
 		public Player(int inputLives, int inputVelocity,Color inputTint, List<Texture2D> inTex)
 		{
+
+			frames = new int[] { 35, 72, 35, 35, 23, 46 };
+			frameOffset = new int[] { 0, 0, 13, 13, 4, 40 };
+
+			x = 400;
+			y = 300;
+
+			headOffset = new Vector2(17.5F, 17.5F);
+			
+			// Default keys are WSAD, but are changable via Rebind().
+			up = Keys.W;
+			down = Keys.S;
+			left = Keys.A;
+			right = Keys.D;
+
+			vectors = new Vector2[]
+			{		
+				// Vectors should be updated relative to index 0.
+				new Vector2(x + frameOffset[0], y + frameOffset[1]),
+				new Vector2(x + frameOffset[2], y + frameOffset[3]),
+				new Vector2(x + frameOffset[4], y + frameOffset[5]),
+			};
+
+			rectangles = new Rectangle[]
+			{
+				new Rectangle(0,0,35,72), // Body.
+				new Rectangle(0,0,35,35), // Head.
+				new Rectangle(0,0,23,46)  // Flames.
+			};
+
+			scale = 0.7F; 
+
 			textures = inTex;
 			walkingVel = inputVelocity;
 			velocity = walkingVel;
@@ -115,26 +121,26 @@ namespace Flyatron
 
 		private void Living()
 		{
-			UpdateBodyAnimation(Game.currentMouseState);
-			UpdateHeadAnimation(Game.currentMouseState);
+			UpdateBodyAnimation(Game.CURR_MOUSE);
+			UpdateHeadAnimation(Game.CURR_MOUSE);
 			UpdateFlamesAnimation();
 
-			if (Game.currentKeyboardState.IsKeyDown(left))
+			if (Game.CURRENT_KEYBOARD.IsKeyDown(left))
 				if (vectors[0].X > 0)
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].X -= velocity;
 
-			if (Game.currentKeyboardState.IsKeyDown(up))
+			if (Game.CURRENT_KEYBOARD.IsKeyDown(up))
 				if (vectors[0].Y > 0)
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].Y -= velocity;
 
-			if (Game.currentKeyboardState.IsKeyDown(right))
+			if (Game.CURRENT_KEYBOARD.IsKeyDown(right))
 				if (vectors[0].X + 30 < Game.WIDTH)
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].X += velocity;
 
-			if (Game.currentKeyboardState.IsKeyDown(down))
+			if (Game.CURRENT_KEYBOARD.IsKeyDown(down))
 				if (vectors[0].Y + 50 < Game.HEIGHT)
 					for (int i = 0; i < vectors.Length; i++)
 						vectors[i].Y += velocity;

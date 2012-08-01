@@ -15,9 +15,9 @@ namespace Flyatron
 		Stopwatch timer;
 		string path;
 
-		public Scoreboard(string path)
+		public Scoreboard()
 		{
-			scores = Import(path);
+			scores = Import("scores.txt");
 			timer = new Stopwatch();
 			timer.Start();
 		}

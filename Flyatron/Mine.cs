@@ -17,14 +17,15 @@ namespace Flyatron
 		Stopwatch expTimer;
 
 		// Health.
-		int health = 100;
+		int health;
 
 		// Current state of the mine.
 		enum Minestate { Halted, Traverse, Explosion };
 		Minestate state = Minestate.Traverse;
 
 		// Mine traverse speed.
-		float velocity = 4 + Helper.Rng(7);
+		float velocity, baseVelocity;
+		int variableVelocity;
 
 		// Animation: Texture, vector, rotation offset, and frame rectangle.
 		Texture2D[] texture;
@@ -32,7 +33,7 @@ namespace Flyatron
 		Vector2 offset;
 		Rectangle[] rectangle;
 		// Rotation.
-		float[] angle = new float[] { 0, 0 };
+		float[] angle;
 
 		// Explosion.
 		float expOpacity;
@@ -50,9 +51,13 @@ namespace Flyatron
 		public Mine(Texture2D[] inputTextures)
 		{
 			texture = inputTextures;
-
+			angle = new float[] { 0, 0 };
+			baseVelocity = 3;
+			variableVelocity = 7;
+			velocity = baseVelocity + Helper.Rng(variableVelocity);
 			vector = new Vector2(0 - texture[0].Width, Helper.Rng(Game.HEIGHT - texture[0].Height));
 			offset = new Vector2(20, 20);
+			health = 100;
 
 			rectangle = new Rectangle[]
 				{
@@ -163,6 +168,9 @@ namespace Flyatron
 
 			vector.X = Game.WIDTH + texture[0].Width;
 			vector.Y = Helper.Rng(Game.HEIGHT - texture[0].Height);
+
+			// Randomize speed for the next run.
+			velocity = baseVelocity + Helper.Rng(variableVelocity);
 
 			haltDuration = Helper.Rng(10000);
 
