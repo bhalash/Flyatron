@@ -16,9 +16,6 @@ namespace Flyatron
 		// Explosion.
 		Stopwatch expTimer;
 
-		// Health.
-		int health;
-
 		// Current state of the mine.
 		enum Minestate { Halted, Traverse, Explosion };
 		Minestate state = Minestate.Traverse;
@@ -57,7 +54,6 @@ namespace Flyatron
 			velocity = baseVelocity + Helper.Rng(variableVelocity);
 			vector = new Vector2(0 - texture[0].Width, Helper.Rng(Game.HEIGHT - texture[0].Height));
 			offset = new Vector2(20, 20);
-			health = 100;
 
 			rectangle = new Rectangle[]
 				{

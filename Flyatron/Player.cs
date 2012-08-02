@@ -20,16 +20,17 @@ namespace Flyatron
 		Playerstate state;
 
 		Stopwatch exhaust;
-		List<Texture2D> textures;
-		Vector2[] vectors;
+		Texture2D[] texture;
+		Vector2[] vector;
+		Rectangle[] rectangle;
+
 		float scale, headRotation;
-		Rectangle[] rectangles;
 		int[] frames, frameOffset;
 		int x, y;
 		int lives, currentLives, velocity, walkingVel;
 		Vector2 headOffset;
 
-		public Player(int inputLives, int inputVelocity,Color inputTint, List<Texture2D> inTex)
+		public Player(int newLives, int newVelocity, Color newTint, Texture2D[] newText)
 		{
 
 			frames = new int[] { 35, 72, 35, 35, 23, 46 };
@@ -46,7 +47,7 @@ namespace Flyatron
 			left = Keys.A;
 			right = Keys.D;
 
-			vectors = new Vector2[]
+			vector = new Vector2[]
 			{		
 				// Vectors should be updated relative to index 0.
 				new Vector2(x + frameOffset[0], y + frameOffset[1]),
@@ -54,7 +55,7 @@ namespace Flyatron
 				new Vector2(x + frameOffset[4], y + frameOffset[5]),
 			};
 
-			rectangles = new Rectangle[]
+			rectangle = new Rectangle[]
 			{
 				new Rectangle(0,0,35,72), // Body.
 				new Rectangle(0,0,35,35), // Head.
@@ -63,10 +64,10 @@ namespace Flyatron
 
 			scale = 0.7F; 
 
-			textures = inTex;
-			walkingVel = inputVelocity;
+			texture = newText;
+			walkingVel = newVelocity;
 			velocity = walkingVel;
-			lives = currentLives = inputLives;
+			lives = currentLives = newLives;
 
 			exhaust = new Stopwatch();
 			exhaust.Start();
@@ -74,7 +75,7 @@ namespace Flyatron
 
 		public Vector2 Position()
 		{
-			return vectors[1];
+			return vector[1];
 		}
 
 		public void Update()
@@ -99,11 +100,11 @@ namespace Flyatron
 			if (state == Playerstate.Alive)
 			{
 				// Player Flames.
-				spriteBatch.Draw(textures[2], vectors[2], rectangles[2], Color.White, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
+				spriteBatch.Draw(texture[2], vector[2], rectangle[2], Color.White, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
 				// Player body.
-				spriteBatch.Draw(textures[0], vectors[0], rectangles[0], Color.White, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
+				spriteBatch.Draw(texture[0], vector[0], rectangle[0], Color.White, 0, new Vector2(0, 0), scale, SpriteEffects.None, 0);
 				// Player head.
-				spriteBatch.Draw(textures[1], vectors[1], rectangles[1], Color.White, headRotation, headOffset, scale, SpriteEffects.None, 0);
+				spriteBatch.Draw(texture[1], vector[1], rectangle[1], Color.White, headRotation, headOffset, scale, SpriteEffects.None, 0);
 			}
 		}
 
@@ -113,7 +114,7 @@ namespace Flyatron
 			{
 				Lives(-1);
 				X(50);
-				Y(Game.HEIGHT / 2 - textures[0].Height / 2);
+				Y(Game.HEIGHT / 2 - texture[0].Height / 2);
 			}
 
 			state = Playerstate.Alive;
@@ -126,44 +127,44 @@ namespace Flyatron
 			UpdateFlamesAnimation();
 
 			if (Game.CURRENT_KEYBOARD.IsKeyDown(left))
-				if (vectors[0].X > 0)
-					for (int i = 0; i < vectors.Length; i++)
-						vectors[i].X -= velocity;
+				if (vector[0].X > 0)
+					for (int i = 0; i < vector.Length; i++)
+						vector[i].X -= velocity;
 
 			if (Game.CURRENT_KEYBOARD.IsKeyDown(up))
-				if (vectors[0].Y > 0)
-					for (int i = 0; i < vectors.Length; i++)
-						vectors[i].Y -= velocity;
+				if (vector[0].Y > 0)
+					for (int i = 0; i < vector.Length; i++)
+						vector[i].Y -= velocity;
 
 			if (Game.CURRENT_KEYBOARD.IsKeyDown(right))
-				if (vectors[0].X + 30 < Game.WIDTH)
-					for (int i = 0; i < vectors.Length; i++)
-						vectors[i].X += velocity;
+				if (vector[0].X + 30 < Game.WIDTH)
+					for (int i = 0; i < vector.Length; i++)
+						vector[i].X += velocity;
 
 			if (Game.CURRENT_KEYBOARD.IsKeyDown(down))
-				if (vectors[0].Y + 50 < Game.HEIGHT)
-					for (int i = 0; i < vectors.Length; i++)
-						vectors[i].Y += velocity;
+				if (vector[0].Y + 50 < Game.HEIGHT)
+					for (int i = 0; i < vector.Length; i++)
+						vector[i].Y += velocity;
 		}
 
 		public Rectangle Rectangle()
 		{
-			return new Rectangle((int)vectors[0].X, (int)vectors[0].Y, 25, 52);
+			return new Rectangle((int)vector[0].X, (int)vector[0].Y, 25, 52);
 		}
 
 		public void X(int newX)
 		{
 			// Streamline.
-			vectors[0].X = newX;
-			vectors[1].X = newX + 13;
-			vectors[2].X = newX + frameOffset[4];
+			vector[0].X = newX;
+			vector[1].X = newX + 13;
+			vector[2].X = newX + frameOffset[4];
 		}
 
 		public void Y(int newY)
 		{
-			vectors[0].Y = newY;
-			vectors[1].Y = newY + 13;
-			vectors[2].Y = newY + frameOffset[5];
+			vector[0].Y = newY;
+			vector[1].Y = newY + 13;
+			vector[2].Y = newY + frameOffset[5];
 		}
 
 		public int RemainingLives()
@@ -193,44 +194,44 @@ namespace Flyatron
 		{
 			Vector2 mouseLoc = new Vector2(mouse.X, mouse.Y);
 
-			Vector2 leftFacing = new Vector2(vectors[1].X - mouse.X, vectors[1].Y - mouse.Y);
-			Vector2 rightFacing = new Vector2(mouse.X - vectors[1].X, mouse.Y - vectors[1].Y);
+			Vector2 leftFacing = new Vector2(vector[1].X - mouse.X, vector[1].Y - mouse.Y);
+			Vector2 rightFacing = new Vector2(mouse.X - vector[1].X, mouse.Y - vector[1].Y);
 
 			float leftAngle = (float)(Math.Atan2(leftFacing.Y, leftFacing.X));
 			float rightAngle = (float)(Math.Atan2(rightFacing.Y, rightFacing.X));
 
-			if (mouse.X < vectors[1].X)
+			if (mouse.X < vector[1].X)
 			{
 				headRotation = leftAngle;
-				rectangles[1] = new Rectangle(44, 0, frames[2], frames[3]);
+				rectangle[1] = new Rectangle(44, 0, frames[2], frames[3]);
 			}
-			if (mouse.X > vectors[0].X)
+			if (mouse.X > vector[0].X)
 			{
 				headRotation = rightAngle;
-				rectangles[1] = new Rectangle(0, 0, frames[2], frames[3]);
+				rectangle[1] = new Rectangle(0, 0, frames[2], frames[3]);
 			}
 		}
 
 		private void UpdateBodyAnimation(MouseState mouse)
 		{
-			if (mouse.X < vectors[0].X)
+			if (mouse.X < vector[0].X)
 			{
-				rectangles[0] = new Rectangle(40, 0, frames[0], frames[1]);
+				rectangle[0] = new Rectangle(40, 0, frames[0], frames[1]);
 			}
-			if (mouse.X > vectors[0].X)
+			if (mouse.X > vector[0].X)
 			{
-				rectangles[0] = new Rectangle(0, 0, frames[0], frames[1]);
+				rectangle[0] = new Rectangle(0, 0, frames[0], frames[1]);
 			}
 		}
 
 		private void UpdateFlamesAnimation()
 		{
 			if ((exhaust.ElapsedMilliseconds >= 0) && (exhaust.ElapsedMilliseconds < 300))
-				rectangles[2] = new Rectangle(52, 0, frames[4], frames[5]);
+				rectangle[2] = new Rectangle(52, 0, frames[4], frames[5]);
 			if ((exhaust.ElapsedMilliseconds >= 300) && (exhaust.ElapsedMilliseconds < 600))
-				rectangles[2] = new Rectangle(25, 0, frames[4], frames[5]);
+				rectangle[2] = new Rectangle(25, 0, frames[4], frames[5]);
 			if ((exhaust.ElapsedMilliseconds >= 600) && (exhaust.ElapsedMilliseconds < 900))
-				rectangles[2] = new Rectangle(0, 0, frames[4], frames[5]);
+				rectangle[2] = new Rectangle(0, 0, frames[4], frames[5]);
 
 			if (exhaust.ElapsedMilliseconds > 900)
 				exhaust.Restart();

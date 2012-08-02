@@ -16,8 +16,7 @@ namespace Flyatron
 		// Explosion.
 		Stopwatch expTimer;
 
-		int width  = 49;
-		int height = 49;
+		int frameW, frameH;
 
 		// Current state of the mine.
 		enum BonusState { Halted, Traverse };
@@ -27,13 +26,13 @@ namespace Flyatron
 		BonusType type;
 
 		// Mine traverse speed.
-		float velocity = 4;
+		float velocity;
 
 		// Animation: Texture, vector, rotation offset, and frame rectangle.
 		Texture2D[] texture;
-		Vector2 vector;
-		Vector2 offset;
 		Rectangle[] rectangle;
+		Vector2[] vector;
+
 		// Rotation.
 		float angle;
 		float scale;
@@ -47,18 +46,25 @@ namespace Flyatron
 		public Bonus(Texture2D[] inputTexture)
 		{
 			texture = inputTexture;
+			velocity = 4;
 
-			vector = new Vector2(0 - width, Helper.Rng(Game.HEIGHT - height));
-			offset = new Vector2(24.5F, 24.5F);
+			frameW = 49;
+			frameH = 49;
+
+			vector = new Vector2[]
+			{
+				new Vector2(0 - frameW, Helper.Rng(Game.HEIGHT - frameH)),
+				new Vector2(24.5F, 24.5F)
+			};
 
 			angle = 0;
 			scale = 1;
 
 			rectangle = new Rectangle[]
-				{
-					new Rectangle(0, 0,  49, 49),
-					new Rectangle(0, 0, 125, 125)
-				};
+			{
+				new Rectangle(0, 0,  49, 49),
+				new Rectangle(0, 0, 125, 125)
+			};
 
 			// Animation timer.
 			scaleTimer = new Stopwatch();
@@ -79,11 +85,11 @@ namespace Flyatron
 							for (int i = 0; i < 2; i++)
 								spriteBatch.Draw(
 									texture[i],
-									vector,
+									vector[0],
 									rectangle[0],
 									Color.White,
 									angle,
-									offset,
+									vector[1],
 									scale,
 									SpriteEffects.None,
 									0
@@ -96,11 +102,11 @@ namespace Flyatron
 							for (int i = 2; i < 4; i++)
 								spriteBatch.Draw(
 									texture[i],
-									vector,
+									vector[0],
 									rectangle[0],
 									Color.White,
 									angle,
-									offset,
+									vector[1],
 									scale,
 									SpriteEffects.None,
 									0
@@ -135,14 +141,14 @@ namespace Flyatron
 			Animate();
 
 			// Traverse left.
-			vector.X -= velocity;
+			vector[0].X -= velocity;
 
 			// Player/bonus collision.
 			if (Helper.CircleCollision(Rectangle(), reference))
 				State(2);
 
 			// Check if it needs to be drawn.
-			if (vector.X + width < 0)
+			if (vector[0].X + frameW < 0)
 				state = BonusState.Halted;
 		}
 
@@ -156,8 +162,8 @@ namespace Flyatron
 			else
 				type = BonusType.Life;
 
-			vector.X = Game.WIDTH + width;
-			vector.Y = Helper.Rng(Game.HEIGHT - height);
+			vector[0].X = Game.WIDTH + frameW;
+			vector[0].Y = Helper.Rng(Game.HEIGHT - frameH);
 
 			haltDuration = Helper.Rng2(10000,20000);
 
@@ -188,12 +194,12 @@ namespace Flyatron
 
 		public Rectangle Rectangle()
 		{
-			return new Rectangle((int)vector.X - width / 2, (int)vector.Y - height / 2, width, height);
+			return new Rectangle((int)vector[0].X - frameW / 2, (int)vector[0].Y - frameH / 2, frameW, frameH);
 		}
 
 		public Vector2 Position()
 		{
-			return vector;
+			return vector[0];
 		}
 
 		public void State(int newState)
@@ -214,12 +220,12 @@ namespace Flyatron
 
 		public void X(int newX)
 		{
-			vector.X = newX;
+			vector[0].X = newX;
 		}
 
 		public void Y(int newY)
 		{
-			vector.Y = newY;
+			vector[0].Y = newY;
 		}
 	}
 }

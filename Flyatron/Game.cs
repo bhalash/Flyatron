@@ -49,15 +49,15 @@ namespace Flyatron
 		Muzak eightBitWeapon;
 
 		// Player.
-		Player a;
-		List <Texture2D> playerTextures;
+		Player first;
+		Texture2D[] playerTextures;
 		
 		// Gun.
 		Gun gun;
 		Texture2D[] gunTex;
 
 		// Fear, fire foes.
-		Texture2D[] mineTextures;
+		Texture2D[] mineTex;
 		List <Mine> mine;
 		int totalMines = 35;
 
@@ -69,7 +69,7 @@ namespace Flyatron
 		Scoreboard scores;
 
 		// Backdrop.
-		Texture2D[] alphaTextures;
+		Texture2D[] backdropTex;
 		Backdrop cloudyBackdrop;
 
 		// Mouse.
@@ -113,7 +113,7 @@ namespace Flyatron
 
 		protected override void LoadContent()
 		{
-			alphaTextures = new Texture2D[]
+			backdropTex = new Texture2D[]
 			{
 				// Backdrop textures.
 				Content.Load<Texture2D>("sky\\cloud0"),
@@ -122,7 +122,7 @@ namespace Flyatron
 			};
 
 			// Initialize backdrop.
-			cloudyBackdrop = new Backdrop(alphaTextures);
+			cloudyBackdrop = new Backdrop(backdropTex);
 
 			// Numerical value equates to pixel size.
 			font10 = Content.Load<SpriteFont>("fonts\\PressStart2P_10");
@@ -145,8 +145,8 @@ namespace Flyatron
 		{
 			border = Content.Load<Texture2D>("border");
 			cross = Content.Load<Texture2D>("zero");
-			
-			playerTextures = new List<Texture2D>()
+
+			playerTextures = new Texture2D[]
 			{
 				// Player textures.
 				Content.Load<Texture2D>("player\\body"),
@@ -154,7 +154,7 @@ namespace Flyatron
 				Content.Load<Texture2D>("player\\flames")
 			};
 
-			mineTextures = new Texture2D[]
+			mineTex = new Texture2D[]
 			{
 				Content.Load<Texture2D>("mine\\core"),
 				Content.Load<Texture2D>("mine\\spikes"),
@@ -171,7 +171,8 @@ namespace Flyatron
 			};
 
 			// Load player art/stats.
-			a = new Player(5, 10, Color.White, playerTextures);
+			first = new Player(5, 10, Color.White, playerTextures);
+
 			// Gun.
 			gunTex = new Texture2D[]
 			{
@@ -201,7 +202,7 @@ namespace Flyatron
 			bOpacity = 0.3F;
 
 			for (int i = 0; i < totalMines; i ++)
-				mine.Add(new Mine(mineTextures));
+				mine.Add(new Mine(mineTex));
 
 			// Import top scores.
 			scores = new Scoreboard();
@@ -228,7 +229,7 @@ namespace Flyatron
 				// Toggle between menu and gameplay.
 				if (state == Gamestate.Play)
 					state = Gamestate.Menu;
-				else if ((state == Gamestate.Menu) && (a.RemainingLives() > 0))
+				else if ((state == Gamestate.Menu) && (first.RemainingLives() > 0))
 					state = Gamestate.Play;
 			}
 
@@ -256,7 +257,7 @@ namespace Flyatron
 		private void NewGame()
 		{
 			scores.Reset();
-			a.Lives(5);
+			first.Lives(5);
 
 			for (int i = 0; i < mine.Count; i++)
 				mine[i].State(2);
@@ -271,11 +272,11 @@ namespace Flyatron
 			for (int i = 0; i < mine.Count; i++)
 				mine[i].State(3);
 
-			a.X(100);
-			a.Y(HEIGHT / 2 - a.Rectangle().Height / 2);
-			a.Lives(-1);
+			first.X(100);
+			first.Y(HEIGHT / 2 - first.Rectangle().Height / 2);
+			first.Lives(-1);
 
-			if (a.RemainingLives() <= 0)
+			if (first.RemainingLives() <= 0)
 				state = Gamestate.End;
 			else
 				state = Gamestate.Play;
@@ -289,7 +290,7 @@ namespace Flyatron
 		private void UpdateMenu()
 		{
 			// Menu opts.
-			if ((Helper.Keypress(Keys.D1)) && (a.RemainingLives() > 0))
+			if ((Helper.Keypress(Keys.D1)) && (first.RemainingLives() > 0))
 				state = Gamestate.Play;
 			if (Helper.Keypress(Keys.D2))
 				state = Gamestate.New;
@@ -440,7 +441,7 @@ namespace Flyatron
 
 		private void UpdatePlay()
 		{
-			if (a.RemainingLives() <= 0)
+			if (first.RemainingLives() <= 0)
 				state = Gamestate.End;
 
 			// Update backdrop.
@@ -448,28 +449,28 @@ namespace Flyatron
 			// Tick scores.
 			scores.Increment();
 
-			bonus.Update(a.Rectangle());
+			bonus.Update(first.Rectangle());
 
 			if (!DEBUG)
 				for (int i = 0; i < mine.Count; i++)
-					mine[i].Update(a.Rectangle());
+					mine[i].Update(first.Rectangle());
 				
 			// Player/mine collision.
 			for (int i = 0; i < mine.Count; i++)
-				if (Helper.CircleCollision(a.Rectangle(), mine[i].Rectangle()))
+				if (Helper.CircleCollision(first.Rectangle(), mine[i].Rectangle()))
 					state = Gamestate.Death;
 
 			// Player/bonus collision.
-			if (Helper.CircleCollision(a.Rectangle(), bonus.Rectangle()))
+			if (Helper.CircleCollision(first.Rectangle(), bonus.Rectangle()))
 				if (bonus.Type() == 1)
-					a.Lives(1);
+					first.Lives(1);
 				else if (bonus.Type() == 2)
 					for (int i = 0; i < mine.Count; i++)
 						mine[i].State(3);
 
 			// Update player + gun.
-			a.Update(); 
-			gun.Update(a.Position());
+			first.Update(); 
+			gun.Update(first.Position());
 
 			// Audio controls: Pause, unpause, skip forward.
 			if (Helper.Keypress(Keys.N))
@@ -487,7 +488,7 @@ namespace Flyatron
 			// Draw HUD.
 			DrawHud(gameTime);
 			// Draw player.
-			a.Draw(spriteBatch);
+			first.Draw(spriteBatch);
 			// Draw gun. Should always be drawn after the player!
 			gun.Draw(spriteBatch);
 			// Bonus.
@@ -500,7 +501,7 @@ namespace Flyatron
 			if (DEBUG)
 			{
 				// Outline textures if debug is enabled.
-				spriteBatch.Draw(border, a.Rectangle(), Color.White * bOpacity);
+				spriteBatch.Draw(border, first.Rectangle(), Color.White * bOpacity);
 				spriteBatch.Draw(border, mouse.Rectangle(), Color.White * bOpacity);
 				spriteBatch.Draw(border, bonus.Rectangle(), Color.White * bOpacity);
 				spriteBatch.Draw(border, gun.Rectangle(), Color.White * bOpacity);
@@ -517,7 +518,7 @@ namespace Flyatron
 			List<string> hud = new List<string>()
 			{
 				"Score: " + Convert.ToString(scores.Current()),
-				"Lives: " + Convert.ToString(a.RemainingLives())
+				"Lives: " + Convert.ToString(first.RemainingLives())
 			};
 
 			for (int i = 0; i < hud.Count; i++)
