@@ -450,10 +450,10 @@ namespace Flyatron
 
 			bonus.Update(a.Rectangle());
 
-			// Update mine.
-			for (int i = 0; i < mine.Count; i++)
-				mine[i].Update(a.Rectangle());
-
+			if (!DEBUG)
+				for (int i = 0; i < mine.Count; i++)
+					mine[i].Update(a.Rectangle());
+				
 			// Player/mine collision.
 			for (int i = 0; i < mine.Count; i++)
 				if (Helper.CircleCollision(a.Rectangle(), mine[i].Rectangle()))

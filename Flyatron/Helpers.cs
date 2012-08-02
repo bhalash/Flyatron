@@ -32,13 +32,13 @@ namespace Flyatron
 			if (a.Intersects(b))
 				return true;
 
-			return false;
+			return false;	
 		}
 
-		public static bool CircleCollision(Rectangle a, Rectangle b)
+		public static bool CircleCollision(Rectangle a, Rectangle b, float multiplier1 = 1F, float multiplier2 = 1F)
 		{
 			// Circular generic collisions.
-			if (Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y)) < (a.Width / 2 + b.Width / 2))
+			if (Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y)) < ((a.Width * multiplier1) / 2 + (b.Width * multiplier2) / 2))
 				return true;
 
 			return false;

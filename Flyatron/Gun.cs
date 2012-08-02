@@ -25,7 +25,7 @@ namespace Flyatron
 
 		Vector2 mouse;
 
-		List<Bullet> bullets;
+		List<Missile> missiles;
 
 		public Gun(Texture2D[] inputTexture)
 		{
@@ -37,7 +37,7 @@ namespace Flyatron
 
 			texture = inputTexture;
 			vector = new Vector2(150, 150);
-			bullets = new List<Bullet>();
+			missiles = new List<Missile>();
 
 			rectangle = new Rectangle[]
 			{
@@ -58,21 +58,25 @@ namespace Flyatron
 			Animate();
 
 			if (Helper.LeftClick())
-				bullets.Add(new Bullet(texture, Rectangle()));
+				missiles.Add(new Missile(texture, vector));
 
-			if (bullets.Count > 0)
-				for (int i = 0; i < bullets.Count; i++)
+			if (missiles.Count > 0)
+				for (int i = 0; i < missiles.Count; i++)
 				{
-					bullets[i].Update();
+					missiles[i].Update();
 
-					if (bullets[i].Expired())
-						bullets.RemoveAt(i);
+					if (missiles[i].Expired())
+						missiles.RemoveAt(i);
 				}
 		}
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
 			spriteBatch.Draw(texture[0], vector, rectangle[0], color, rotation, origin, 1, effects, 0);
+
+			if (missiles.Count != 0)
+				for (int i = 0; i < missiles.Count; i++)
+					missiles[i].Draw(spriteBatch);
 		}
 
 		private void Animate()
