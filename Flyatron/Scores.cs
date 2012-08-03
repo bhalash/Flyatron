@@ -10,7 +10,7 @@ namespace Flyatron
 {
 	class Scoreboard
 	{
-		public static int score = 0;
+		public static int SCORE = 0;
 		List<int> scores;
 		Stopwatch timer;
 		string path;
@@ -53,14 +53,14 @@ namespace Flyatron
 			// seeing your score climbing upward unto infinity. 
 			if (timer.ElapsedMilliseconds >= 80)
 			{
-				score += 1;
+				SCORE += 1;
 				timer.Restart();
 			}
 		}
 
 		public void Reset()
 		{
-			score = 0;
+			SCORE = 0;
 		}
 
 		private void Dummy(string path)
@@ -75,7 +75,7 @@ namespace Flyatron
 			// Collate combines the current score along with the top 10 scores.
 			// It then sorts this list, and overwrites the saved scores with the
 			// new top ten scores.
-			scores.Add(score);
+			scores.Add(SCORE);
 			scores.Sort();
 			scores.RemoveAt(0);
 			scores.Reverse();
@@ -96,7 +96,7 @@ namespace Flyatron
 
 		public string Current()
 		{
-			return Convert.ToString(score);
+			return Convert.ToString(SCORE);
 		}
 
 		public void Export(string path)
@@ -110,7 +110,7 @@ namespace Flyatron
 
 		public static void Bump(int amount)
 		{
-			score += amount;
+			SCORE += amount;
 		}
 	}
 }

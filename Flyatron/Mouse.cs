@@ -9,15 +9,20 @@ namespace Flyatron
 	class Flymouse
 	{
 		Texture2D texture;
-		Vector2 vector	= new Vector2(150, 150);
-		Rectangle rectangle = new Rectangle(0, 0, 34, 34);
-		Color color	= Color.White;
-		Vector2 origin	= new Vector2(0, 0);
-		SpriteEffects effects = SpriteEffects.None;
+		Vector2 vector;
+		Rectangle rectangle;
+		Color color;
+		Vector2 origin;
+		SpriteEffects effects;
 
 		public Flymouse(Texture2D inputTexture)
 		{
 			texture = inputTexture;
+			vector = new Vector2(150, 150);
+			origin = new Vector2(0, 0);
+			rectangle = new Rectangle(0, 0, 34, 34);
+			effects = SpriteEffects.None;
+			color = Color.White;
 		}
 
 		public void Update()

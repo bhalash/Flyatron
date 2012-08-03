@@ -52,7 +52,7 @@ namespace Flyatron
 				// Vectors should be updated relative to index 0.
 				new Vector2(x + frameOffset[0], y + frameOffset[1]),
 				new Vector2(x + frameOffset[2], y + frameOffset[3]),
-				new Vector2(x + frameOffset[4], y + frameOffset[5]),
+				new Vector2(x + frameOffset[4], y + frameOffset[5])
 			};
 
 			rectangle = new Rectangle[]
@@ -122,26 +122,26 @@ namespace Flyatron
 
 		private void Living()
 		{
-			UpdateBodyAnimation(Game.CURR_MOUSE);
-			UpdateHeadAnimation(Game.CURR_MOUSE);
+			UpdateBodyAnimation(Game.MOUSE);
+			UpdateHeadAnimation(Game.MOUSE);
 			UpdateFlamesAnimation();
 
-			if (Game.CURRENT_KEYBOARD.IsKeyDown(left))
+			if (Game.KEYBOARD.IsKeyDown(left))
 				if (vector[0].X > 0)
 					for (int i = 0; i < vector.Length; i++)
 						vector[i].X -= velocity;
 
-			if (Game.CURRENT_KEYBOARD.IsKeyDown(up))
+			if (Game.KEYBOARD.IsKeyDown(up))
 				if (vector[0].Y > 0)
 					for (int i = 0; i < vector.Length; i++)
 						vector[i].Y -= velocity;
 
-			if (Game.CURRENT_KEYBOARD.IsKeyDown(right))
+			if (Game.KEYBOARD.IsKeyDown(right))
 				if (vector[0].X + 30 < Game.WIDTH)
 					for (int i = 0; i < vector.Length; i++)
 						vector[i].X += velocity;
 
-			if (Game.CURRENT_KEYBOARD.IsKeyDown(down))
+			if (Game.KEYBOARD.IsKeyDown(down))
 				if (vector[0].Y + 50 < Game.HEIGHT)
 					for (int i = 0; i < vector.Length; i++)
 						vector[i].Y += velocity;
@@ -192,22 +192,20 @@ namespace Flyatron
 
 		private void UpdateHeadAnimation(MouseState mouse)
 		{
-			Vector2 mouseLoc = new Vector2(mouse.X, mouse.Y);
+			Vector2 mouseLoc = new Vector2(Game.MOUSE.X, Game.MOUSE.Y);
 
 			Vector2 leftFacing = new Vector2(vector[1].X - mouse.X, vector[1].Y - mouse.Y);
 			Vector2 rightFacing = new Vector2(mouse.X - vector[1].X, mouse.Y - vector[1].Y);
 
-			float leftAngle = (float)(Math.Atan2(leftFacing.Y, leftFacing.X));
-			float rightAngle = (float)(Math.Atan2(rightFacing.Y, rightFacing.X));
-
 			if (mouse.X < vector[1].X)
 			{
-				headRotation = leftAngle;
+				headRotation = (float)(Math.Atan2(leftFacing.Y, leftFacing.X));
 				rectangle[1] = new Rectangle(44, 0, frames[2], frames[3]);
 			}
-			if (mouse.X > vector[0].X)
+
+			else if (mouse.X > vector[0].X)
 			{
-				headRotation = rightAngle;
+				headRotation = (float)(Math.Atan2(rightFacing.Y, rightFacing.X));
 				rectangle[1] = new Rectangle(0, 0, frames[2], frames[3]);
 			}
 		}

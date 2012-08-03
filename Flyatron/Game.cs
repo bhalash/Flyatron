@@ -26,8 +26,8 @@ namespace Flyatron
 		enum Gamestate { Menu, Play, New, Scores, About, End, Death };
 		Gamestate state = Gamestate.Menu;
 
-		public static KeyboardState PREV_KEYBOARD, CURRENT_KEYBOARD;
-		public static MouseState PREV_MOUSE, CURR_MOUSE;
+		public static KeyboardState PREV_KEYBOARD, KEYBOARD;
+		public static MouseState PREV_MOUSE, MOUSE;
 
 		public static Game Instance;
 
@@ -216,8 +216,8 @@ namespace Flyatron
 
 		protected override void Update(GameTime gameTime)
 		{
-			CURRENT_KEYBOARD = Keyboard.GetState();
-			CURR_MOUSE = Mouse.GetState();
+			KEYBOARD = Keyboard.GetState();
+			MOUSE = Mouse.GetState();
 
 			mouse.Update();
 
@@ -235,8 +235,8 @@ namespace Flyatron
 
 			base.Update(gameTime);
 
-			PREV_MOUSE = CURR_MOUSE;
-			PREV_KEYBOARD = CURRENT_KEYBOARD;
+			PREV_MOUSE = MOUSE;
+			PREV_KEYBOARD = KEYBOARD;
 		}
 
 		protected override void Draw(GameTime gameTime)
@@ -468,6 +468,8 @@ namespace Flyatron
 					for (int i = 0; i < mine.Count; i++)
 						mine[i].State(3);
 
+			// Bullet/mine.
+
 			// Update player + gun.
 			first.Update(); 
 			gun.Update(first.Position());
@@ -504,7 +506,6 @@ namespace Flyatron
 				spriteBatch.Draw(border, first.Rectangle(), Color.White * bOpacity);
 				spriteBatch.Draw(border, mouse.Rectangle(), Color.White * bOpacity);
 				spriteBatch.Draw(border, bonus.Rectangle(), Color.White * bOpacity);
-				spriteBatch.Draw(border, gun.Rectangle(), Color.White * bOpacity);
 
 				for (int i = 0; i < mine.Count; i++)
 					spriteBatch.Draw(border, mine[i].Rectangle(), Color.White * bOpacity);

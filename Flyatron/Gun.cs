@@ -86,10 +86,10 @@ namespace Flyatron
 
 		private void Animate()
 		{
-			mouse.X = Game.CURR_MOUSE.X;
-			mouse.Y = Game.CURR_MOUSE.Y;
+			mouse.X = Game.MOUSE.X;
+			mouse.Y = Game.MOUSE.Y;
 
-			Vector2 leftFacing = new Vector2(vector[0].X - Game.CURR_MOUSE.X, vector[0].Y - mouse.Y);
+			Vector2 leftFacing = new Vector2(vector[0].X - Game.MOUSE.X, vector[0].Y - mouse.Y);
 			Vector2 rightFacing = new Vector2(mouse.X - vector[0].X, mouse.Y - vector[0].Y);
 
 			float leftAngle = (float)(Math.Atan2(leftFacing.Y, leftFacing.X));

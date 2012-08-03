@@ -47,7 +47,7 @@ namespace Flyatron
 		public static bool LeftClick()
 		{
 			// Left mouse click.
-			if ((Game.CURR_MOUSE.LeftButton == ButtonState.Released) && (Game.PREV_MOUSE.LeftButton == ButtonState.Pressed))
+			if ((Game.MOUSE.LeftButton == ButtonState.Released) && (Game.PREV_MOUSE.LeftButton == ButtonState.Pressed))
 				return true;
 
 			else return false;
@@ -56,7 +56,7 @@ namespace Flyatron
 		public static bool RightClick()
 		{
 			// Right mouse click.
-			if ((Game.CURR_MOUSE.RightButton == ButtonState.Released) && (Game.PREV_MOUSE.RightButton == ButtonState.Pressed))
+			if ((Game.MOUSE.RightButton == ButtonState.Released) && (Game.PREV_MOUSE.RightButton == ButtonState.Pressed))
 				return true;
 
 			else return false;
@@ -64,7 +64,7 @@ namespace Flyatron
 
 		public static bool Keypress(Keys inputKey)
 		{
-			if (Game.CURRENT_KEYBOARD.IsKeyUp(inputKey) && (Game.PREV_KEYBOARD.IsKeyDown(inputKey)))
+			if (Game.KEYBOARD.IsKeyUp(inputKey) && (Game.PREV_KEYBOARD.IsKeyDown(inputKey)))
 				return true;
 
 			return false;
