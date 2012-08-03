@@ -71,7 +71,9 @@ namespace Flyatron
 				// Animation frame.
 				new Rectangle(frameX, frameY, frameW, frameH),
 				// Debug.
-				new Rectangle((int)Game.MOUSE.X, (int)Game.MOUSE.Y, 50,50)
+				new Rectangle((int)Game.MOUSE.X, (int)Game.MOUSE.Y, 50,50),
+				// Game bounds. 
+				new Rectangle(0, 0, Game.WIDTH, Game.HEIGHT)
 			};
 
 			rotation = (float)(Math.Atan2(vector[3].Y, vector[3].X));
@@ -107,6 +109,11 @@ namespace Flyatron
 				vector[3].Normalize();
 
 			vector[0] -= vector[3] * velocity;
+
+			if (vector[0] == vector[3])
+				state = Bulletstate.Detonated;
+			if (!Rectangle().Intersects(rectangle[3]))
+				state = Bulletstate.Detonated;
 		}
 
 		private void Detonated()
@@ -139,11 +146,7 @@ namespace Flyatron
 
 		public bool Expired()
 		{
-			Rectangle bounds = new Rectangle(0, 0, Game.WIDTH, Game.HEIGHT);
-
 			if (state == Bulletstate.Detonated)
-				return true;
-			if (!Rectangle().Intersects(bounds))
 				return true;
 
 			return false;
