@@ -127,7 +127,6 @@ namespace Flyatron
 
 						if (Game.DEBUG)
 							spriteBatch.Draw(texture[2], vector[0], rectangle[1], color * 0.3F, rotation, vector[1], scale, effects, 0F);
-
 						break;
 					}
 			}
@@ -148,6 +147,16 @@ namespace Flyatron
 				return true;
 
 			return false;
+		}
+
+		public string Rotation()
+		{
+			return Convert.ToString(rotation);
+		}
+
+		public string Velocity()
+		{
+			return Convert.ToString(velocity);
 		}
 
 		public Vector2 Position()

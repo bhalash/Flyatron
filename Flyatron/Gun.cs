@@ -65,14 +65,13 @@ namespace Flyatron
 			if (Helper.LeftClick())
 				missiles.Add(new Missile(texture, vector[0]));
 
-			if (missiles.Count > 0)
-				for (int i = 0; i < missiles.Count; i++)
-				{
-					missiles[i].Update();
+			for (int i = 0; i < missiles.Count; i++)
+			{
+				missiles[i].Update();
 
-					if (missiles[i].Expired())
-						missiles.RemoveAt(i);
-				}
+				if (missiles[i].Expired())
+					missiles.RemoveAt(i);
+			}
 		}
 
 		public void Draw(SpriteBatch spriteBatch)
@@ -82,6 +81,28 @@ namespace Flyatron
 			if (missiles.Count != 0)
 				for (int i = 0; i < missiles.Count; i++)
 					missiles[i].Draw(spriteBatch);
+
+			if (Game.DEBUG)
+			{
+				int y = 110;
+
+				spriteBatch.DrawString(Game.FONT1, "Bullets:", new Vector2(30, 90), Color.Black);
+
+				for (int i = 0; i < missiles.Count; i++)
+				{
+					spriteBatch.DrawString(
+						Game.FONT1, 
+						i + ": " + missiles[i].Rotation() + " V: " + missiles[i].Velocity() + "X: " + missiles[i].Position().X + " Y: "  + missiles[i].Position().Y, 
+						new Vector2(30, y), 
+						Color.Black
+					);
+
+					y += 15;
+				}
+
+				if (missiles.Count == 0)
+					y = 90;
+			}
 		}
 
 		private void Animate()

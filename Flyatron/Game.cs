@@ -43,7 +43,7 @@ namespace Flyatron
 		// this project under it, along with creator attribution.
 		// Font download page:	 http://www.zone38.net/font/
 		// OFL license homepage: http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL
-		static SpriteFont font10, font14, font25;	
+		public static SpriteFont FONT1, FONT2, FONT3;	
 
 		// Soundtrack instance.
 		Muzak eightBitWeapon;
@@ -93,8 +93,6 @@ namespace Flyatron
 		Texture2D menuBg;
 		Vector2 menuVec;
 
-		// Custom mouse texture.
-
 		public Game()
 		{
 			Instance = this;
@@ -125,9 +123,9 @@ namespace Flyatron
 			cloudyBackdrop = new Backdrop(backdropTex);
 
 			// Numerical value equates to pixel size.
-			font10 = Content.Load<SpriteFont>("fonts\\PressStart2P_10");
-			font14 = Content.Load<SpriteFont>("fonts\\PressStart2P_14");
-			font25 = Content.Load<SpriteFont>("fonts\\PressStart2P_25");
+			FONT1 = Content.Load<SpriteFont>("fonts\\PressStart2P_10");
+			FONT2 = Content.Load<SpriteFont>("fonts\\PressStart2P_14");
+			FONT3 = Content.Load<SpriteFont>("fonts\\PressStart2P_25");
 
 			// Initialize menu backdrop.
 			menuBg = Content.Load<Texture2D>("bg\\paused");
@@ -320,19 +318,19 @@ namespace Flyatron
 
 			cloudyBackdrop.Update(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
-			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
+			spriteBatch.DrawString(FONT3, title, new Vector2(50, 50), Color.White);
 			// Draw the menu.
 			for (int i = 0; i < opt.Count; i++)
 			{
-				spriteBatch.DrawString(font14, (i + 1) + ". " + opt[i], new Vector2(50, Y), Color.White);
+				spriteBatch.DrawString(FONT2, (i + 1) + ". " + opt[i], new Vector2(50, Y), Color.White);
 				Y += 35;
 			}
 
 			if (DEBUG)
 				spriteBatch.DrawString(
-					font10,
+					FONT1,
 					VERSIONSTRING,
-					new Vector2(WIDTH - 30 - font10.MeasureString(VERSIONSTRING).Length(), HEIGHT - 30),
+					new Vector2(WIDTH - 30 - FONT1.MeasureString(VERSIONSTRING).Length(), HEIGHT - 30),
 					Color.White
 				);
 		}
@@ -365,11 +363,11 @@ namespace Flyatron
 
 			cloudyBackdrop.Update(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
-			spriteBatch.DrawString(font25, title, new Vector2(x, 50), Color.White);
+			spriteBatch.DrawString(FONT3, title, new Vector2(x, 50), Color.White);
 
 			for (int i = 0; i < messages.Count; i++)
 			{
-				spriteBatch.DrawString(font10, messages[i], new Vector2(x, y), Color.White);
+				spriteBatch.DrawString(FONT1, messages[i], new Vector2(x, y), Color.White);
 				y += 20;
 			}
 		}
@@ -399,27 +397,27 @@ namespace Flyatron
 
 			cloudyBackdrop.Update(3);
 
-			Vector2 fontVector = new Vector2(WIDTH / 2 - font25.MeasureString(message).Length() / 2, HEIGHT / 2 - 25);
+			Vector2 fontVector = new Vector2(WIDTH / 2 - FONT3.MeasureString(message).Length() / 2, HEIGHT / 2 - 25);
 
 			if ((deathScreenTimer.ElapsedMilliseconds > 1000) && (deathScreenTimer.ElapsedMilliseconds <= 2000))
 			{
 				spriteBatch.Draw(menuBg, menuVec, color * 0.25F);
-				spriteBatch.DrawString(font25, message, fontVector, color * 0.25F);
+				spriteBatch.DrawString(FONT3, message, fontVector, color * 0.25F);
 			}
 			if ((deathScreenTimer.ElapsedMilliseconds > 2000) && (deathScreenTimer.ElapsedMilliseconds <= 3000))
 			{
 				spriteBatch.Draw(menuBg, menuVec, color * 0.5F);
-				spriteBatch.DrawString(font25, message, fontVector, color * 0.5F);
+				spriteBatch.DrawString(FONT3, message, fontVector, color * 0.5F);
 			}
 			if ((deathScreenTimer.ElapsedMilliseconds > 3000) && (deathScreenTimer.ElapsedMilliseconds <= 4000))
 			{
 				spriteBatch.Draw(menuBg, menuVec, color * 0.75F);
-				spriteBatch.DrawString(font25, message, fontVector, color * 0.75F);
+				spriteBatch.DrawString(FONT3, message, fontVector, color * 0.75F);
 			}
 			if (deathScreenTimer.ElapsedMilliseconds > 4000)
 			{
 				spriteBatch.Draw(menuBg, menuVec, color * 1.0F);
-				spriteBatch.DrawString(font25, message, fontVector, color * 1.0F);
+				spriteBatch.DrawString(FONT3, message, fontVector, color * 1.0F);
 			}
 		}
 
@@ -435,8 +433,8 @@ namespace Flyatron
 
 			cloudyBackdrop.Update(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
-			spriteBatch.DrawString(font25, title, new Vector2(50, 50), Color.White);
-			scores.Report(font14, spriteBatch, 55, 100, Color.White);
+			spriteBatch.DrawString(FONT3, title, new Vector2(50, 50), Color.White);
+			scores.Report(FONT2, spriteBatch, 55, 100, Color.White);
 		}
 
 		private void UpdatePlay()
@@ -525,7 +523,7 @@ namespace Flyatron
 			for (int i = 0; i < hud.Count; i++)
 			{
 				spriteBatch.DrawString(
-					font14,
+					FONT2,
 					hud[i],
 					new Vector2(30, y),
 					Color.Black
@@ -536,7 +534,7 @@ namespace Flyatron
 
 			if (!DEBUG)
 				spriteBatch.DrawString(
-					font10,
+					FONT1,
 					eightBitWeapon.NameTime(),
 					new Vector2(GraphicsDevice.Viewport.X + 25, GraphicsDevice.Viewport.Height - 30),
 					Color.Black
@@ -544,7 +542,7 @@ namespace Flyatron
 
 			if (DEBUG)
 				spriteBatch.DrawString(
-					font10,
+					FONT1,
 					Convert.ToString(gameTime.TotalGameTime),
 					new Vector2(30, HEIGHT - 30),
 					Color.Black
