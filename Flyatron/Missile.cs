@@ -17,7 +17,7 @@ namespace Flyatron
 		float rotation, scale, velocity;
 		SpriteEffects effects;
 
-		enum Bulletstate { Traversing, Detonating, Detonated };
+		enum Bulletstate { Traversing, Detonating, Expired };
 		Bulletstate state;
 
 		Color color;
@@ -25,7 +25,7 @@ namespace Flyatron
 		public Missile(Texture2D[] newTexture, Vector2 newVector)
 		{
 			texture = newTexture;
-
+			effects = SpriteEffects.None;
 			color = Color.White;
 
 			// frameX is set based on mouse position.
@@ -41,7 +41,7 @@ namespace Flyatron
 				new Vector2(27.5F, 10.5F),
 				// Mouse.
 				new Vector2(Game.MOUSE.X, Game.MOUSE.Y),
-				// Difference vector. Used for movement.
+				// Difference vector. Used for updating the bullet's position.
 				new Vector2(0,0)
 			};
 
@@ -76,6 +76,7 @@ namespace Flyatron
 				new Rectangle(0, 0, Game.WIDTH, Game.HEIGHT)
 			};
 
+			velocity = 10;
 			rotation = (float)(Math.Atan2(vector[3].Y, vector[3].X));
 			scale = 1;
 			state = Bulletstate.Traversing;
@@ -95,11 +96,6 @@ namespace Flyatron
 						Detonating();
 						break;
 					}
-				case Bulletstate.Detonated:
-					{
-						Detonated();
-						break;
-					}
 			}
 		}
 
@@ -109,15 +105,9 @@ namespace Flyatron
 				vector[3].Normalize();
 
 			vector[0] -= vector[3] * velocity;
-
-			if (vector[0] == vector[3])
-				state = Bulletstate.Detonated;
+			
 			if (!Rectangle().Intersects(rectangle[3]))
-				state = Bulletstate.Detonated;
-		}
-
-		private void Detonated()
-		{
+				state = Bulletstate.Expired;
 		}
 
 		private void Detonating()
@@ -134,6 +124,7 @@ namespace Flyatron
 
 						if (Game.DEBUG)
 							spriteBatch.Draw(texture[2], vector[0], rectangle[1], color * 0.3F, rotation, vector[1], scale, effects, 0F);
+
 						break;
 					}
 			}
@@ -146,7 +137,7 @@ namespace Flyatron
 
 		public bool Expired()
 		{
-			if (state == Bulletstate.Detonated)
+			if (state == Bulletstate.Expired)
 				return true;
 
 			return false;

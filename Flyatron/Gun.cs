@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Flyatron
 {
@@ -25,6 +26,7 @@ namespace Flyatron
 		Vector2 mouse;
 
 		List<Missile> missiles;
+		Missile[] test;
 
 		public Gun(Texture2D[] inputTexture)
 		{
@@ -53,6 +55,8 @@ namespace Flyatron
 			color = Color.White;
 			rotation = 0;
 			effects = SpriteEffects.None;
+
+			test = new Missile[0];
 		}
 
 		public void Update(Vector2 reference)
@@ -66,21 +70,19 @@ namespace Flyatron
 				missiles.Add(new Missile(texture, vector[0]));
 
 			for (int i = 0; i < missiles.Count; i++)
-			{
-				missiles[i].Update();
-
 				if (missiles[i].Expired())
 					missiles.RemoveAt(i);
-			}
+
+			for (int i = 0; i < missiles.Count; i++)
+				missiles[i].Update();
 		}
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
 			spriteBatch.Draw(texture[0], vector[0], rectangle[0], color, rotation, vector[1], 1, effects, 0);
 
-			if (missiles.Count != 0)
-				for (int i = 0; i < missiles.Count; i++)
-					missiles[i].Draw(spriteBatch);
+			for (int i = 0; i < missiles.Count; i++)
+				missiles[i].Draw(spriteBatch);
 
 			if (Game.DEBUG)
 			{
