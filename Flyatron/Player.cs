@@ -174,7 +174,17 @@ namespace Flyatron
 
 		public void Lives(int inputLives)
 		{
-			currentLives += inputLives;
+			currentLives = inputLives;
+		}
+
+		public void Plus()
+		{
+			currentLives++;
+		}
+
+		public void Minus()
+		{
+			currentLives--;
 		}
 
 		public void ResetLives()

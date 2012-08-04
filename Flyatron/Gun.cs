@@ -9,130 +9,127 @@ namespace Flyatron
 {
 	class Gun
 	{
-		int xSize;
-		int ySize;
+		// Used in Game.cs to determine collisions.
+		public static List<Missile> MISSILES;
 
-		float xOffset;
-		float yOffset;
+		int frameX, frameY, frameWidth, frameHeight;
+		float placementXOffset, placementYOffset, rotation;
+		Texture2D gunTexture, borderTexture;
+		Vector2 gunPosition, rotationOffset;
+		Rectangle animationFrame;
+		SpriteEffects effects;
+		Color color;
 
 		// Gun/bullet.
-		Texture2D[] texture;
-		Vector2[] vector;
-		Rectangle[] rectangle;
-		Color color;
-		float rotation;
-		SpriteEffects effects;
-
-		Vector2 mouse;
-
-		List<Missile> missiles;
-		Missile[] test;
+		Texture2D[] textureHolding;
 
 		public Gun(Texture2D[] inputTexture)
 		{
-			xSize = 35;
-			ySize = 18;
-
-			xOffset = 0;
-			yOffset = 25;
-
-			texture = inputTexture;
-
-			vector = new Vector2[]
-			{
-				new Vector2(150, 150),
-				new Vector2(17, 9)
-			};
-
-			missiles = new List<Missile>();
-
-			rectangle = new Rectangle[]
-			{
-				new Rectangle(0, 0, 35, 18),
-				new Rectangle(0, 0, 55, 11),
-			};
-
+			// Gun's textures.
+			textureHolding = inputTexture;
+			gunTexture = inputTexture[0];
+			borderTexture = inputTexture[2];
+			// Munitions-in-flight.
+			MISSILES = new List<Missile>();
+			// Offset for animation rotation.
+			rotationOffset = new Vector2(17.5F, 9);
+			// Width and height of the gun's sprite.
+			frameWidth = 35;
+			frameHeight = 18;
+			// Color, rotation, and effects.
 			color = Color.White;
 			rotation = 0;
 			effects = SpriteEffects.None;
+			// Where do you want the gun placed relative to the vector it is attached too?
+			placementXOffset = 0;
+			placementYOffset = 25;
 
-			test = new Missile[0];
+			animationFrame = new Rectangle(
+				frameX,
+				frameY,
+				frameWidth,
+				frameHeight
+			);
 		}
 
 		public void Update(Vector2 reference)
 		{
-			vector[0].X = reference.X + xOffset;
-			vector[0].Y = reference.Y + yOffset;
+			gunPosition.X = reference.X + placementXOffset;
+			gunPosition.Y = reference.Y + placementYOffset;
 
 			Animate();
 
 			if (Helper.LeftClick())
-				missiles.Add(new Missile(texture, vector[0]));
+				MISSILES.Add(new Missile(textureHolding, gunPosition));
 
-			for (int i = 0; i < missiles.Count; i++)
-				if (missiles[i].Expired())
-					missiles.RemoveAt(i);
+			for (int i = 0; i < MISSILES.Count; i++)
+				if (MISSILES[i].Expired())
+					MISSILES.RemoveAt(i);
 
-			for (int i = 0; i < missiles.Count; i++)
-				missiles[i].Update();
+			for (int i = 0; i < MISSILES.Count; i++)
+				MISSILES[i].Update();
 		}
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
-			spriteBatch.Draw(texture[0], vector[0], rectangle[0], color, rotation, vector[1], 1, effects, 0);
+			spriteBatch.Draw(gunTexture, gunPosition, animationFrame, color, rotation, rotationOffset, 1, effects, 0);
 
-			for (int i = 0; i < missiles.Count; i++)
-				missiles[i].Draw(spriteBatch);
+			for (int i = 0; i < MISSILES.Count; i++)
+				MISSILES[i].Draw(spriteBatch);
 
 			if (Game.DEBUG)
 			{
 				int y = 110;
 
-				spriteBatch.DrawString(Game.FONT1, "Bullets:", new Vector2(30, 90), Color.Black);
+				spriteBatch.DrawString(Game.FONT10, "Bullets:", new Vector2(30, 90), Color.Black);
 
-				for (int i = 0; i < missiles.Count; i++)
+				for (int i = 0; i < MISSILES.Count; i++)
 				{
 					spriteBatch.DrawString(
-						Game.FONT1, 
-						i + ": " + missiles[i].Rotation() + " V: " + missiles[i].Velocity() + "X: " + missiles[i].Position().X + " Y: "  + missiles[i].Position().Y, 
+						Game.FONT10, 
+						i + ": " + MISSILES[i].Rotation() + " V: " + MISSILES[i].Velocity() + "X: " + MISSILES[i].Position().X + " Y: "  + MISSILES[i].Position().Y, 
 						new Vector2(30, y), 
 						Color.Black
 					);
 
+					// Debug. Outline the rectangle.
+					spriteBatch.Draw(borderTexture, gunPosition, animationFrame, color * 0.3F, rotation, rotationOffset, 1, effects, 0);
+
 					y += 15;
 				}
 
-				if (missiles.Count == 0)
+				if (MISSILES.Count == 0)
 					y = 90;
 			}
 		}
 
 		private void Animate()
 		{
-			mouse.X = Game.MOUSE.X;
-			mouse.Y = Game.MOUSE.Y;
-
-			Vector2 leftFacing = new Vector2(vector[0].X - Game.MOUSE.X, vector[0].Y - mouse.Y);
-			Vector2 rightFacing = new Vector2(mouse.X - vector[0].X, mouse.Y - vector[0].Y);
+			Vector2 leftFacing = new Vector2(gunPosition.X - Game.MOUSE.X, gunPosition.Y - Game.MOUSE.Y);
+			Vector2 rightFacing = new Vector2(Game.MOUSE.X - gunPosition.X, Game.MOUSE.Y - gunPosition.Y);
 
 			float leftAngle = (float)(Math.Atan2(leftFacing.Y, leftFacing.X));
 			float rightAngle = (float)(Math.Atan2(rightFacing.Y, rightFacing.X));
 
-			if (mouse.X < vector[0].X)
+			if (Game.MOUSE.X < gunPosition.X)
 			{
 				rotation = leftAngle;
-				rectangle[0] = new Rectangle(39, 0, 35, 18);
+				animationFrame.X = 39;
 			}
-			if (mouse.X > vector[0].X)
+			if (Game.MOUSE.X > gunPosition.X)
 			{
 				rotation = rightAngle;
-				rectangle[0] = new Rectangle(0, 0, 35, 18);
+				animationFrame.X = 0;
 			}
 		}
 
 		public Rectangle Rectangle()
 		{
-			return new Rectangle((int)vector[0].X - xSize / 2, (int)vector[0].Y - ySize / 2, xSize, ySize);
+			return new Rectangle(
+				(int)gunPosition.X - frameWidth / 2,
+				(int)gunPosition.Y - frameHeight / 2,
+				frameWidth,
+				frameHeight);
 		}
 	}
 }

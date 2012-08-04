@@ -13,12 +13,13 @@ namespace Flyatron
 	public class Game : Microsoft.Xna.Framework.Game
 	{
 		// Welcome to Flyatron!
-
-		public static bool DEBUG = true;
+		public static bool DEBUG = false;
 
 		public static int WIDTH  = 1024;
 		public static int HEIGHT = 600;
 		static bool FULLSCREEN   = false;
+
+		public static Rectangle BOUNDS = new Rectangle(0, 0, WIDTH, HEIGHT);
 
 		static double VERSION = 0.1;
 		static string VERSIONSTRING = "Version " + VERSION;
@@ -43,14 +44,14 @@ namespace Flyatron
 		// this project under it, along with creator attribution.
 		// Font download page:	 http://www.zone38.net/font/
 		// OFL license homepage: http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL
-		public static SpriteFont FONT1, FONT2, FONT3;	
+		public static SpriteFont FONT10, FONT14, FONT25;	
 
 		// Soundtrack instance.
 		Muzak eightBitWeapon;
 
 		// Player.
-		Player first;
-		Texture2D[] playerTextures;
+		Player playerOne;
+		Texture2D[] playerOneTextures;
 		
 		// Gun.
 		Gun gun;
@@ -58,7 +59,7 @@ namespace Flyatron
 
 		// Fear, fire foes.
 		Texture2D[] mineTex;
-		List <Mine> mine;
+		List <Mine> mines;
 		int totalMines = 35;
 
 		// Bonuses.
@@ -123,9 +124,9 @@ namespace Flyatron
 			cloudyBackdrop = new Backdrop(backdropTex);
 
 			// Numerical value equates to pixel size.
-			FONT1 = Content.Load<SpriteFont>("fonts\\PressStart2P_10");
-			FONT2 = Content.Load<SpriteFont>("fonts\\PressStart2P_14");
-			FONT3 = Content.Load<SpriteFont>("fonts\\PressStart2P_25");
+			FONT10 = Content.Load<SpriteFont>("fonts\\PressStart2P_10");
+			FONT14 = Content.Load<SpriteFont>("fonts\\PressStart2P_14");
+			FONT25 = Content.Load<SpriteFont>("fonts\\PressStart2P_25");
 
 			// Initialize menu backdrop.
 			menuBg = Content.Load<Texture2D>("bg\\paused");
@@ -144,7 +145,7 @@ namespace Flyatron
 			border = Content.Load<Texture2D>("border");
 			cross = Content.Load<Texture2D>("zero");
 
-			playerTextures = new Texture2D[]
+			playerOneTextures = new Texture2D[]
 			{
 				// Player textures.
 				Content.Load<Texture2D>("player\\body"),
@@ -169,7 +170,7 @@ namespace Flyatron
 			};
 
 			// Load player art/stats.
-			first = new Player(5, 10, Color.White, playerTextures);
+			playerOne = new Player(5, 10, Color.White, playerOneTextures);
 
 			// Gun.
 			gunTex = new Texture2D[]
@@ -194,13 +195,13 @@ namespace Flyatron
 			deathScreenTimer = new Stopwatch();
 
 			// Initialize foe mine.
-			mine = new List<Mine>();
+			mines = new List<Mine>();
 
 			// Debug. Border opacity.
 			bOpacity = 0.3F;
 
 			for (int i = 0; i < totalMines; i ++)
-				mine.Add(new Mine(mineTex));
+				mines.Add(new Mine(mineTex));
 
 			// Import top scores.
 			scores = new Scoreboard();
@@ -227,7 +228,7 @@ namespace Flyatron
 				// Toggle between menu and gameplay.
 				if (state == Gamestate.Play)
 					state = Gamestate.Menu;
-				else if ((state == Gamestate.Menu) && (first.RemainingLives() > 0))
+				else if ((state == Gamestate.Menu) && (playerOne.RemainingLives() > 0))
 					state = Gamestate.Play;
 			}
 
@@ -255,10 +256,10 @@ namespace Flyatron
 		private void NewGame()
 		{
 			scores.Reset();
-			first.Lives(5);
+			playerOne.Lives(5);
 
-			for (int i = 0; i < mine.Count; i++)
-				mine[i].State(2);
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].State(2);
 
 			state = Gamestate.Play;
 		}
@@ -267,14 +268,14 @@ namespace Flyatron
 		{
 			// This function should be called if and when the player dies.
 
-			for (int i = 0; i < mine.Count; i++)
-				mine[i].State(3);
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].State(3);
 
-			first.X(100);
-			first.Y(HEIGHT / 2 - first.Rectangle().Height / 2);
-			first.Lives(-1);
+			playerOne.X(100);
+			playerOne.Y(HEIGHT / 2 - playerOne.Rectangle().Height / 2);
+			playerOne.Minus();
 
-			if (first.RemainingLives() <= 0)
+			if (playerOne.RemainingLives() <= 0)
 				state = Gamestate.End;
 			else
 				state = Gamestate.Play;
@@ -288,7 +289,7 @@ namespace Flyatron
 		private void UpdateMenu()
 		{
 			// Menu opts.
-			if ((Helper.Keypress(Keys.D1)) && (first.RemainingLives() > 0))
+			if ((Helper.Keypress(Keys.D1)) && (playerOne.RemainingLives() > 0))
 				state = Gamestate.Play;
 			if (Helper.Keypress(Keys.D2))
 				state = Gamestate.New;
@@ -318,19 +319,19 @@ namespace Flyatron
 
 			cloudyBackdrop.Update(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
-			spriteBatch.DrawString(FONT3, title, new Vector2(50, 50), Color.White);
+			spriteBatch.DrawString(FONT25, title, new Vector2(50, 50), Color.White);
 			// Draw the menu.
 			for (int i = 0; i < opt.Count; i++)
 			{
-				spriteBatch.DrawString(FONT2, (i + 1) + ". " + opt[i], new Vector2(50, Y), Color.White);
+				spriteBatch.DrawString(FONT14, (i + 1) + ". " + opt[i], new Vector2(50, Y), Color.White);
 				Y += 35;
 			}
 
 			if (DEBUG)
 				spriteBatch.DrawString(
-					FONT1,
+					FONT10,
 					VERSIONSTRING,
-					new Vector2(WIDTH - 30 - FONT1.MeasureString(VERSIONSTRING).Length(), HEIGHT - 30),
+					new Vector2(WIDTH - 30 - FONT10.MeasureString(VERSIONSTRING).Length(), HEIGHT - 30),
 					Color.White
 				);
 		}
@@ -351,11 +352,18 @@ namespace Flyatron
 				"Dedicated to Ciara and Garrett.",
 				"",
 				"Big thanks to:",
-				"The 091 Labs Hackerspace",
+				"",
 				"8 Bit Weapon",
 				"Alanna Kelly",
 				"Domhall Walsh",
 				"Duncan Thomas",
+				"",
+				"IRC (##xna):",
+				"NullSoldier",
+				"tert13",
+				"",
+				"Also:",
+				"8-Bit Weapon",
 				"Jennifer Tidmore (just because :)",
 			};
 
@@ -363,19 +371,19 @@ namespace Flyatron
 
 			cloudyBackdrop.Update(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
-			spriteBatch.DrawString(FONT3, title, new Vector2(x, 50), Color.White);
+			spriteBatch.DrawString(FONT25, title, new Vector2(x, 50), Color.White);
 
 			for (int i = 0; i < messages.Count; i++)
 			{
-				spriteBatch.DrawString(FONT1, messages[i], new Vector2(x, y), Color.White);
+				spriteBatch.DrawString(FONT10, messages[i], new Vector2(x, y), Color.White);
 				y += 20;
 			}
 		}
 
 		private void UpdateEnd()
 		{
-			for (int i = 0; i < mine.Count; i++)
-				mine[i].State(2);
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].State(2);
 
 			bonus.State(2);
 
@@ -397,27 +405,27 @@ namespace Flyatron
 
 			cloudyBackdrop.Update(3);
 
-			Vector2 fontVector = new Vector2(WIDTH / 2 - FONT3.MeasureString(message).Length() / 2, HEIGHT / 2 - 25);
+			Vector2 fontVector = new Vector2(WIDTH / 2 - FONT25.MeasureString(message).Length() / 2, HEIGHT / 2 - 25);
 
 			if ((deathScreenTimer.ElapsedMilliseconds > 1000) && (deathScreenTimer.ElapsedMilliseconds <= 2000))
 			{
 				spriteBatch.Draw(menuBg, menuVec, color * 0.25F);
-				spriteBatch.DrawString(FONT3, message, fontVector, color * 0.25F);
+				spriteBatch.DrawString(FONT25, message, fontVector, color * 0.25F);
 			}
 			if ((deathScreenTimer.ElapsedMilliseconds > 2000) && (deathScreenTimer.ElapsedMilliseconds <= 3000))
 			{
 				spriteBatch.Draw(menuBg, menuVec, color * 0.5F);
-				spriteBatch.DrawString(FONT3, message, fontVector, color * 0.5F);
+				spriteBatch.DrawString(FONT25, message, fontVector, color * 0.5F);
 			}
 			if ((deathScreenTimer.ElapsedMilliseconds > 3000) && (deathScreenTimer.ElapsedMilliseconds <= 4000))
 			{
 				spriteBatch.Draw(menuBg, menuVec, color * 0.75F);
-				spriteBatch.DrawString(FONT3, message, fontVector, color * 0.75F);
+				spriteBatch.DrawString(FONT25, message, fontVector, color * 0.75F);
 			}
 			if (deathScreenTimer.ElapsedMilliseconds > 4000)
 			{
 				spriteBatch.Draw(menuBg, menuVec, color * 1.0F);
-				spriteBatch.DrawString(FONT3, message, fontVector, color * 1.0F);
+				spriteBatch.DrawString(FONT25, message, fontVector, color * 1.0F);
 			}
 		}
 
@@ -433,13 +441,13 @@ namespace Flyatron
 
 			cloudyBackdrop.Update(3);
 			spriteBatch.Draw(menuBg, menuVec, Color.White);
-			spriteBatch.DrawString(FONT3, title, new Vector2(50, 50), Color.White);
-			scores.Report(FONT2, spriteBatch, 55, 100, Color.White);
+			spriteBatch.DrawString(FONT25, title, new Vector2(50, 50), Color.White);
+			scores.Report(FONT14, spriteBatch, 55, 100, Color.White);
 		}
 
 		private void UpdatePlay()
 		{
-			if (first.RemainingLives() <= 0)
+			if (playerOne.RemainingLives() <= 0)
 				state = Gamestate.End;
 
 			// Update backdrop.
@@ -447,30 +455,37 @@ namespace Flyatron
 			// Tick scores.
 			scores.Increment();
 
-			bonus.Update(first.Rectangle());
+			bonus.Update(playerOne.Rectangle());
 
 			if (!DEBUG)
-				for (int i = 0; i < mine.Count; i++)
-					mine[i].Update(first.Rectangle());
-				
-			// Player/mine collision.
-			for (int i = 0; i < mine.Count; i++)
-				if (Helper.CircleCollision(first.Rectangle(), mine[i].Rectangle()))
+				for (int i = 0; i < mines.Count; i++)
+					mines[i].Update(playerOne.Rectangle());
+
+			// Mine collisions.
+			for (int i = 0; i < mines.Count; i++)
+			{
+				if (Helper.CircleCollision(playerOne.Rectangle(), mines[i].Rectangle()))
 					state = Gamestate.Death;
 
-			// Player/bonus collision.
-			if (Helper.CircleCollision(first.Rectangle(), bonus.Rectangle()))
-				if (bonus.Type() == 1)
-					first.Lives(1);
-				else if (bonus.Type() == 2)
-					for (int i = 0; i < mine.Count; i++)
-						mine[i].State(3);
+				for (int j = 0; j < Gun.MISSILES.Count; j++)
+					if (Helper.CircleCollision(mines[i].Rectangle(), Gun.MISSILES[j].Rectangle()))
+					{
+						Gun.MISSILES[j].State(3);
+						mines[i].State(3);
+					}
+			}
 
-			// Bullet/mine.
+			// Player/bonus collision.
+			if (Helper.CircleCollision(playerOne.Rectangle(), bonus.Rectangle()))
+				if (bonus.Type() == 1)
+					playerOne.Lives(1);
+				else if (bonus.Type() == 2)
+					for (int i = 0; i < mines.Count; i++)
+						mines[i].State(3);
 
 			// Update player + gun.
-			first.Update(); 
-			gun.Update(first.Position());
+			playerOne.Update(); 
+			gun.Update(playerOne.Position());
 
 			// Audio controls: Pause, unpause, skip forward.
 			if (Helper.Keypress(Keys.N))
@@ -488,25 +503,25 @@ namespace Flyatron
 			// Draw HUD.
 			DrawHud(gameTime);
 			// Draw player.
-			first.Draw(spriteBatch);
+			playerOne.Draw(spriteBatch);
 			// Draw gun. Should always be drawn after the player!
 			gun.Draw(spriteBatch);
 			// Bonus.
 			bonus.Draw(spriteBatch);
 
 			// Draw mine.
-			for (int i = 0; i < mine.Count; i++)
-				mine[i].Draw(spriteBatch);
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].Draw(spriteBatch);
 
 			if (DEBUG)
 			{
 				// Outline textures if debug is enabled.
-				spriteBatch.Draw(border, first.Rectangle(), Color.White * bOpacity);
+				spriteBatch.Draw(border, playerOne.Rectangle(), Color.White * bOpacity);
 				spriteBatch.Draw(border, mouse.Rectangle(), Color.White * bOpacity);
 				spriteBatch.Draw(border, bonus.Rectangle(), Color.White * bOpacity);
 
-				for (int i = 0; i < mine.Count; i++)
-					spriteBatch.Draw(border, mine[i].Rectangle(), Color.White * bOpacity);
+				for (int i = 0; i < mines.Count; i++)
+					spriteBatch.Draw(border, mines[i].Rectangle(), Color.White * bOpacity);
 			}
 		}
 
@@ -517,13 +532,13 @@ namespace Flyatron
 			List<string> hud = new List<string>()
 			{
 				"Score: " + Convert.ToString(scores.Current()),
-				"Lives: " + Convert.ToString(first.RemainingLives())
+				"Lives: " + Convert.ToString(playerOne.RemainingLives())
 			};
 
 			for (int i = 0; i < hud.Count; i++)
 			{
 				spriteBatch.DrawString(
-					FONT2,
+					FONT14,
 					hud[i],
 					new Vector2(30, y),
 					Color.Black
@@ -534,7 +549,7 @@ namespace Flyatron
 
 			if (!DEBUG)
 				spriteBatch.DrawString(
-					FONT1,
+					FONT10,
 					eightBitWeapon.NameTime(),
 					new Vector2(GraphicsDevice.Viewport.X + 25, GraphicsDevice.Viewport.Height - 30),
 					Color.Black
@@ -542,7 +557,7 @@ namespace Flyatron
 
 			if (DEBUG)
 				spriteBatch.DrawString(
-					FONT1,
+					FONT10,
 					Convert.ToString(gameTime.TotalGameTime),
 					new Vector2(30, HEIGHT - 30),
 					Color.Black
