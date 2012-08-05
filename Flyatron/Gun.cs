@@ -41,8 +41,8 @@ namespace Flyatron
 			rotation = 0;
 			effects = SpriteEffects.None;
 			// Where do you want the gun placed relative to the vector it is attached too?
-			placementXOffset = 0;
-			placementYOffset = 25;
+			placementXOffset = 15;
+			placementYOffset = 35;
 
 			animationFrame = new Rectangle(
 				frameX,

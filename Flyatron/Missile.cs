@@ -12,9 +12,9 @@ namespace Flyatron
 	{
 		Texture2D missileTexture, borderTexture;
 		Vector2 mousePosition, missilePosition, rotationOffset, missilePath;
-		Rectangle animationFrame, debugBorder;
+		Rectangle animationFrame;
 		int frameX, frameY, frameWidth, frameHeight;
-		float rotation, scale, velocity, velocityMaster;
+		float rotation, scale, velocity;
 		SpriteEffects effects;
 		Color color;
 
@@ -26,7 +26,7 @@ namespace Flyatron
 			// Initial bullet state should be "in-flight."
 			state = Bulletstate.Traversing;
 			// x/y velocity; pixels per frame.
-			velocityMaster = 16;
+			velocity = 16;
 			scale = 1;
 			// Textures.
 			missileTexture = inputTexture[1];
@@ -39,7 +39,8 @@ namespace Flyatron
 			frameWidth = 55;
 			frameHeight = 11;
 			// Gun vector.
-			missilePosition = gunPosition;
+			missilePosition.X = gunPosition.X;
+			missilePosition.Y = gunPosition.Y - missileTexture.Height / 2;
 			// Offset, used for animatng rotation.
 			rotationOffset = new Vector2(27.5F, 10.5F);
 			// Mouse. Snapstopped. 
@@ -51,7 +52,7 @@ namespace Flyatron
 				// Animation frame.
 				frameX = 59;
 				// Left or right velocity? 
-				velocity = -velocityMaster;
+				velocity = -velocity;
 				// The path the bullet will travel after firing.
 				missilePath = mousePosition - missilePosition;
 			}
@@ -60,27 +61,18 @@ namespace Flyatron
 			if (mousePosition.X >= missilePosition.X)
 			{
 				frameX = 0;
-				velocity = velocityMaster;
 				missilePath = missilePosition - mousePosition;
 			}
 
 			// Rotation is set once.
 			rotation = (float)(Math.Atan2(missilePath.Y, missilePath.X));
 
-			// Frame within texture for animation purposes.
+			// Animation frame.
 			animationFrame = new Rectangle(
 				frameX,
 				frameY,
 				frameWidth,
 				frameHeight
-			);
-
-			// Debug.
-			debugBorder = new Rectangle(
-				(int)mousePosition.X,
-				(int)mousePosition.Y,
-				50, 
-				50
 			);
 		}
 

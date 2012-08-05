@@ -13,7 +13,7 @@ namespace Flyatron
 	public class Game : Microsoft.Xna.Framework.Game
 	{
 		// Welcome to Flyatron!
-		public static bool DEBUG = false;
+		public static bool DEBUG = true;
 
 		public static int WIDTH  = 1024;
 		public static int HEIGHT = 600;
@@ -150,7 +150,7 @@ namespace Flyatron
 				// Player textures.
 				Content.Load<Texture2D>("player\\body"),
 				Content.Load<Texture2D>("player\\head"),
-				Content.Load<Texture2D>("player\\flames")
+				Content.Load<Texture2D>("player\\fire")
 			};
 
 			mineTex = new Texture2D[]
@@ -170,7 +170,7 @@ namespace Flyatron
 			};
 
 			// Load player art/stats.
-			playerOne = new Player(5, 10, Color.White, playerOneTextures);
+			playerOne = new Player(playerOneTextures);
 
 			// Gun.
 			gunTex = new Texture2D[]
