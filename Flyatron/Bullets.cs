@@ -12,8 +12,7 @@ namespace Flyatron
 	{
 		Texture2D bulletTexture, borderTexture;
 		Vector2 mousePosition, bulletPosition, rotationOffset, bulletPath;
-		Rectangle animationFrame;
-		int frameX, frameY, frameWidth, frameHeight;
+		Rectangle bullet;
 		float rotation, scale, velocity;
 		SpriteEffects effects;
 		Color color;
@@ -34,10 +33,8 @@ namespace Flyatron
 			// Effects and colour.
 			effects = SpriteEffects.None;
 			color = Color.White;
-			// frameX is set based on mouse position.
-			frameY = 0;
-			frameWidth = 55;
-			frameHeight = 11;
+			// Animation frame.
+			bullet = new Rectangle(0, 0, 55, 11);
 			// Gun vector.
 			bulletPosition.X = gunPosition.X;
 			bulletPosition.Y = gunPosition.Y - bulletTexture.Height / 2;
@@ -50,7 +47,7 @@ namespace Flyatron
 			if (mousePosition.X < bulletPosition.X)
 			{
 				// Animation frame.
-				frameX = 59;
+				bullet.X = 59;
 				// Reverse velocity.
 				velocity = -velocity;
 				// The path the bullet will travel after firing.
@@ -60,20 +57,12 @@ namespace Flyatron
 			// If mouse is right of gun.
 			if (mousePosition.X >= bulletPosition.X)
 			{
-				frameX = 0;
+				bullet.X = 0;
 				bulletPath = bulletPosition - mousePosition;
 			}
 
 			// Rotation is set once.
 			rotation = (float)(Math.Atan2(bulletPath.Y, bulletPath.X));
-
-			// Animation frame.
-			animationFrame = new Rectangle(
-				frameX,
-				frameY,
-				frameWidth,
-				frameHeight
-			);
 		}
 
 		public void Update()
@@ -112,16 +101,16 @@ namespace Flyatron
 		{
 			if (state == Bulletstate.Traversing)
 			{
-				spriteBatch.Draw(bulletTexture, bulletPosition, animationFrame, color, rotation, rotationOffset, scale, effects, 0F);
+				spriteBatch.Draw(bulletTexture, bulletPosition, bullet, color, rotation, rotationOffset, scale, effects, 0F);
 				
 				if (Game.DEBUG)
-					spriteBatch.Draw(borderTexture, bulletPosition, animationFrame, color * 0.3F, rotation, rotationOffset, scale, effects, 0F);
+					spriteBatch.Draw(borderTexture, bulletPosition, bullet, color * 0.3F, rotation, rotationOffset, scale, effects, 0F);
 			}
 		}
 
 		public Rectangle Rectangle()
 		{
-			return new Rectangle((int)bulletPosition.X, (int)bulletPosition.Y, frameWidth, frameHeight);
+			return new Rectangle((int)bulletPosition.X, (int)bulletPosition.Y, bullet.X, bullet.Y);
 		}
 
 		public bool Expired()

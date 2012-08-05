@@ -79,28 +79,6 @@ namespace Flyatron
 			}
 		}
 
-		public void Draw(SpriteBatch spriteBatch)
-		{
-			if (Game.DEBUG)
-			{
-				spriteBatch.DrawString(Game.FONT07, dString1, dPosition1, Color.Black);
-				spriteBatch.DrawString(Game.FONT07, dString2, dPosition2, Color.Black);
-			}
-
-			// if was more compact than a switch, here.
-			if ((state == Minestate.Traverse) || (state == Minestate.Shot))
-			{
-				spriteBatch.Draw(coreTexture,  minePosition, core,  color, angle, rotationOffset, mineScale, effects, 0);
-				spriteBatch.Draw(spikeTexture, minePosition, spikes, color, 360 - angle, rotationOffset, mineScale, effects, 0);
-
-				if (Game.DEBUG)
-					spriteBatch.Draw(borderTexture, minePosition, core, color * 0.3F, angle, rotationOffset, mineScale, effects, 0);
-			}
-
-			if (state == Minestate.Explosion)			
-				spriteBatch.Draw(explosionTexture, explosionPosition, explosion, color * explosionOpacity, 0, rotationOffset, explosionScale, effects, 0);
-		}
-
 		public void Update(Rectangle newReference)
 		{
 			reference = newReference;
@@ -128,6 +106,26 @@ namespace Flyatron
 						break;
 					}
 			}
+		}
+
+		public void Draw(SpriteBatch spriteBatch)
+		{
+			// if was more compact than a switch, here.
+			if ((state == Minestate.Traverse) || (state == Minestate.Shot))
+			{
+				spriteBatch.Draw(coreTexture,  minePosition, core,  color, angle, rotationOffset, mineScale, effects, 0);
+				spriteBatch.Draw(spikeTexture, minePosition, spikes, color, 360 - angle, rotationOffset, mineScale, effects, 0);
+
+				if (Game.DEBUG)
+				{
+					spriteBatch.Draw(borderTexture, minePosition, core, color * 0.3F, angle, rotationOffset, mineScale, effects, 0);
+					spriteBatch.DrawString(Game.FONT07, dString1, dPosition1, Color.Black);
+					spriteBatch.DrawString(Game.FONT07, dString2, dPosition2, Color.Black);
+				}
+			}
+
+			if (state == Minestate.Explosion)			
+				spriteBatch.Draw(explosionTexture, explosionPosition, explosion, color * explosionOpacity, 0, rotationOffset, explosionScale, effects, 0);
 		}
 
 		private void Shot()
@@ -167,7 +165,7 @@ namespace Flyatron
 				dString1 = "H: " + health + " " + "V: " + velocity;
 				dString2 = "X: " + minePosition.X + " " + "Y: " + minePosition.Y;
 
-				dPosition1 = new Vector2(minePosition.X + core.Width + 1, minePosition.Y - 14);
+				dPosition1 = new Vector2(minePosition.X + core.Width + 1, minePosition.Y - 13);
 				dPosition2 = new Vector2(minePosition.X + core.Width + 1, minePosition.Y + 2);
 			}
 

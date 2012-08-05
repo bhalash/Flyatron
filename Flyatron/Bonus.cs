@@ -9,118 +9,68 @@ namespace Flyatron
 {
 	class Bonus
 	{
-		// Animate.
-		Stopwatch scaleTimer;
-		// Respawn.
-		Stopwatch halt;
-		// Explosion.
-		Stopwatch expTimer;
+		enum Bonusstate { Halted, Traverse }; Bonusstate state;
+		enum Bonustype { Life, Nuke }; Bonustype type;
 
-		int frameW, frameH;
-
-		// Current state of the mine.
-		enum Bonusstate { Halted, Traverse };
-		Bonusstate state = Bonusstate.Traverse;
-		// Type.
-		enum Bonustype { Life, Nuke };
-		Bonustype type;
-
-		// Mine traverse speed.
-		float velocity;
-
-		// Animation: Texture, vector, rotation offset, and frame rectangle.
-		Texture2D[] texture;
-		Rectangle[] rectangle;
-		Vector2[] vector;
-
-		// Rotation.
-		float angle;
-		float scale;
-
-		// Halt/loop timer.
+		float scale, velocity;
+		Stopwatch scaleTimer, halt;
 		int haltDuration;
+		Texture2D bonusTexture;
+		Vector2 bonusPosition, rotationOffset;
+		Rectangle bonus;
+		Color color;
+		SpriteEffects effects;
 
-		// Reference vector (for animaiton/collision).
-		Rectangle reference;
+		// Debug messages.
+		string dString1, dString2;
+		Vector2 dPosition1, dPosition2;
 
-		public Bonus(Texture2D[] inputTexture)
+		public Bonus(Texture2D inputTexture)
 		{
-			texture = inputTexture;
+			state = Bonusstate.Traverse;
+
+			bonusTexture = inputTexture;
+
+			bonus = new Rectangle(0, 0, 49, 49);
+
+			color = Color.White;
+			effects = SpriteEffects.None;
+
 			velocity = 4;
-
-			frameW = 49;
-			frameH = 49;
-
-			vector = new Vector2[]
-			{
-				new Vector2(0 - frameW, Helper.Rng(Game.HEIGHT - frameH)),
-				new Vector2(24.5F, 24.5F)
-			};
-
-			angle = 0;
 			scale = 1;
-
-			rectangle = new Rectangle[]
-			{
-				new Rectangle(0, 0,  49, 49),
-				new Rectangle(0, 0, 125, 125)
-			};
+			
+			bonusPosition = new Vector2(0 - bonus.Width, Helper.Rng(Game.HEIGHT - bonus.Height));
+			rotationOffset = new Vector2(24.5F, 24.5F);
 
 			// Animation timer.
 			scaleTimer = new Stopwatch();
 			scaleTimer.Start();
 			// Respawn timer.
 			halt = new Stopwatch();
-			// Explosion.
-			expTimer = new Stopwatch();
+
+			if (Game.DEBUG)
+			{
+				dString1 = dString2 = "";
+				dPosition1 = dPosition2 = new Vector2(0, 0);
+			}
 		}
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
 			if (state == Bonusstate.Traverse)
-				switch (type)
+			{
+				spriteBatch.Draw(bonusTexture, bonusPosition, bonus, color, 0, rotationOffset, scale, effects, 0);
+
+				if (Game.DEBUG)
 				{
-					case Bonustype.Life:
-						{
-							for (int i = 0; i < 2; i++)
-								spriteBatch.Draw(
-									texture[i],
-									vector[0],
-									rectangle[0],
-									Color.White,
-									angle,
-									vector[1],
-									scale,
-									SpriteEffects.None,
-									0
-								);
-
-							break;
-						}
-					case Bonustype.Nuke:
-						{
-							for (int i = 2; i < 4; i++)
-								spriteBatch.Draw(
-									texture[i],
-									vector[0],
-									rectangle[0],
-									Color.White,
-									angle,
-									vector[1],
-									scale,
-									SpriteEffects.None,
-									0
-								);
-
-							break;
-						}
+					spriteBatch.DrawString(Game.FONT07, dString1, dPosition1, Color.Black);
+					spriteBatch.DrawString(Game.FONT07, dString2, dPosition2, Color.Black);
 				}
+			}
 		}
 
-		public void Update(Rectangle newReference)
+		public void Update()
 		{
-			reference = newReference;
-
 			switch (state)
 			{
 				case (Bonusstate.Halted):
@@ -140,15 +90,20 @@ namespace Flyatron
 		{
 			Animate();
 
-			// Traverse left.
-			vector[0].X -= velocity;
+			if (Game.DEBUG)
+			{
+				dString1 = "Type: " + type;
+				dString2 = "X: " + bonusPosition.X + " " + "Y: " + bonusPosition.Y;
 
-			// Player/bonus collision.
-			if (Helper.CircleCollision(Rectangle(), reference))
-				State(2);
+				dPosition1 = new Vector2(bonusPosition.X + bonus.Width - 20, bonusPosition.Y - 22);
+				dPosition2 = new Vector2(bonusPosition.X + bonus.Width - 20, bonusPosition.Y - 7);
+			}
+
+			// Traverse left.
+			bonusPosition.X -= velocity;
 
 			// Check if it needs to be drawn.
-			if (vector[0].X + frameW < 0)
+			if (bonusPosition.X + bonus.Width < 0)
 				state = Bonusstate.Halted;
 		}
 
@@ -162,10 +117,13 @@ namespace Flyatron
 			else
 				type = Bonustype.Life;
 
-			vector[0].X = Game.WIDTH + frameW;
-			vector[0].Y = Helper.Rng(Game.HEIGHT - frameH);
+			bonusPosition.X = Game.WIDTH + bonus.Width;
+			bonusPosition.Y = Helper.Rng(Game.HEIGHT - bonus.Height);
 
 			haltDuration = Helper.Rng2(10000,20000);
+
+			if (Game.DEBUG)
+				haltDuration = 1;
 
 			// Check if it needs to be drawn.
 			if (halt.ElapsedMilliseconds > haltDuration)
@@ -182,6 +140,11 @@ namespace Flyatron
 			if (!scaleTimer.IsRunning)
 				scaleTimer.Start();
 
+			if (type == Bonustype.Life)
+				bonus.X = 0;
+			else
+				bonus.X = 53;
+
 			if ((elapsed >= 0) && (elapsed <= 300))
 				scale = 1 - elapsed * 0.001F;
 
@@ -194,12 +157,12 @@ namespace Flyatron
 
 		public Rectangle Rectangle()
 		{
-			return new Rectangle((int)vector[0].X - frameW / 2, (int)vector[0].Y - frameH / 2, frameW, frameH);
+			return new Rectangle((int)bonusPosition.X - bonus.Width / 2, (int)bonusPosition.Y - bonus.Height / 2, bonus.Width, bonus.Height);
 		}
 
 		public Vector2 Position()
 		{
-			return vector[0];
+			return bonusPosition;
 		}
 
 		public void State(int newState)
@@ -210,7 +173,15 @@ namespace Flyatron
 				state = Bonusstate.Halted;
 		}
 
-		public int Type()
+		public int ReportType()
+		{
+			if (type == Bonustype.Life)
+				return 1;
+
+			else return 2;
+		}
+
+		public int ReportState()
 		{
 			if (type == Bonustype.Life)
 				return 1;
@@ -220,12 +191,12 @@ namespace Flyatron
 
 		public void X(int newX)
 		{
-			vector[0].X = newX;
+			bonusPosition.X = newX;
 		}
 
 		public void Y(int newY)
 		{
-			vector[0].Y = newY;
+			bonusPosition.Y = newY;
 		}
 	}
 }

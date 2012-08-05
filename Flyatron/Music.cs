@@ -15,7 +15,9 @@ namespace Flyatron
 		{
 			playlist = inputPlaylist;
 			currentSong = playlist[0];
-			Play();
+
+			if (!Game.DEBUG)
+				Play();
 		}
 
 		public void Update()

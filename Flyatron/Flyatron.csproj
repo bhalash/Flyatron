@@ -111,7 +111,7 @@
     <Compile Include="Gun.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Mine.cs" />
-    <Compile Include="Missile.cs" />
+    <Compile Include="Bullets.cs" />
     <Compile Include="Mouse.cs" />
     <Compile Include="Music.cs" />
     <Compile Include="Player.cs" />

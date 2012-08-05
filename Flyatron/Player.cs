@@ -23,6 +23,10 @@ namespace Flyatron
 		enum Playerstate { Alive, Dead };
 		Playerstate state;
 
+		// Debug messages.
+		string dString1, dString2;
+		Vector2 dPosition1, dPosition2;
+
 		public Player(Texture2D[] newTexture)
 		{
 			velocity = 8;
@@ -58,6 +62,12 @@ namespace Flyatron
 			// Fire animation timer.
 			exhaust = new Stopwatch();
 			exhaust.Start();
+
+			if (Game.DEBUG)
+			{
+				dString1 = dString2 = "";
+				dPosition1 = dPosition2 = new Vector2(0, 0);
+			}
 		}
 
 		public Vector2 Position()
@@ -84,6 +94,12 @@ namespace Flyatron
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
+			if (Game.DEBUG)
+			{
+				spriteBatch.DrawString(Game.FONT07, dString1, dPosition1, Color.Black);
+				spriteBatch.DrawString(Game.FONT07, dString2, dPosition2, Color.Black);
+			}
+
 			if (state == Playerstate.Alive)
 			{
 				// Fire.
@@ -112,6 +128,15 @@ namespace Flyatron
 			UpdateBodyAnimation(Game.MOUSE);
 			UpdateHeadAnimation(Game.MOUSE);
 			UpdateFlamesAnimation();
+
+			if (Game.DEBUG)
+			{
+				dString1 = "L: " + lives + " " + "V: " + velocity;
+				dString2 = "X: " + bodyPosition.X + " " + "Y: " + bodyPosition.Y;
+
+				dPosition1 = new Vector2(bodyPosition.X + body.Width + 1, bodyPosition.Y + 2);
+				dPosition2 = new Vector2(bodyPosition.X + body.Width + 1, bodyPosition.Y + 17);
+			}
 
 			if (Game.KEYBOARD.IsKeyDown(left))
 				if (bodyPosition.X > 0)

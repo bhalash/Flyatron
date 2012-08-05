@@ -92,18 +92,19 @@ namespace Flyatron
 			for (int i = 0; i < BULLETS.Count; i++)
 				BULLETS[i].Draw(spriteBatch);
 
-			/*
 			if (Game.DEBUG)
 			{
-				int y = 110;
+				int y = 120;
 
-				spriteBatch.DrawString(Game.FONT10, "Bullets:", new Vector2(30, 90), Color.Black);
+				spriteBatch.DrawString(Game.FONT07, "Bullets:", new Vector2(30, y), Color.Black);
 
-				for (int i = 0; i < MISSILES.Count; i++)
+				y += 15;
+
+				for (int i = 0; i < BULLETS.Count; i++)
 				{
 					spriteBatch.DrawString(
-						Game.FONT10, 
-						i + ": " + MISSILES[i].Rotation() + " V: " + MISSILES[i].Velocity() + "X: " + MISSILES[i].Position().X + " Y: "  + MISSILES[i].Position().Y, 
+						Game.FONT07, 
+						i + ": " + BULLETS[i].Rotation() + " V: " + BULLETS[i].Velocity() + "X: " + BULLETS[i].Position().X + " Y: "  + BULLETS[i].Position().Y, 
 						new Vector2(30, y), 
 						Color.Black
 					);
@@ -114,10 +115,9 @@ namespace Flyatron
 					y += 15;
 				}
 
-				if (MISSILES.Count == 0)
+				if (BULLETS.Count == 0)
 					y = 90;
 			}
-			*/
 		}
 
 		private void Animate()
