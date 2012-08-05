@@ -13,7 +13,7 @@ namespace Flyatron
 	public class Game : Microsoft.Xna.Framework.Game
 	{
 		// Welcome to Flyatron!
-		public static bool DEBUG = true;
+		public static bool DEBUG = false;
 
 		public static int WIDTH  = 1024;
 		public static int HEIGHT = 600;
@@ -21,7 +21,7 @@ namespace Flyatron
 
 		public static Rectangle BOUNDS = new Rectangle(0, 0, WIDTH, HEIGHT);
 
-		static double VERSION = 0.1;
+		static double VERSION = 1.0;
 		static string VERSIONSTRING = "Version " + VERSION;
 
 		enum Gamestate { Menu, Play, New, Scores, About, End, Death };
@@ -39,19 +39,9 @@ namespace Flyatron
 		static SpriteBatch spriteBatch;
 		GraphicsDeviceManager graphics;
 
-		// Flyatron uses the font "Press Start 2P". The font was created by William Cody of Zone38.
-		// The font is distributed under the permissive SIL Open Font License (OFL), and included in
-		// this project under it, along with creator attribution.
-		// Font download page:	 http://www.zone38.net/font/
-		// OFL license homepage: http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL
-		public static SpriteFont FONT10, FONT14, FONT25;	
-
-		// Soundtrack instance.
-		Muzak eightBitWeapon;
-
 		// Player.
-		Player playerOne;
-		Texture2D[] playerOneTextures;
+		Player player;
+		Texture2D[] playerTextures;
 		
 		// Gun.
 		Gun gun;
@@ -59,8 +49,8 @@ namespace Flyatron
 
 		// Fear, fire foes.
 		Texture2D[] mineTex;
-		List <Mine> mines;
-		int totalMines = 35;
+		List<Mine> mines;
+		int totalMines;
 
 		// Bonuses.
 		Bonus bonus;
@@ -68,6 +58,7 @@ namespace Flyatron
 
 		// Scoreboard.
 		Scoreboard scores;
+		bool collated;
 
 		// Backdrop.
 		Texture2D[] backdropTex;
@@ -79,20 +70,24 @@ namespace Flyatron
 		// Event timer.
 		Stopwatch deathScreenTimer;
 
-		// Music sourced from the chiptunes group "8-Bit Weapon". Used with permission.
-		// Homepage: http://www.8bitweapon.com
-		List<string> playList = new List<string>()
-		{ 
-			"8 Bit Weapon/Chip On Your Shoulder", 
-			"8 Bit Weapon/Closer (Bitpop Mix)", 
-			"8 Bit Weapon/Micro Boogie", 
-			"8 Bit Weapon/One Last Mission", 
-			"8 Bit Weapon/Times Changing" 
-		};
-
 		// Texture for the menu. Declared here since I use it in several places.
 		Texture2D menuBg;
 		Vector2 menuVec;
+
+		// Player-held bombs.
+		int playerNukes;
+
+		// Music sourced from the chiptunes group "8-Bit Weapon". Used with permission.
+		// Homepage: http://www.8bitweapon.com
+		Song[] eightBitWeapon;
+		Muzak soundtrack;
+
+		// Flyatron uses the font "Press Start 2P". The font was created by William Cody of Zone38.
+		// The font is distributed under the permissive SIL Open Font License (OFL), and included in
+		// this project under it, along with creator attribution.
+		// Font download page:	 http://www.zone38.net/font/
+		// OFL license homepage: http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL
+		public static SpriteFont FONT07, FONT10, FONT14, FONT25;
 
 		public Game()
 		{
@@ -112,6 +107,18 @@ namespace Flyatron
 
 		protected override void LoadContent()
 		{
+			eightBitWeapon = new Song[]
+			{ 
+				Content.Load<Song>("8 Bit Weapon/Chip On Your Shoulder"), 
+				Content.Load<Song>("8 Bit Weapon/Closer (Bitpop Mix)"),
+				Content.Load<Song>("8 Bit Weapon/Micro Boogie"),
+				Content.Load<Song>("8 Bit Weapon/One Last Mission"), 
+				Content.Load<Song>("8 Bit Weapon/Times Changing")
+			};
+
+			// Initialize soundtrack audio.
+			soundtrack = new Muzak(eightBitWeapon);
+
 			backdropTex = new Texture2D[]
 			{
 				// Backdrop textures.
@@ -124,6 +131,7 @@ namespace Flyatron
 			cloudyBackdrop = new Backdrop(backdropTex);
 
 			// Numerical value equates to pixel size.
+			FONT07 = Content.Load<SpriteFont>("fonts\\PressStart2P_07");
 			FONT10 = Content.Load<SpriteFont>("fonts\\PressStart2P_10");
 			FONT14 = Content.Load<SpriteFont>("fonts\\PressStart2P_14");
 			FONT25 = Content.Load<SpriteFont>("fonts\\PressStart2P_25");
@@ -131,13 +139,6 @@ namespace Flyatron
 			// Initialize menu backdrop.
 			menuBg = Content.Load<Texture2D>("bg\\paused");
 			menuVec = new Vector2(0, 0);
-
-			// Initialize soundtrack audio.
-			eightBitWeapon = new Muzak();
-			eightBitWeapon.Play(Content.Load<Song>(playList[0]));
-
-			if (DEBUG)
-				eightBitWeapon.Pause();
 		}
 
 		protected override void Initialize()
@@ -145,7 +146,7 @@ namespace Flyatron
 			border = Content.Load<Texture2D>("border");
 			cross = Content.Load<Texture2D>("zero");
 
-			playerOneTextures = new Texture2D[]
+			playerTextures = new Texture2D[]
 			{
 				// Player textures.
 				Content.Load<Texture2D>("player\\body"),
@@ -157,7 +158,8 @@ namespace Flyatron
 			{
 				Content.Load<Texture2D>("mine\\core"),
 				Content.Load<Texture2D>("mine\\spikes"),
-				Content.Load<Texture2D>("mine\\explosion")
+				Content.Load<Texture2D>("mine\\explosion"),
+				Content.Load<Texture2D>("border")
 			};
 
 			bonusTex = new Texture2D[]
@@ -170,7 +172,7 @@ namespace Flyatron
 			};
 
 			// Load player art/stats.
-			playerOne = new Player(playerOneTextures);
+			player = new Player(playerTextures);
 
 			// Gun.
 			gunTex = new Texture2D[]
@@ -200,11 +202,21 @@ namespace Flyatron
 			// Debug. Border opacity.
 			bOpacity = 0.3F;
 
+			// Default 1 bomb.
+			playerNukes = 1;
+
+			// Total mines. Fewer for debug so I can study behaviour.
+			if (!DEBUG)
+				totalMines = 35;
+			if (DEBUG)
+				totalMines = 10;
+
 			for (int i = 0; i < totalMines; i ++)
 				mines.Add(new Mine(mineTex));
 
 			// Import top scores.
 			scores = new Scoreboard();
+			collated = false;
 
 			base.Initialize();
 		}
@@ -219,7 +231,6 @@ namespace Flyatron
 			MOUSE = Mouse.GetState();
 
 			mouse.Update();
-
 			// Update SCREEN selection.
 			UpdateSwitch();
 
@@ -228,7 +239,7 @@ namespace Flyatron
 				// Toggle between menu and gameplay.
 				if (state == Gamestate.Play)
 					state = Gamestate.Menu;
-				else if ((state == Gamestate.Menu) && (playerOne.RemainingLives() > 0))
+				else if ((state == Gamestate.Menu) && (player.RemainingLives() > 0))
 					state = Gamestate.Play;
 			}
 
@@ -255,8 +266,9 @@ namespace Flyatron
 
 		private void NewGame()
 		{
+			collated = false;
 			scores.Reset();
-			playerOne.Lives(5);
+			player.Lives(5);
 
 			for (int i = 0; i < mines.Count; i++)
 				mines[i].State(2);
@@ -266,16 +278,20 @@ namespace Flyatron
 
 		private void UpdateDeath()
 		{
-			// This function should be called if and when the player dies.
+			if (!collated)
+			{
+				scores.Collate();
+				collated = true;
+			}
 
 			for (int i = 0; i < mines.Count; i++)
 				mines[i].State(3);
 
-			playerOne.X(100);
-			playerOne.Y(HEIGHT / 2 - playerOne.Rectangle().Height / 2);
-			playerOne.Minus();
+			player.X(100);
+			player.Y(HEIGHT / 2 - player.Rectangle().Height / 2);
+			player.Minus();
 
-			if (playerOne.RemainingLives() <= 0)
+			if (player.RemainingLives() <= 0)
 				state = Gamestate.End;
 			else
 				state = Gamestate.Play;
@@ -289,7 +305,7 @@ namespace Flyatron
 		private void UpdateMenu()
 		{
 			// Menu opts.
-			if ((Helper.Keypress(Keys.D1)) && (playerOne.RemainingLives() > 0))
+			if ((Helper.Keypress(Keys.D1)) && (player.RemainingLives() > 0))
 				state = Gamestate.Play;
 			if (Helper.Keypress(Keys.D2))
 				state = Gamestate.New;
@@ -303,7 +319,7 @@ namespace Flyatron
 
 		private void DrawMenu()
 		{
-			eightBitWeapon.Volume(0.5F);
+			soundtrack.Volume(0.5F);
 			int Y = 100;
 
 			string title = "Flyatron";
@@ -447,63 +463,80 @@ namespace Flyatron
 
 		private void UpdatePlay()
 		{
-			if (playerOne.RemainingLives() <= 0)
-				state = Gamestate.End;
-
+			// Update player + gun position..
+			player.Update();
+			gun.Update(player.Position());
+			// Increment mine position.
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].Update(player.Rectangle());
+			// Music.
+			soundtrack.Update();
+			// Calculate any collisions.
+			Collisions();
 			// Update backdrop.
 			cloudyBackdrop.Update(5);
 			// Tick scores.
-			scores.Increment();
+			scores.Update();
+			// Increment bonus position.
+			bonus.Update(player.Rectangle());
+			// Goodnight, sweet prince.
+			if (player.RemainingLives() <= 0)
+			{
+				state = Gamestate.End;
+			}
+		}
 
-			bonus.Update(playerOne.Rectangle());
+		private void Collisions()
+		{
+			// TODO: Put somewhere better.
+			if (Helper.RightClick())
+				if (playerNukes > 0)
+				{
+					playerNukes--;
 
-			if (!DEBUG)
-				for (int i = 0; i < mines.Count; i++)
-					mines[i].Update(playerOne.Rectangle());
+					for (int i = 0; i < mines.Count; i++)
+					{
+						mines[i].State(3);
+						scores.Bump(10);
+					}
+				}
 
-			// Mine collisions.
+			// Player/mine + mine/bullet collisions.
 			for (int i = 0; i < mines.Count; i++)
 			{
-				if (Helper.CircleCollision(playerOne.Rectangle(), mines[i].Rectangle()))
-					state = Gamestate.Death;
+				// Player/mine. Condition to not interact if it is animating an explosion.
+				if (Helper.CircleCollision(player.Rectangle(), mines[i].Rectangle()))
+					if (mines[i].ReportState() == 1)
+						state = Gamestate.Death;
 
-				for (int j = 0; j < Gun.MISSILES.Count; j++)
-					if (Helper.CircleCollision(mines[i].Rectangle(), Gun.MISSILES[j].Rectangle()))
+				// Bullet/mine.
+				for (int j = 0; j < Gun.BULLETS.Count; j++)
+					if (Helper.CircleCollision(mines[i].Rectangle(), Gun.BULLETS[j].Rectangle()))
 					{
-						Gun.MISSILES[j].State(3);
-						mines[i].State(3);
+						Gun.BULLETS[j].State(3);
+						mines[i].State(4);
+						scores.Bump(10);
 					}
 			}
 
 			// Player/bonus collision.
-			if (Helper.CircleCollision(playerOne.Rectangle(), bonus.Rectangle()))
+			if (Helper.CircleCollision(player.Rectangle(), bonus.Rectangle()))
+			{
 				if (bonus.Type() == 1)
-					playerOne.Lives(1);
-				else if (bonus.Type() == 2)
-					for (int i = 0; i < mines.Count; i++)
-						mines[i].State(3);
-
-			// Update player + gun.
-			playerOne.Update(); 
-			gun.Update(playerOne.Position());
-
-			// Audio controls: Pause, unpause, skip forward.
-			if (Helper.Keypress(Keys.N))
-				eightBitWeapon.Play(Content.Load<Song>(playList[Helper.Rng(playList.Count - 1)]));
-			if (Helper.Keypress(Keys.P))
-				eightBitWeapon.Pause();
-			if (Helper.Keypress(Keys.U))
-				eightBitWeapon.Resume();
+					player.Lives(1);
+				if (bonus.Type() == 2)
+					playerNukes++;
+			}
 		}
 
 		private void DrawPlay(GameTime gameTime)
 		{
-			eightBitWeapon.Volume(0.7F);
+			soundtrack.Volume(0.7F);
 
 			// Draw HUD.
 			DrawHud(gameTime);
 			// Draw player.
-			playerOne.Draw(spriteBatch);
+			player.Draw(spriteBatch);
 			// Draw gun. Should always be drawn after the player!
 			gun.Draw(spriteBatch);
 			// Bonus.
@@ -516,12 +549,9 @@ namespace Flyatron
 			if (DEBUG)
 			{
 				// Outline textures if debug is enabled.
-				spriteBatch.Draw(border, playerOne.Rectangle(), Color.White * bOpacity);
-				spriteBatch.Draw(border, mouse.Rectangle(), Color.White * bOpacity);
-				spriteBatch.Draw(border, bonus.Rectangle(), Color.White * bOpacity);
-
-				for (int i = 0; i < mines.Count; i++)
-					spriteBatch.Draw(border, mines[i].Rectangle(), Color.White * bOpacity);
+				spriteBatch.Draw(border, player.Rectangle(), Color.White * bOpacity);
+				spriteBatch.Draw(border, mouse.Rectangle(),  Color.White * bOpacity);
+				spriteBatch.Draw(border, bonus.Rectangle(),  Color.White * bOpacity);
 			}
 		}
 
@@ -532,7 +562,8 @@ namespace Flyatron
 			List<string> hud = new List<string>()
 			{
 				"Score: " + Convert.ToString(scores.Current()),
-				"Lives: " + Convert.ToString(playerOne.RemainingLives())
+				"Lives: " + Convert.ToString(player.RemainingLives()),
+				"Nukes: " + Convert.ToString(playerNukes)
 			};
 
 			for (int i = 0; i < hud.Count; i++)
@@ -550,7 +581,7 @@ namespace Flyatron
 			if (!DEBUG)
 				spriteBatch.DrawString(
 					FONT10,
-					eightBitWeapon.NameTime(),
+					soundtrack.NameTime(),
 					new Vector2(GraphicsDevice.Viewport.X + 25, GraphicsDevice.Viewport.Height - 30),
 					Color.Black
 				);

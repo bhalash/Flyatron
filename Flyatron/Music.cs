@@ -2,34 +2,35 @@
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace Flyatron
 {
 	class Muzak
 	{
-		Song song;
+		Song[] playlist;
+		Song currentSong;
 
-		public Muzak()
+		public Muzak(Song[] inputPlaylist)
 		{
+			playlist = inputPlaylist;
+			currentSong = playlist[0];
+			Play();
 		}
 
-		public void Play(Song inputSong)
+		public void Update()
 		{
-			song = inputSong;
-			MediaPlayer.Play(song);
-		}
-
-		public bool Playing()
-		{
-			// Is it playing?
-			if (MediaPlayer.State == MediaState.Playing)
-				return true;		
-			return false;
+			// Audio controls: Pause, unpause, skip forward.
+			if (Helper.Keypress(Keys.N))
+				currentSong = playlist[Helper.Rng(playlist.Length - 1)];
+			if (Helper.Keypress(Keys.P))
+				Pause();
+			if (Helper.Keypress(Keys.U))
+				Resume();
 		}
 
 		public void Pause()
 		{
-			// All-in-one switch.
 			if (MediaPlayer.State == MediaState.Playing)
 				MediaPlayer.Pause();
 		}
@@ -40,15 +41,28 @@ namespace Flyatron
 				MediaPlayer.Resume();
 		}
 
+		public void Play()
+		{
+			MediaPlayer.Play(currentSong);
+		}
+
+		public bool Playing()
+		{
+			// Is it playing?
+			if (MediaPlayer.State == MediaState.Playing)
+				return true;		
+			return false;
+		}
+
 		public void Volume(float inputVolume)
 		{
 			MediaPlayer.Volume = inputVolume;
 		}
 
-		// Parse code stolen from RB Whitaker.
-		// Source URL: http://rbwhitaker.wikidot.com/playing-background-music
 		public string Parse(TimeSpan timeSpan)
 		{
+			// Parse code stolen from RB Whitaker.
+			// Source URL: http://rbwhitaker.wikidot.com/playing-background-music
 			int minutes = timeSpan.Minutes;
 			int seconds = timeSpan.Seconds;
 
@@ -58,12 +72,10 @@ namespace Flyatron
 				return minutes + ":" + seconds;
 		}
 
-		// These functions return various information regarding the song.
-		// Mostly a duplicate of existing functions, but I want the option of extensibility.
 		public string Name()
 		{
 			// Song name.
-			return song.Name.Replace("\\", ": ");
+			return currentSong.Name.Replace("\\", ": ");
 		}
 
 		public string Elapsed()
@@ -73,7 +85,7 @@ namespace Flyatron
 
 		public string Length()
 		{
-			return Parse(song.Duration);
+			return Parse(currentSong.Duration);
 		}
 
 		public string Time()

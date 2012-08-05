@@ -15,7 +15,7 @@ namespace Flyatron
 		Texture2D headTexture, bodyTexture, fireTexture;
 		Vector2 headOffset;
 		Rectangle body, head, fire;
-		int x, y, lives, currentLives, headXOff, headYOff, fireXOff, fireYOff;
+		int lives, currentLives, headXOff, headYOff, fireXOff, fireYOff;
 		float scale, headRotation, velocity;
 		Stopwatch exhaust;
 		Color color;
@@ -25,7 +25,7 @@ namespace Flyatron
 
 		public Player(Texture2D[] newTexture)
 		{
-			velocity = 5;
+			velocity = 8;
 			lives = currentLives = 5;
 			color = Color.White;
 			lives = 5;
@@ -44,9 +44,9 @@ namespace Flyatron
 			fire = new Rectangle(0, 0, 23, 46);
 
 			// Fire and head are both positioned relative to the body.
-			bodyPosition = new Vector2(x, y);
-			headPosition = new Vector2(x + headXOff, y + headYOff);
-			firePosition = new Vector2(x + fireXOff, y + fireYOff);
+			bodyPosition = new Vector2(100, 200);
+			headPosition = new Vector2(100 + headXOff, 200 + headYOff);
+			firePosition = new Vector2(100 + fireXOff, 200 + fireYOff);
 
 			bodyTexture = newTexture[0];
 			headTexture = newTexture[1];
@@ -54,10 +54,6 @@ namespace Flyatron
 
 			// Rotational offset. 
 			headOffset = new Vector2(17.5F, 17.5F);
-
-			// Initial player position.
-			x = 100;
-			y = Game.BOUNDS.Height / 2 - body.Height / 2;
 
 			// Fire animation timer.
 			exhaust = new Stopwatch();
@@ -90,11 +86,11 @@ namespace Flyatron
 		{
 			if (state == Playerstate.Alive)
 			{
-				// Player Flames.
+				// Fire.
 				spriteBatch.Draw(fireTexture, firePosition, fire, Color.White, 0, default(Vector2), scale, SpriteEffects.None, 0);
-				// Player body.
+				// Body.
 				spriteBatch.Draw(bodyTexture, bodyPosition, body, Color.White, 0, default(Vector2), scale, SpriteEffects.None, 0);
-				// Player head.
+				// Head.
 				spriteBatch.Draw(headTexture, headPosition, head, Color.White, headRotation, headOffset, scale, SpriteEffects.None, 0);
 			}
 		}
@@ -104,7 +100,7 @@ namespace Flyatron
 			if (lives > 0)
 			{
 				Lives(-1);
-				X(50);
+				X(25);
 				Y(Game.HEIGHT / 2 - bodyTexture.Height / 2);
 			}
 
@@ -149,7 +145,7 @@ namespace Flyatron
 					firePosition.Y += velocity;
 				}
 		}
-
+		
 		public Rectangle Rectangle()
 		{
 			return new Rectangle((int)bodyPosition.X, (int)bodyPosition.Y, 25, 52);
@@ -158,15 +154,15 @@ namespace Flyatron
 		public void X(int newX)
 		{
 			bodyPosition.X = newX;
-			headPosition.X = newX + headXOff;
-			firePosition.X = newX + fireXOff;
+			headPosition.X = bodyPosition.X + headXOff;
+			firePosition.X = bodyPosition.X + fireXOff;
 		}
 
 		public void Y(int newY)
 		{
-			bodyPosition.X = newY;
-			headPosition.X = newY + headYOff;
-			firePosition.X = newY + fireYOff;
+			bodyPosition.Y = newY;
+			headPosition.Y = bodyPosition.Y + headYOff;
+			firePosition.Y = bodyPosition.Y + fireYOff;
 		}
 
 		public int RemainingLives()

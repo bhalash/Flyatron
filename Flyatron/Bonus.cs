@@ -19,11 +19,11 @@ namespace Flyatron
 		int frameW, frameH;
 
 		// Current state of the mine.
-		enum BonusState { Halted, Traverse };
-		BonusState state = BonusState.Traverse;
+		enum Bonusstate { Halted, Traverse };
+		Bonusstate state = Bonusstate.Traverse;
 		// Type.
-		enum BonusType { Life, Nuke };
-		BonusType type;
+		enum Bonustype { Life, Nuke };
+		Bonustype type;
 
 		// Mine traverse speed.
 		float velocity;
@@ -77,10 +77,10 @@ namespace Flyatron
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
-			if (state == BonusState.Traverse)
+			if (state == Bonusstate.Traverse)
 				switch (type)
 				{
-					case BonusType.Life:
+					case Bonustype.Life:
 						{
 							for (int i = 0; i < 2; i++)
 								spriteBatch.Draw(
@@ -97,7 +97,7 @@ namespace Flyatron
 
 							break;
 						}
-					case BonusType.Nuke:
+					case Bonustype.Nuke:
 						{
 							for (int i = 2; i < 4; i++)
 								spriteBatch.Draw(
@@ -123,12 +123,12 @@ namespace Flyatron
 
 			switch (state)
 			{
-				case (BonusState.Halted):
+				case (Bonusstate.Halted):
 					{
 						Halt();
 						break;
 					}
-				case (BonusState.Traverse):
+				case (Bonusstate.Traverse):
 					{
 						Traverse();
 						break;
@@ -149,7 +149,7 @@ namespace Flyatron
 
 			// Check if it needs to be drawn.
 			if (vector[0].X + frameW < 0)
-				state = BonusState.Halted;
+				state = Bonusstate.Halted;
 		}
 
 		private void Halt()
@@ -158,9 +158,9 @@ namespace Flyatron
 				halt.Start();
 
 			if (Helper.Rng(31337) % 2 == 0)
-				type = BonusType.Nuke;
+				type = Bonustype.Nuke;
 			else
-				type = BonusType.Life;
+				type = Bonustype.Life;
 
 			vector[0].X = Game.WIDTH + frameW;
 			vector[0].Y = Helper.Rng(Game.HEIGHT - frameH);
@@ -170,7 +170,7 @@ namespace Flyatron
 			// Check if it needs to be drawn.
 			if (halt.ElapsedMilliseconds > haltDuration)
 			{
-				state = BonusState.Traverse;
+				state = Bonusstate.Traverse;
 				halt.Reset();
 			}
 		}
@@ -205,14 +205,14 @@ namespace Flyatron
 		public void State(int newState)
 		{
 			if (newState == 1)
-				state = BonusState.Traverse;
+				state = Bonusstate.Traverse;
 			if (newState == 2)
-				state = BonusState.Halted;
+				state = Bonusstate.Halted;
 		}
 
 		public int Type()
 		{
-			if (type == BonusType.Life)
+			if (type == Bonustype.Life)
 				return 1;
 
 			else return 2;

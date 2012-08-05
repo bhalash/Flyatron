@@ -10,15 +10,17 @@ namespace Flyatron
 	class Gun
 	{
 		// Used in Game.cs to determine collisions.
-		public static List<Missile> MISSILES;
+		public static List<Bullet> BULLETS;
 
-		int frameX, frameY, frameWidth, frameHeight;
+		int frameWidth, frameHeight;
 		float placementXOffset, placementYOffset, rotation;
 		Texture2D gunTexture, borderTexture;
 		Vector2 gunPosition, rotationOffset;
 		Rectangle animationFrame;
 		SpriteEffects effects;
 		Color color;
+
+		Stopwatch mineSpawn;
 
 		// Gun/bullet.
 		Texture2D[] textureHolding;
@@ -30,7 +32,7 @@ namespace Flyatron
 			gunTexture = inputTexture[0];
 			borderTexture = inputTexture[2];
 			// Munitions-in-flight.
-			MISSILES = new List<Missile>();
+			BULLETS = new List<Bullet>();
 			// Offset for animation rotation.
 			rotationOffset = new Vector2(17.5F, 9);
 			// Width and height of the gun's sprite.
@@ -44,12 +46,9 @@ namespace Flyatron
 			placementXOffset = 15;
 			placementYOffset = 35;
 
-			animationFrame = new Rectangle(
-				frameX,
-				frameY,
-				frameWidth,
-				frameHeight
-			);
+			animationFrame = new Rectangle(0, 0, frameWidth, frameHeight);
+
+			mineSpawn = new Stopwatch();
 		}
 
 		public void Update(Vector2 reference)
@@ -59,24 +58,41 @@ namespace Flyatron
 
 			Animate();
 
+			// Shoot on click.
 			if (Helper.LeftClick())
-				MISSILES.Add(new Missile(textureHolding, gunPosition));
+				BULLETS.Add(new Bullet(textureHolding, gunPosition));
 
-			for (int i = 0; i < MISSILES.Count; i++)
-				if (MISSILES[i].Expired())
-					MISSILES.RemoveAt(i);
+			// Shoot on button being held down.
+			if (Game.MOUSE.LeftButton == ButtonState.Pressed)
+			{
+				if (!mineSpawn.IsRunning)
+					mineSpawn.Start();
 
-			for (int i = 0; i < MISSILES.Count; i++)
-				MISSILES[i].Update();
+				if (mineSpawn.ElapsedMilliseconds > 170)
+				{
+					BULLETS.Add(new Bullet(textureHolding, gunPosition));
+					mineSpawn.Restart();
+				}
+			}
+
+			// If no longer on screen, remove.
+			for (int i = 0; i < BULLETS.Count; i++)
+				if (BULLETS[i].Expired())
+					BULLETS.RemoveAt(i);
+
+			// Increment position.
+			for (int i = 0; i < BULLETS.Count; i++)
+				BULLETS[i].Update();
 		}
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
 			spriteBatch.Draw(gunTexture, gunPosition, animationFrame, color, rotation, rotationOffset, 1, effects, 0);
 
-			for (int i = 0; i < MISSILES.Count; i++)
-				MISSILES[i].Draw(spriteBatch);
+			for (int i = 0; i < BULLETS.Count; i++)
+				BULLETS[i].Draw(spriteBatch);
 
+			/*
 			if (Game.DEBUG)
 			{
 				int y = 110;
@@ -101,11 +117,12 @@ namespace Flyatron
 				if (MISSILES.Count == 0)
 					y = 90;
 			}
+			*/
 		}
 
 		private void Animate()
 		{
-			Vector2 leftFacing = new Vector2(gunPosition.X - Game.MOUSE.X, gunPosition.Y - Game.MOUSE.Y);
+			Vector2 leftFacing  = new Vector2(gunPosition.X - Game.MOUSE.X, gunPosition.Y - Game.MOUSE.Y);
 			Vector2 rightFacing = new Vector2(Game.MOUSE.X - gunPosition.X, Game.MOUSE.Y - gunPosition.Y);
 
 			float leftAngle = (float)(Math.Atan2(leftFacing.Y, leftFacing.X));

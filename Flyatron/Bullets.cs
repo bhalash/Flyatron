@@ -8,10 +8,10 @@ using System.Diagnostics;
 
 namespace Flyatron
 {
-	class Missile
+	class Bullet
 	{
-		Texture2D missileTexture, borderTexture;
-		Vector2 mousePosition, missilePosition, rotationOffset, missilePath;
+		Texture2D bulletTexture, borderTexture;
+		Vector2 mousePosition, bulletPosition, rotationOffset, bulletPath;
 		Rectangle animationFrame;
 		int frameX, frameY, frameWidth, frameHeight;
 		float rotation, scale, velocity;
@@ -21,7 +21,7 @@ namespace Flyatron
 		enum Bulletstate { Traversing, Detonating, Expired };
 		Bulletstate state;
 
-		public Missile(Texture2D[] inputTexture, Vector2 gunPosition)
+		public Bullet(Texture2D[] inputTexture, Vector2 gunPosition)
 		{
 			// Initial bullet state should be "in-flight."
 			state = Bulletstate.Traversing;
@@ -29,7 +29,7 @@ namespace Flyatron
 			velocity = 16;
 			scale = 1;
 			// Textures.
-			missileTexture = inputTexture[1];
+			bulletTexture = inputTexture[1];
 			borderTexture = inputTexture[2];
 			// Effects and colour.
 			effects = SpriteEffects.None;
@@ -39,33 +39,33 @@ namespace Flyatron
 			frameWidth = 55;
 			frameHeight = 11;
 			// Gun vector.
-			missilePosition.X = gunPosition.X;
-			missilePosition.Y = gunPosition.Y - missileTexture.Height / 2;
+			bulletPosition.X = gunPosition.X;
+			bulletPosition.Y = gunPosition.Y - bulletTexture.Height / 2;
 			// Offset, used for animatng rotation.
 			rotationOffset = new Vector2(27.5F, 10.5F);
 			// Mouse. Snapstopped. 
 			mousePosition = new Vector2(Game.MOUSE.X, Game.MOUSE.Y);
 
 			// If mouse is left of gun.
-			if (mousePosition.X < missilePosition.X)
+			if (mousePosition.X < bulletPosition.X)
 			{
 				// Animation frame.
 				frameX = 59;
-				// Left or right velocity? 
+				// Reverse velocity.
 				velocity = -velocity;
 				// The path the bullet will travel after firing.
-				missilePath = mousePosition - missilePosition;
+				bulletPath = mousePosition - bulletPosition;
 			}
 
 			// If mouse is right of gun.
-			if (mousePosition.X >= missilePosition.X)
+			if (mousePosition.X >= bulletPosition.X)
 			{
 				frameX = 0;
-				missilePath = missilePosition - mousePosition;
+				bulletPath = bulletPosition - mousePosition;
 			}
 
 			// Rotation is set once.
-			rotation = (float)(Math.Atan2(missilePath.Y, missilePath.X));
+			rotation = (float)(Math.Atan2(bulletPath.Y, bulletPath.X));
 
 			// Animation frame.
 			animationFrame = new Rectangle(
@@ -95,10 +95,10 @@ namespace Flyatron
 
 		private void Traversing()
 		{
-			if (missilePath != Vector2.Zero)
-				missilePath.Normalize();
+			if (bulletPath != Vector2.Zero)
+				bulletPath.Normalize();
 
-			missilePosition -= missilePath * velocity;
+			bulletPosition -= bulletPath * velocity;
 			
 			if (!Rectangle().Intersects(Game.BOUNDS))
 				state = Bulletstate.Expired;
@@ -110,23 +110,18 @@ namespace Flyatron
 
 		public void Draw(SpriteBatch spriteBatch)
 		{
-			switch (state)
+			if (state == Bulletstate.Traversing)
 			{
-				case Bulletstate.Traversing:
-					{
-						spriteBatch.Draw(missileTexture, missilePosition, animationFrame, color, rotation, rotationOffset, scale, effects, 0F);
-
-						if (Game.DEBUG)
-							spriteBatch.Draw(borderTexture, missilePosition, animationFrame, color * 0.3F, rotation, rotationOffset, scale, effects, 0F);
-
-						break;
-					}
+				spriteBatch.Draw(bulletTexture, bulletPosition, animationFrame, color, rotation, rotationOffset, scale, effects, 0F);
+				
+				if (Game.DEBUG)
+					spriteBatch.Draw(borderTexture, bulletPosition, animationFrame, color * 0.3F, rotation, rotationOffset, scale, effects, 0F);
 			}
 		}
 
 		public Rectangle Rectangle()
 		{
-			return new Rectangle((int)missilePosition.X, (int)missilePosition.Y, frameWidth, frameHeight);
+			return new Rectangle((int)bulletPosition.X, (int)bulletPosition.Y, frameWidth, frameHeight);
 		}
 
 		public bool Expired()
@@ -159,7 +154,7 @@ namespace Flyatron
 
 		public Vector2 Position()
 		{
-			return missilePosition;
+			return bulletPosition;
 		}
 	}
 }
