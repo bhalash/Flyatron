@@ -30,7 +30,7 @@ namespace Flyatron
 		public Player(Texture2D[] newTexture)
 		{
 			velocity = 8;
-			lives = currentLives = 5;
+			lives = currentLives = 0;
 			color = Color.White;
 			lives = 5;
 			scale = 0.7F; 

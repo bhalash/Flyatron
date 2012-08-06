@@ -195,10 +195,10 @@ namespace Flyatron
 			playerNukes = 1;
 
 			// Total mines. Fewer for debug so I can study behaviour
+			totalMines = 35;
+
 			if (DEBUG)
-				totalMines = 10;
-			else
-				totalMines = 35;
+				totalMines = 9;
 
 			for (int i = 0; i < totalMines; i ++)
 				mines.Add(new Mine(mineTextures));
@@ -258,6 +258,7 @@ namespace Flyatron
 			collated = false;
 			scores.Reset();
 			PLAYER.Lives(5);
+			playerNukes = 1;
 
 			for (int i = 0; i < mines.Count; i++)
 				mines[i].State(2);
@@ -358,7 +359,7 @@ namespace Flyatron
 				"",
 				"Big thanks to:",
 				"",
-				"8 Bit Weapon",
+				"091 Labs:",
 				"Alanna Kelly",
 				"Domhall Walsh",
 				"Duncan Thomas",
@@ -493,17 +494,20 @@ namespace Flyatron
 			// Player/mine + mine/bullet collisions.
 			for (int i = 0; i < mines.Count; i++)
 			{
-				// Player/mine. Condition to not interact if it is animating an explosion.
-				if (Helper.CircleCollision(PLAYER.Rectangle(), mines[i].Rectangle()))
-					if (mines[i].ReportState() == 1)
-						state = Gamestate.Death;
+				if (!DEBUG)
+				{
+					// Player/mine. Condition to not interact if it is animating an explosion.
+					if (Helper.CircleCollision(PLAYER.Rectangle(), mines[i].Rectangle()))
+						if (mines[i].ReportState() == 1)
+							state = Gamestate.Death;
+				}
 
 				// Bullet/mine.
 				for (int j = 0; j < Gun.BULLETS.Count; j++)
-					if (Helper.CircleCollision(mines[i].Rectangle(), Gun.BULLETS[j].Rectangle()))
+					if ((Helper.CircleCollision(mines[i].Rectangle(), Gun.BULLETS[j].Rectangle()) && (mines[i].ReportState() != 4)))
 					{
 						Gun.BULLETS[j].State(3);
-						mines[i].State(4);
+						mines[i].State(4, Gun.BULLETS[j].Position());
 						scores.Bump(10);
 					}
 			}
@@ -580,9 +584,9 @@ namespace Flyatron
 
 			if (DEBUG)
 				spriteBatch.DrawString(
-					FONT10,
+					FONT07,
 					Convert.ToString(gameTime.TotalGameTime),
-					new Vector2(30, HEIGHT - 30),
+					new Vector2(30, HEIGHT - 20),
 					Color.Black
 				);
 		}

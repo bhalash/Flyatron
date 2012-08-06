@@ -43,7 +43,7 @@ namespace Flyatron
 			// Mouse. Snapstopped. 
 			mousePosition = new Vector2(Game.MOUSE.X, Game.MOUSE.Y);
 
-			// If mouse is left of gun.
+			// If mouse is left of bullet.
 			if (mousePosition.X < bulletPosition.X)
 			{
 				// Animation frame.
@@ -54,7 +54,7 @@ namespace Flyatron
 				bulletPath = mousePosition - bulletPosition;
 			}
 
-			// If mouse is right of gun.
+			// If mouse is right of bullet.
 			if (mousePosition.X >= bulletPosition.X)
 			{
 				bullet.X = 0;

@@ -13,6 +13,7 @@ namespace Flyatron
 		Minestate state;
 
 		Vector2 minePosition, explosionPosition, rotationOffset;
+		Vector2 recoilPath, bulletSnapshot, mineSnapshot;
 		Rectangle core, spikes, explosion, reference;
 		Texture2D coreTexture, spikeTexture, explosionTexture, borderTexture;
 		Stopwatch rotation, halt, explosionTimer, shotTimer;
@@ -132,24 +133,31 @@ namespace Flyatron
 		{
 			Animate();
 
+			if (Game.DEBUG)
+			{
+				dString1 = "H: " + health + " " + "V: " + velocity;
+				dString2 = "X: " + minePosition.X + " " + "Y: " + minePosition.Y;
+
+				dPosition1 = new Vector2(minePosition.X + core.Width + 1, minePosition.Y - 13);
+				dPosition2 = new Vector2(minePosition.X + core.Width + 1, minePosition.Y + 2);
+			}
+
 			if (!shotTimer.IsRunning)
 			{
 				shotTimer.Restart();
+
 				// Health decreases inverse to speed: Slower mines take less damage. TODO: Tweak.
 				health -= (int)((velocity * (velocity * 0.3F)) * 5);
 			}
-
-			// Proximity.
+	
+			// Proximity to player.
 			distance = Vector2.Distance(minePosition, new Vector2(reference.X + (reference.Width / 2), reference.Y + (reference.Height / 2)));
-
-			// Traverse right.
-			minePosition.X += baseVelocity * 2;
 
 			if (shotTimer.ElapsedMilliseconds > 180)
 			{
 				if (health <= 0)
 					state = Minestate.Explosion;
-				else 
+				else
 					state = Minestate.Traverse;
 
 				shotTimer.Stop();
@@ -183,8 +191,10 @@ namespace Flyatron
 		private void Halt()
 		{
 			if (!halt.IsRunning)
-				halt.Start();
+				halt.Restart();
 
+			health = 100;
+			
 			minePosition.X = Game.WIDTH + core.Width;
 			minePosition.Y = Helper.Rng(Game.HEIGHT - spikes.Height);
 
@@ -196,11 +206,10 @@ namespace Flyatron
 
 			haltDuration = Helper.Rng(10000);
 
-			// Check if it needs to be drawn.
 			if (halt.ElapsedMilliseconds > haltDuration)
 			{
+				halt.Stop();
 				state = Minestate.Traverse;
-				halt.Reset();
 			}
 		}
 
@@ -283,7 +292,7 @@ namespace Flyatron
 			else return 3;
 		}
 
-		public void State(int newState)
+		public void State(int newState, Vector2 newBulletPosition = default(Vector2))
 		{
 			if (newState == 1)
 				state = Minestate.Traverse;
@@ -292,7 +301,10 @@ namespace Flyatron
 			if (newState == 3)
 				state = Minestate.Explosion;
 			if (newState == 4)
+			{
+				bulletSnapshot = newBulletPosition;
 				state = Minestate.Shot;
+			}
 		}
 
 		public void X(int newX)

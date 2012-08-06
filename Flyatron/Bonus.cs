@@ -122,9 +122,6 @@ namespace Flyatron
 
 			haltDuration = Helper.Rng2(10000,20000);
 
-			if (Game.DEBUG)
-				haltDuration = 1;
-
 			// Check if it needs to be drawn.
 			if (halt.ElapsedMilliseconds > haltDuration)
 			{
