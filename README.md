@@ -14,7 +14,9 @@ Contact mark@bhalash.com with any and all queries.
 
 Code and sprite assets copyright 2012 Mark Grealish (http://www.bhalash.com).
 
-Music copyright 1999-2012 8-Bit Weapon (http://8bitweapon.com/). 
+Music copyright 1999-2012 8-Bit Weapon (http://8bitweapon.com/). Used with permission.
+
+WAV sound effects copyright 2012 AtomSplitter(http://www.atomsplitteraudio.com). Used per free license. 
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published bythe Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 

@@ -7,33 +7,27 @@ using Microsoft.Xna.Framework.Media;
 using System.Collections.Generic;
 using Flyatron;
 using System.Diagnostics;
+using Microsoft.Xna.Framework.Audio;
 
 namespace Flyatron
 {
 	public class Game : Microsoft.Xna.Framework.Game
 	{
-		// Welcome to Flyatron!
-		public static bool DEBUG = true;
-
-		public static int WIDTH  = 1366;
-		public static int HEIGHT = 768;
-		static bool FULLSCREEN   = true;
-
+		public static bool DEBUG = false;
+		public static int WIDTH = 1024;
+		public static int HEIGHT = 600;
+		static bool FULLSCREEN = false;
 		public static Rectangle BOUNDS = new Rectangle(0, 0, WIDTH, HEIGHT);
-
 		static double VERSION = 1.1;
 		static string VERSIONSTRING = "Version " + VERSION;
 
 		enum Gamestate { Menu, Play, New, Scores, About, End, Death };
-		Gamestate state = Gamestate.Menu;
+		Gamestate STATE = Gamestate.Menu;
 
 		public static KeyboardState PREV_KEYBOARD, KEYBOARD;
 		public static MouseState PREV_MOUSE, MOUSE;
 
 		public static Game Instance;
-
-		Texture2D border;
-		float borderOpacity;
 
 		static SpriteBatch spriteBatch;
 		GraphicsDeviceManager graphics;
@@ -141,9 +135,6 @@ namespace Flyatron
 
 		protected override void Initialize()
 		{
-			// Border to outline content in debug.
-			border = Content.Load<Texture2D>("border");
-
 			playerTextures = new Texture2D[]
 			{
 				// Player textures.
@@ -171,7 +162,7 @@ namespace Flyatron
 			// Load player art/stats.
 			PLAYER = new Player(playerTextures);
 
-			gun = new Gun(gunTextures);
+			gun = new Gun(gunTextures, Content.Load<SoundEffect>("sounds\\zap"));
 
 			// Initialize bonus.
 			bonus = new Bonus(Content.Load<Texture2D>("bonus\\bonus"));
@@ -188,9 +179,6 @@ namespace Flyatron
 			// Initialize foe mine.
 			mines = new List<Mine>();
 
-			// Debug. Border opacity.
-			borderOpacity = 0.3F;
-
 			// Default 1 bomb.
 			playerNukes = 1;
 
@@ -201,7 +189,7 @@ namespace Flyatron
 				totalMines = 9;
 
 			for (int i = 0; i < totalMines; i ++)
-				mines.Add(new Mine(mineTextures));
+				mines.Add(new Mine(mineTextures, Content.Load<SoundEffect>("sounds\\blast")));
 
 			// Import top scores.
 			scores = new Scoreboard();
@@ -221,21 +209,70 @@ namespace Flyatron
 
 			mouse.Update();
 			// Update SCREEN selection.
-			UpdateSwitch();
+			SwitchUpdate();
 
 			if (Helper.Keypress(Keys.Escape))
 			{
 				// Toggle between menu and gameplay.
-				if (state == Gamestate.Play)
-					state = Gamestate.Menu;
-				else if ((state == Gamestate.Menu) && (PLAYER.RemainingLives() > 0))
-					state = Gamestate.Play;
+				if (STATE == Gamestate.Play)
+					STATE = Gamestate.Menu;
+				else if ((STATE == Gamestate.Menu) && (PLAYER.RemainingLives() > 0))
+					STATE = Gamestate.Play;
 			}
 
-			base.Update(gameTime);
+				base.Update(gameTime);
 
 			PREV_MOUSE = MOUSE;
 			PREV_KEYBOARD = KEYBOARD;
+		}
+
+		private void Collisions()
+		{
+			// TODO: Put somewhere better.
+			if (Helper.RightClick())
+				if (playerNukes > 0)
+				{
+					playerNukes--;
+
+					for (int i = 0; i < mines.Count; i++)
+					{
+						mines[i].State(3);
+						scores.Bump(10);
+					}
+				}
+
+			// Player/mine + mine/bullet collisions.
+			for (int i = 0; i < mines.Count; i++)
+			{
+				if (!DEBUG)
+				{
+					// Player/mine. Condition to not interact if it is animating an explosion.
+					if (Helper.CircleCollision(PLAYER.Rectangle(), mines[i].Rectangle()))
+						if (mines[i].ReportState() == 1)
+							STATE = Gamestate.Death;
+				}
+
+				// Bullet/mine.
+				for (int j = 0; j < Gun.BULLETS.Count; j++)
+					if ((Helper.CircleCollision(mines[i].Rectangle(), Gun.BULLETS[j].Rectangle()) && (mines[i].ReportState() != 4)))
+					{
+						Gun.BULLETS[j].State(3);
+						mines[i].State(4, Gun.BULLETS[j].Position());
+						scores.Bump(10);
+					}
+			}
+
+			// Player/bonus collision.
+			if (Helper.CircleCollision(PLAYER.Rectangle(), bonus.Rectangle()))
+			{
+				if (bonus.ReportType() == 1)
+					bonus.State(2);
+				PLAYER.Lives(1);
+				if (bonus.ReportType() == 2)
+					playerNukes++;
+
+				bonus.State(2);
+			}
 		}
 
 		protected override void Draw(GameTime gameTime)
@@ -246,106 +283,11 @@ namespace Flyatron
 			// Draw the background.
 			cloudyBackdrop.Draw(spriteBatch);
 			// Update game state.
-			Switch(gameTime, spriteBatch);
+			SwitchDraw(gameTime, spriteBatch);
 			mouse.Draw(spriteBatch);
 			spriteBatch.End();
 
 			base.Draw(gameTime);
-		}
-
-		private void NewGame()
-		{
-			collated = false;
-			scores.Reset();
-			PLAYER.Lives(5);
-			playerNukes = 1;
-
-			for (int i = 0; i < mines.Count; i++)
-				mines[i].State(2);
-
-			state = Gamestate.Play;
-		}
-
-		private void UpdateDeath()
-		{
-			if (!collated)
-			{
-				scores.Collate();
-				collated = true;
-			}
-
-			for (int i = 0; i < mines.Count; i++)
-				mines[i].State(3);
-
-			PLAYER.X(100);
-			PLAYER.Y(HEIGHT / 2 - PLAYER.Rectangle().Height / 2);
-			PLAYER.Minus();
-
-			if (PLAYER.RemainingLives() <= 0)
-				state = Gamestate.End;
-			else
-				state = Gamestate.Play;
-		}
-
-		private void DrawDeath()
-		{
-			// Nothing to draw here. Included for completeness.
-		}
-
-		private void UpdateMenu()
-		{
-			// Menu opts.
-			if ((Helper.Keypress(Keys.D1)) && (PLAYER.RemainingLives() > 0))
-				state = Gamestate.Play;
-			if (Helper.Keypress(Keys.D2))
-				state = Gamestate.New;
-			if (Helper.Keypress(Keys.D3))
-				state = Gamestate.Scores;
-			if (Helper.Keypress(Keys.D4))
-				state = Gamestate.About;
-			if (Helper.Keypress(Keys.D5))
-				this.Exit();
-		}
-
-		private void DrawMenu()
-		{
-			soundtrack.Volume(0.5F);
-			int Y = 100;
-
-			string title = "Flyatron";
-
-			List<string> opt = new List<string>()
-			{
-				"Resume Game",
-				"New Game",
-				"High Scores",
-				"About",
-				"Exit"
-			};
-
-			cloudyBackdrop.Update(3);
-			spriteBatch.Draw(menuBg, menuVec, Color.White);
-			spriteBatch.DrawString(FONT25, title, new Vector2(50, 50), Color.White);
-			// Draw the menu.
-			for (int i = 0; i < opt.Count; i++)
-			{
-				spriteBatch.DrawString(FONT14, (i + 1) + ". " + opt[i], new Vector2(50, Y), Color.White);
-				Y += 35;
-			}
-
-			if (DEBUG)
-				spriteBatch.DrawString(
-					FONT10,
-					VERSIONSTRING,
-					new Vector2(WIDTH - 30 - FONT10.MeasureString(VERSIONSTRING).Length(), HEIGHT - 30),
-					Color.White
-				);
-		}
-
-		private void UpdateAbout()
-		{
-			if (Helper.Keypress(Keys.Escape))
-				state = Gamestate.Menu;
 		}
 
 		private void DrawAbout()
@@ -386,18 +328,9 @@ namespace Flyatron
 			}
 		}
 
-		private void UpdateEnd()
+		private void DrawDeath()
 		{
-			for (int i = 0; i < mines.Count; i++)
-				mines[i].State(2);
-
-			bonus.State(2);
-
-			if ((Helper.Keypress(Keys.Escape)) || (Helper.LeftClick()))
-			{
-				state = Gamestate.Menu;
-				deathScreenTimer.Reset();
-			}
+			// Nothing to draw here. Included for completeness.
 		}
 
 		private void DrawEnd()
@@ -432,122 +365,6 @@ namespace Flyatron
 			{
 				spriteBatch.Draw(menuBg, menuVec, color * 1.0F);
 				spriteBatch.DrawString(FONT25, message, fontVector, color * 1.0F);
-			}
-		}
-
-		private void UpdateScores()
-		{
-			if (Helper.Keypress(Keys.Escape))
-				state = Gamestate.Menu;
-		}
-
-		private void DrawScores()
-		{
-			string title = "Top Scores";
-
-			cloudyBackdrop.Update(3);
-			spriteBatch.Draw(menuBg, menuVec, Color.White);
-			spriteBatch.DrawString(FONT25, title, new Vector2(50, 50), Color.White);
-			scores.Report(FONT14, spriteBatch, 55, 100, Color.White);
-		}
-
-		private void UpdatePlay()
-		{
-			// Update player + gun position..
-			PLAYER.Update();
-			gun.Update(PLAYER.Position());
-			// Increment mine position.
-			for (int i = 0; i < mines.Count; i++)
-				mines[i].Update(PLAYER.Rectangle());
-			// Music.
-			soundtrack.Update();
-			// Calculate any collisions.
-			Collisions();
-			// Update backdrop.
-			cloudyBackdrop.Update(5);
-			// Tick scores.
-			scores.Update();
-			// Increment bonus position.
-			bonus.Update();
-			// Goodnight, sweet prince.
-			if (PLAYER.RemainingLives() <= 0)
-			{
-				state = Gamestate.End;
-			}
-		}
-
-		private void Collisions()
-		{
-			// TODO: Put somewhere better.
-			if (Helper.RightClick())
-				if (playerNukes > 0)
-				{
-					playerNukes--;
-
-					for (int i = 0; i < mines.Count; i++)
-					{
-						mines[i].State(3);
-						scores.Bump(10);
-					}
-				}
-
-			// Player/mine + mine/bullet collisions.
-			for (int i = 0; i < mines.Count; i++)
-			{
-				if (!DEBUG)
-				{
-					// Player/mine. Condition to not interact if it is animating an explosion.
-					if (Helper.CircleCollision(PLAYER.Rectangle(), mines[i].Rectangle()))
-						if (mines[i].ReportState() == 1)
-							state = Gamestate.Death;
-				}
-
-				// Bullet/mine.
-				for (int j = 0; j < Gun.BULLETS.Count; j++)
-					if ((Helper.CircleCollision(mines[i].Rectangle(), Gun.BULLETS[j].Rectangle()) && (mines[i].ReportState() != 4)))
-					{
-						Gun.BULLETS[j].State(3);
-						mines[i].State(4, Gun.BULLETS[j].Position());
-						scores.Bump(10);
-					}
-			}
-
-			// Player/bonus collision.
-			if (Helper.CircleCollision(PLAYER.Rectangle(), bonus.Rectangle()))
-			{
-				if (bonus.ReportType() == 1)
-					bonus.State(2);
-					PLAYER.Lives(1);
-				if (bonus.ReportType() == 2)
-					playerNukes++;
-
-				bonus.State(2);
-			}
-		}
-
-		private void DrawPlay(GameTime gameTime)
-		{
-			soundtrack.Volume(0.7F);
-
-			// Draw HUD.
-			DrawHud(gameTime);
-			// Draw player.
-			PLAYER.Draw(spriteBatch);
-			// Draw gun. Should always be drawn after the player!
-			gun.Draw(spriteBatch);
-			// Bonus.
-			bonus.Draw(spriteBatch);
-
-			// Draw mine.
-			for (int i = 0; i < mines.Count; i++)
-				mines[i].Draw(spriteBatch);
-
-			if (DEBUG)
-			{
-				// Outline textures if debug is enabled.
-				spriteBatch.Draw(border, PLAYER.Rectangle(), Color.White * borderOpacity);
-				spriteBatch.Draw(border, mouse.Rectangle(),  Color.White * borderOpacity);
-				spriteBatch.Draw(border, bonus.Rectangle(),  Color.White * borderOpacity);
 			}
 		}
 
@@ -591,88 +408,223 @@ namespace Flyatron
 				);
 		}
 
-		private void Switch(GameTime gameTime, SpriteBatch spriteBatch)
+		private void DrawPlay(GameTime gameTime)
 		{
-			switch (state)
+			soundtrack.Volume(0.7F);
+
+			// Draw HUD.
+			DrawHud(gameTime);
+			// Draw player.
+			PLAYER.Draw(spriteBatch);
+			// Draw gun. Should always be drawn after the player!
+			gun.Draw(spriteBatch);
+			// Bonus.
+			bonus.Draw(spriteBatch);
+
+			// Draw mine.
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].Draw(spriteBatch);
+		}
+
+		private void DrawMenu()
+		{
+			soundtrack.Volume(0.5F);
+			int Y = 100;
+
+			string title = "Flyatron";
+
+			List<string> opt = new List<string>()
+			{
+				"Resume Game",
+				"New Game",
+				"High Scores",
+				"About",
+				"Exit"
+			};
+
+			cloudyBackdrop.Update(3);
+			spriteBatch.Draw(menuBg, menuVec, Color.White);
+			spriteBatch.DrawString(FONT25, title, new Vector2(50, 50), Color.White);
+			// Draw the menu.
+			for (int i = 0; i < opt.Count; i++)
+			{
+				spriteBatch.DrawString(FONT14, (i + 1) + ". " + opt[i], new Vector2(50, Y), Color.White);
+				Y += 35;
+			}
+
+			if (DEBUG)
+				spriteBatch.DrawString(
+					FONT10,
+					VERSIONSTRING,
+					new Vector2(WIDTH - 30 - FONT10.MeasureString(VERSIONSTRING).Length(), HEIGHT - 30),
+					Color.White
+				);
+		}
+
+		private void DrawScores()
+		{
+			string title = "Top Scores";
+
+			cloudyBackdrop.Update(3);
+			spriteBatch.Draw(menuBg, menuVec, Color.White);
+			spriteBatch.DrawString(FONT25, title, new Vector2(50, 50), Color.White);
+			scores.Report(FONT14, spriteBatch, 55, 100, Color.White);
+		}
+
+		private void NewGame()
+		{
+			collated = false;
+			scores.Reset();
+			PLAYER.Lives(5);
+			playerNukes = 1;
+
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].State(2);
+
+			STATE = Gamestate.Play;
+		}
+
+		private void SwitchDraw(GameTime gameTime, SpriteBatch spriteBatch)
+		{
+			switch (STATE)
 			{
 				case Gamestate.Menu:
-					{
-						DrawMenu();
-						break;
-					}
+					DrawMenu();
+					break;
 				case Gamestate.Play:
-					{
-						DrawPlay(gameTime);
-						break;
-					}
+					DrawPlay(gameTime);
+					break;
 				case Gamestate.New:
-					{
-						NewGame();
-						break;
-					}
+					NewGame();
+					break;
 				case Gamestate.Scores:
-					{
-						DrawScores();
-						break;
-					}
+					DrawScores();
+					break;
 				case Gamestate.About:
-					{
-						DrawAbout();
-						break;
-					}
+					DrawAbout();
+					break;
 				case Gamestate.End:
-					{
-						DrawEnd();
-						break;
-					}
+					DrawEnd();
+					break;
 				case Gamestate.Death:
-					{
-						DrawDeath();
-						break;
-					}
+					DrawDeath();
+					break;
 			}
 		}
 
-		private void UpdateSwitch()
+		private void SwitchUpdate()
 		{
-			switch (state)
+			switch (STATE)
 			{
 				case Gamestate.Menu:
-					{
-						UpdateMenu();
-						break;
-					}
+					UpdateMenu();
+					break;
 				case Gamestate.Play:
-					{
-						UpdatePlay();
-						break;
-					}
+					UpdatePlay();
+					break;
 				case Gamestate.New:
-					{
-						NewGame();
-						break;
-					}
+					NewGame();
+					break;
 				case Gamestate.Scores:
-					{
-						UpdateScores();
-						break;
-					}
+					UpdateScores();
+					break;
 				case Gamestate.About:
-					{
-						UpdateAbout();
-						break;
-					}
+					UpdateAbout();
+					break;
 				case Gamestate.End:
-					{
-						UpdateEnd();
-						break;
-					}
+					UpdateEnd();
+					break;
 				case Gamestate.Death:
-					{
-						UpdateDeath();
-						break;
-					}
+					UpdateDeath();
+					break;
 			}
+		}
+
+		private void UpdateAbout()
+		{
+			if (Helper.Keypress(Keys.Escape))
+				STATE = Gamestate.Menu;
+		}
+
+		private void UpdateDeath()
+		{
+			if (!collated)
+			{
+				scores.Collate();
+				collated = true;
+			}
+
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].State(3);
+
+			PLAYER.X(100);
+			PLAYER.Y(HEIGHT / 2 - PLAYER.Rectangle().Height / 2);
+			PLAYER.Minus();
+
+			if (PLAYER.RemainingLives() <= 0)
+				STATE = Gamestate.End;
+			else
+				STATE = Gamestate.Play;
+		}
+
+		private void UpdateEnd()
+		{
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].State(2);
+
+			bonus.State(2);
+
+			if ((Helper.Keypress(Keys.Escape)) || (Helper.LeftClick()))
+			{
+				STATE = Gamestate.Menu;
+				deathScreenTimer.Reset();
+			}
+		}
+
+		private void UpdateMenu()
+		{
+			// Menu opts.
+			if ((Helper.Keypress(Keys.D1)) && (PLAYER.RemainingLives() > 0))
+				STATE = Gamestate.Play;
+			if (Helper.Keypress(Keys.D2))
+				STATE = Gamestate.New;
+			if (Helper.Keypress(Keys.D3))
+				STATE = Gamestate.Scores;
+			if (Helper.Keypress(Keys.D4))
+				STATE = Gamestate.About;
+			if (Helper.Keypress(Keys.D5))
+				this.Exit();
+		}
+
+		private void UpdatePlay()
+		{
+			// Update player + gun position..
+			PLAYER.Update();
+			gun.Update(PLAYER.Position());
+			// Increment mine position.
+			for (int i = 0; i < mines.Count; i++)
+				mines[i].Update(PLAYER.Rectangle());
+			// Music.
+			soundtrack.Update();
+			// Calculate any collisions.
+			Collisions();
+			// Update backdrop.
+			cloudyBackdrop.Update(5);
+			// Tick scores.
+			scores.Update();
+			// Increment bonus position.
+			bonus.Update();
+			// Goodnight, sweet prince.
+			if (PLAYER.RemainingLives() <= 0)
+			{
+				STATE = Gamestate.End;
+			}
+		}
+
+		private void UpdateScores()
+		{
+			if (Helper.Keypress(Keys.Escape))
+				STATE = Gamestate.Menu;
 		}
 	}
 }

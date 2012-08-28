@@ -66,9 +66,6 @@ namespace Flyatron
 
 		public void Collate()
 		{
-			// Collate combines the current score along with the top 10 scores.
-			// It then sorts this list, and overwrites the saved scores with the
-			// new top ten scores.
 			scores.Add(SCORE);
 			scores.Sort();
 			scores.RemoveAt(0);

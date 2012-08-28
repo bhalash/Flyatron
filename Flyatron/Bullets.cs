@@ -40,7 +40,7 @@ namespace Flyatron
 			bulletPosition.Y = gunPosition.Y - bulletTexture.Height / 2;
 			// Offset, used for animatng rotation.
 			rotationOffset = new Vector2(27.5F, 10.5F);
-			// Mouse. Snapstopped. 
+			// Mouse. 
 			mousePosition = new Vector2(Game.MOUSE.X, Game.MOUSE.Y);
 
 			// If mouse is left of bullet.
@@ -70,15 +70,11 @@ namespace Flyatron
 			switch (state)
 			{
 				case Bulletstate.Traversing:
-					{
-						Traversing();
-						break;
-					}
+					Traversing();
+					break;
 				case Bulletstate.Detonating:
-					{
-						Detonating();
-						break;
-					}
+					Detonating();
+					break;
 			}
 		}
 

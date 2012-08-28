@@ -10,7 +10,7 @@ namespace Flyatron
 {
 	class Helper
 	{
-		public static Random RANDOM = new Random();
+		public static Random random = new Random();
 
 		public Helper()
 		{
@@ -18,12 +18,12 @@ namespace Flyatron
 
 		public static int Rng(int a)
 		{
-			return RANDOM.Next(a);
+			return random.Next(a);
 		}
 
 		public static int Rng2(int a, int b)
 		{
-			return RANDOM.Next(a, b);
+			return random.Next(a, b);
 		}
 
 		public static bool SquareCollision(Rectangle a, Rectangle b)

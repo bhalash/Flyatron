@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.Xna.Framework.Audio;
 
 namespace Flyatron
 {
@@ -17,6 +18,9 @@ namespace Flyatron
 		Rectangle core, spikes, explosion, reference;
 		Texture2D coreTexture, spikeTexture, explosionTexture, borderTexture;
 		Stopwatch rotation, halt, explosionTimer, shotTimer;
+
+		SoundEffect blast;
+		bool played;
 
 		SpriteEffects effects;
 
@@ -33,8 +37,11 @@ namespace Flyatron
 
 		Color color;
 
-		public Mine(Texture2D[] inputTexture)
+		public Mine(Texture2D[] inputTexture, SoundEffect inputBlast)
 		{
+			blast = inputBlast;
+			played = false;
+
 			state = Minestate.Halted;
 			color = Color.White;
 
@@ -217,6 +224,12 @@ namespace Flyatron
 		{
 			float elapsed = explosionTimer.ElapsedMilliseconds * 0.002F;
 
+			if (!played)
+			{
+				played = true;
+				blast.Play();
+			}
+
 			// Keep the explosion centered on the mine's position.
 			explosionPosition.X = minePosition.X - spikes.Width  / 3 * explosionScale;
 			explosionPosition.Y = minePosition.Y - spikes.Height / 3 * explosionScale;
@@ -231,6 +244,7 @@ namespace Flyatron
 			{
 				explosionTimer.Stop();
 				state = Minestate.Halted;
+				played = false;
 			}
 		}
 

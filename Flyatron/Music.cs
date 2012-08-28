@@ -63,8 +63,6 @@ namespace Flyatron
 
 		public string Parse(TimeSpan timeSpan)
 		{
-			// Parse code stolen from RB Whitaker.
-			// Source URL: http://rbwhitaker.wikidot.com/playing-background-music
 			int minutes = timeSpan.Minutes;
 			int seconds = timeSpan.Seconds;
 
@@ -74,32 +72,17 @@ namespace Flyatron
 				return minutes + ":" + seconds;
 		}
 
-		public string Name()
-		{
-			// Song name.
-			return currentSong.Name.Replace("\\", ": ");
-		}
-
-		public string Elapsed()
-		{
-			return Parse(MediaPlayer.PlayPosition);
-		}
-
-		public string Length()
-		{
-			return Parse(currentSong.Duration);
-		}
-
-		public string Time()
-		{
-			return Elapsed() + " / " + Length();
-		}
-
 		public string NameTime()
 		{
+			string time = Parse(MediaPlayer.PlayPosition)
+				+ " / " 
+				+ Parse(currentSong.Duration) 
+				+ Parse(currentSong.Duration);
+
 			if (!Playing())
-				return Name() + " [Paused]";
-			return Name() + " " + Time();
+				return currentSong.Name + " [Paused]";
+
+			return currentSong.Name + " " + time;
 		}
 	}
 }

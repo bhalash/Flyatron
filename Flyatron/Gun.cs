@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.Xna.Framework.Audio;
 
 namespace Flyatron
 {
@@ -19,13 +20,14 @@ namespace Flyatron
 		Rectangle animationFrame;
 		SpriteEffects effects;
 		Color color;
+		SoundEffect zap;
 
 		Stopwatch mineSpawn;
 
 		// Gun/bullet.
 		Texture2D[] textureHolding;
 
-		public Gun(Texture2D[] inputTexture)
+		public Gun(Texture2D[] inputTexture, SoundEffect inputZap)
 		{
 			// Gun's textures.
 			textureHolding = inputTexture;
@@ -45,7 +47,8 @@ namespace Flyatron
 			// Where do you want the gun placed relative to the vector it is attached too?
 			placementXOffset = 15;
 			placementYOffset = 35;
-
+			// Zap sound effect.
+			zap = inputZap;
 			animationFrame = new Rectangle(0, 0, frameWidth, frameHeight);
 
 			mineSpawn = new Stopwatch();
@@ -71,6 +74,7 @@ namespace Flyatron
 				if (mineSpawn.ElapsedMilliseconds > 170)
 				{
 					BULLETS.Add(new Bullet(textureHolding, gunPosition));
+					zap.Play();
 					mineSpawn.Restart();
 				}
 			}
