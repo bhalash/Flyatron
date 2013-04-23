@@ -6,6 +6,8 @@ Flyatron is a two-dimensional side-scolling video game set (if your imagination 
 
 There are mines. They explode.
 
+Once more unto the breach. I haven't touched *any* computer code, let alone Flyatron's, since September 2012, when I had a substantial emotional breakdown. I am coming back to the project for the original stated purpose of learning. 
+
 ## SUPPORT
 
 Contact mark@bhalash.com with any and all queries.
